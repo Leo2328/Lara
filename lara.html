@@ -33,19 +33,22 @@ textarea{flex:1;resize:none;max-height:120px;border:1px solid var(--line);border
 #cfg{position:fixed;inset:0;background:var(--bg);padding:16px;overflow-y:auto;display:none;padding-top:calc(16px + env(safe-area-inset-top,0px))}
 #cfg.open{display:block}
 label{display:block;margin:14px 0 4px;font:600 14px system-ui,sans-serif}
-input,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink);font:15px system-ui,sans-serif}
+input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink);font:15px system-ui,sans-serif}
 .hint{font:13px system-ui,sans-serif;color:var(--muted);margin:4px 0 0}
 .row{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
 .mem{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:6px;font:14px system-ui,sans-serif}
 .mem button{padding:4px 8px}
 #chip{display:none;padding:6px 12px;background:var(--surface);border-top:1px solid var(--line);font:13px system-ui,sans-serif;align-items:center;justify-content:space-between}
 #chip.on{display:flex}
+#notes{position:fixed;inset:0;background:var(--bg);padding:16px;overflow-y:auto;display:none;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+#notes.open{display:block}
+#toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));background:var(--accent);color:var(--on-accent);padding:12px 14px;border-radius:12px;font:15px system-ui,sans-serif;z-index:50;display:none}
 </style>
 </head>
 <body>
 <header>
   <div><h1>Lara</h1><div class="sub" id="status"></div></div>
-  <button id="openCfg" type="button">Ajustes</button>
+  <div style="display:flex;gap:8px"><button id="openNotes" type="button">Notas</button><button id="openCfg" type="button">Ajustes</button></div>
 </header>
 <div id="chat" aria-live="polite"></div>
 <div id="chip"><span>🖼️ Imagen adjunta</span><button id="rmimg" type="button">Quitar</button></div>
@@ -56,6 +59,19 @@ input,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:10px;p
   <button class="main" id="send" type="submit">Enviar</button>
 </form>
 
+<div id="toast" role="status"></div>
+<section id="notes" aria-label="Notas y recordatorios">
+  <h1>Notas y recordatorios</h1>
+  <label>Notas</label>
+  <div id="nlist"></div>
+  <div class="row"><input id="newnote" placeholder="Escribe una nota"><button id="addnote" type="button">Guardar nota</button></div>
+  <label>Recordatorios</label>
+  <p class="hint">Avisan solo si Lara está abierta. Para que avisen siempre, toca Calendario y ábrelo en tu app de calendario.</p>
+  <div id="rlist"></div>
+  <input id="remtext" placeholder="¿Qué quieres recordar?">
+  <input id="remat" type="datetime-local" style="margin-top:8px">
+  <div class="row"><button class="main" id="addrem" type="button">Añadir recordatorio</button><button id="closeNotes" type="button">Cerrar</button></div>
+</section>
 <section id="cfg" aria-label="Ajustes">
   <h1>Ajustes</h1>
   <label for="key">Clave de Gemini</label>
@@ -66,6 +82,10 @@ input,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:10px;p
   <p class="hint">Déjalo vacío si quieres. Si un modelo falla, Lara prueba otros sola.</p>
   <label for="sys">Personalidad de Lara</label>
   <textarea id="sys" rows="6"></textarea>
+  <label for="theme">Tema</label>
+  <select id="theme"><option value="auto">Automático</option><option value="light">Claro</option><option value="dark">Oscuro</option></select>
+  <label for="accent">Color</label>
+  <select id="accent"><option value="teal">Verde azulado</option><option value="indigo">Índigo</option><option value="rose">Rosa</option></select>
   <label>Memoria de Lara</label>
   <p class="hint">Lo que Lara recuerda de ti. Ella añade datos importantes sola; aquí puedes borrarlos o añadir otros.</p>
   <div id="mems"></div>
@@ -116,6 +136,9 @@ function buildSys(){
   let s=store.get("lara_sys",DEFAULT_SYS);
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+mems.join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
+  const now=new Date();
+  s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas.";
+  if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
@@ -208,8 +231,12 @@ $("f").onsubmit=async ev=>{
     const parts=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts;
     const reply=parts?parts.map(p=>p.text||"").join(""):"";
     if(!reply) throw new Error("Lara no devolvió respuesta. Intenta de nuevo.");
-    let clean=reply.replace(/\[\[MEMORIA:\s*([^\]]+?)\]\]/g,(m,t)=>{addMem(t);return ""}).trim();
-    if(!clean) clean="Anotado.";
+    let extra=[];
+    let clean=reply.replace(/\[\[MEMORIA:\s*([^\]]+?)\]\]/g,(m,t)=>{addMem(t);return ""})
+      .replace(/\[\[NOTA:\s*([^\]]+?)\]\]/g,(m,t)=>{addNote(t);extra.push("📝 Nota guardada");return ""})
+      .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{addRem(at,t);extra.push("⏰ Recordatorio guardado");return ""}).trim();
+    if(!clean) clean="Listo.";
+    if(extra.length) clean+="\n\n"+extra.join(" · ");
     bubble.textContent=clean;
     speak(clean);
     history.push({role:"model",parts:[{text:clean}]});
@@ -281,6 +308,84 @@ $("rmimg").onclick=clearImg;
   const parts=[q.get("title"),q.get("text"),q.get("url")].filter(Boolean);
   if(parts.length){$("t").value=parts.join("\n");window.history.replaceState(null,"",location.pathname)}
 })();
+function isoLocal(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)}
+const ACC={teal:["#0f766e","#2dd4bf"],indigo:["#4338ca","#a5b4fc"],rose:["#be185d","#f9a8d4"]};
+function applyTheme(){
+  const t=store.get("lara_theme","auto"),a=store.get("lara_accent","teal"),root=document.documentElement;
+  if(t==="auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme",t);
+  const dark=t==="dark"||(t==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches);
+  const c=(ACC[a]||ACC.teal)[dark?1:0];
+  root.style.setProperty("--accent",c);
+  root.style.setProperty("--on-accent",dark?"#0b1110":"#ffffff");
+  document.querySelector('meta[name="theme-color"]').setAttribute("content",c);
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme);
+$("theme").value=store.get("lara_theme","auto");$("accent").value=store.get("lara_accent","teal");
+$("theme").onchange=e=>{store.set("lara_theme",e.target.value);applyTheme()};
+$("accent").onchange=e=>{store.set("lara_accent",e.target.value);applyTheme()};
+applyTheme();
+
+let notes=[],rems=[];
+try{notes=JSON.parse(store.get("lara_notes","[]"))||[]}catch(e){}
+try{rems=JSON.parse(store.get("lara_rem","[]"))||[]}catch(e){}
+function saveNotes(){store.set("lara_notes",JSON.stringify(notes))}
+function saveRems(){store.set("lara_rem",JSON.stringify(rems))}
+function addNote(t){t=(t||"").trim().slice(0,1000);if(!t)return;notes.push(t);if(notes.length>100)notes.shift();saveNotes()}
+function addRem(at,text){
+  text=(text||"").trim().slice(0,200);
+  if(!text||isNaN(new Date(at).getTime())) return;
+  rems.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),text,at,done:false});saveRems();
+}
+function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display="none",8000);t.onclick=()=>t.style.display="none"}
+function btn(label,fn){const b=document.createElement("button");b.type="button";b.textContent=label;b.onclick=fn;return b}
+function row(text,btns){
+  const d=document.createElement("div");d.className="mem";
+  const s=document.createElement("span");s.style.whiteSpace="pre-wrap";s.style.overflowWrap="anywhere";s.textContent=text;
+  const w=document.createElement("div");w.style.display="flex";w.style.gap="6px";btns.forEach(b=>w.appendChild(b));
+  d.append(s,w);return d;
+}
+function empty(box,t){const p=document.createElement("p");p.className="hint";p.textContent=t;box.appendChild(p)}
+function icsDownload(r){
+  const f=x=>x.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+  const d=new Date(r.at),e=new Date(d.getTime()+30*60000),t=r.text.replace(/[\r\n,;]/g," ");
+  const txt=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Lara//ES","BEGIN:VEVENT","UID:"+r.id+"@lara","DTSTAMP:"+f(new Date()),"DTSTART:"+f(d),"DTEND:"+f(e),"SUMMARY:"+t,"BEGIN:VALARM","TRIGGER:PT0S","ACTION:DISPLAY","DESCRIPTION:"+t,"END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([txt],{type:"text/calendar"}));
+  a.download="lara-recordatorio.ics";document.body.appendChild(a);a.click();a.remove();
+}
+function renderNotes(){
+  const nl=$("nlist");nl.innerHTML="";
+  if(!notes.length) empty(nl,"Sin notas.");
+  notes.forEach((n,i)=>nl.appendChild(row(n,[btn("Borrar",()=>{notes.splice(i,1);saveNotes();renderNotes()})])));
+  const rl=$("rlist");rl.innerHTML="";
+  if(!rems.length) empty(rl,"Sin recordatorios.");
+  rems.slice().sort((a,b)=>a.at<b.at?-1:1).forEach(r=>{
+    const when=new Date(r.at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"});
+    rl.appendChild(row((r.done?"✓ ":"⏰ ")+when+"\n"+r.text,[btn("Calendario",()=>icsDownload(r)),btn("Borrar",()=>{rems=rems.filter(x=>x.id!==r.id);saveRems();renderNotes()})]));
+  });
+}
+function askPerm(){try{if("Notification" in window&&Notification.permission==="default") Notification.requestPermission()}catch(e){}}
+function notify(t){
+  toast("⏰ "+t);
+  if(!("Notification" in window)||Notification.permission!=="granted") return;
+  const fb=()=>{try{new Notification("Lara",{body:t})}catch(e){}};
+  if(navigator.serviceWorker&&navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r=>r.showNotification("Lara",{body:t,icon:"icon-192.png"})).catch(fb); else fb();
+}
+function checkRems(){
+  const now=Date.now();let ch=false;
+  rems.forEach(r=>{if(!r.done&&new Date(r.at).getTime()<=now){r.done=true;ch=true;notify(r.text)}});
+  if(ch){saveRems();if($("notes").classList.contains("open")) renderNotes()}
+}
+$("openNotes").onclick=()=>{renderNotes();$("notes").classList.add("open");askPerm()};
+$("closeNotes").onclick=()=>$("notes").classList.remove("open");
+$("addnote").onclick=()=>{addNote($("newnote").value);$("newnote").value="";renderNotes()};
+$("addrem").onclick=()=>{
+  const t=$("remtext").value.trim(),at=$("remat").value;
+  if(!t||!at){toast("Escribe qué recordar y elige fecha y hora.");return}
+  if(new Date(at).getTime()<=Date.now()){toast("Elige una hora futura.");return}
+  addRem(at,t);$("remtext").value="";$("remat").value="";askPerm();renderNotes();
+};
+setInterval(checkRems,15000);checkRems();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
