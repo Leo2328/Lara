@@ -23,7 +23,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 .msg{max-width:86%;padding:10px 14px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere}
 .me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-bottom-right-radius:4px}
 .lara{align-self:flex-start;background:var(--bubble);border-bottom-left-radius:4px}
-.err{align-self:center;color:#b3261e;font:14px system-ui,sans-serif;text-align:center}
+.err{align-self:center;max-width:100%;overflow-wrap:anywhere;color:#b3261e;font:14px system-ui,sans-serif;text-align:center}
 .empty{margin:auto;text-align:center;color:var(--muted);max-width:28ch}
 form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--surface)}
 textarea{flex:1;resize:none;max-height:120px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);color:var(--ink);font:16px/1.4 Georgia,serif}
@@ -55,8 +55,8 @@ input,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:10px;p
   <input id="key" type="password" autocomplete="off" placeholder="Pega tu clave de aistudio.google.com">
   <p class="hint">Se guarda solo en este teléfono. No la compartas ni publiques esta página con la clave puesta.</p>
   <label for="model">Modelo</label>
-  <input id="model" placeholder="gemini-flash-latest">
-  <p class="hint">Si da error de modelo, prueba otro nombre de la lista de AI Studio.</p>
+  <input id="model" placeholder="Opcional, ej: gemini-3.5-flash-lite">
+  <p class="hint">Déjalo vacío si quieres. Si un modelo falla, Lara prueba otros sola.</p>
   <label for="sys">Personalidad de Lara</label>
   <textarea id="sys" rows="6"></textarea>
   <label>Memoria de Lara</label>
@@ -110,14 +110,33 @@ function buildSys(){
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
   return s;
 }
-async function tryFetch(url,opts){
-  let res;
-  for(let i=0;i<3;i++){
-    res=await fetch(url,opts);
-    if(res.status!==503&&res.status!==429) return res;
-    await new Promise(r=>setTimeout(r,2000*(i+1)));
+const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function askGemini(key){
+  const first=[store.get("lara_model",""),store.get("lara_model_ok","")].filter(Boolean);
+  const models=[...new Set([...first,...FALLBACK])];
+  const body=JSON.stringify({systemInstruction:{parts:[{text:buildSys()}]},contents:history.slice(-30)});
+  let quota=false,busy=false;
+  for(const model of models){
+    for(let i=0;i<3;i++){
+      let res;
+      try{
+        res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body});
+      }catch(e){throw new Error("Sin conexión. Revisa tu internet e inténtalo de nuevo.")}
+      let data={};try{data=await res.json()}catch(e){}
+      if(res.ok){store.set("lara_model_ok",model);return data}
+      const msg=(data.error&&data.error.message)||"";
+      if(res.status===503){busy=true;if(i<2){await sleep(2000*(i+1));continue}break}
+      if(res.status===429){quota=true;break}
+      if(res.status===404||/no longer available|not found/i.test(msg)) break;
+      if(res.status===400&&/api key/i.test(msg)) throw new Error("La clave no es válida. Revísala en Ajustes.");
+      if(res.status===401||res.status===403) throw new Error("La clave no tiene permiso. Revísala en Ajustes.");
+      throw new Error("Error "+res.status+". Inténtalo de nuevo.");
+    }
   }
-  return res;
+  if(quota) throw new Error("Se agotó la cuota gratis de hoy. Inténtalo más tarde.");
+  if(busy) throw new Error("Google está saturado. Inténtalo en un momento.");
+  throw new Error("Ningún modelo respondió. Revisa el modelo en Ajustes.");
 }
 $("addmem").onclick=()=>{addMem($("newmem").value);$("newmem").value="";renderMems()};
 function add(role,text){
@@ -144,7 +163,7 @@ function render(){
 }
 function openCfg(){
   $("key").value=store.get("lara_key","");
-  $("model").value=store.get("lara_model","gemini-flash-latest");
+  $("model").value=store.get("lara_model","");
   $("sys").value=store.get("lara_sys",DEFAULT_SYS);
   $("cfg").classList.add("open");
   renderMems();
@@ -153,7 +172,7 @@ $("openCfg").onclick=openCfg;
 $("close").onclick=()=>{$("cfg").classList.remove("open");render()};
 $("save").onclick=()=>{
   store.set("lara_key",$("key").value.trim());
-  store.set("lara_model",$("model").value.trim()||"gemini-flash-latest");
+  store.set("lara_model",$("model").value.trim());
   store.set("lara_sys",$("sys").value.trim()||DEFAULT_SYS);
   $("cfg").classList.remove("open");render();
 };
@@ -174,17 +193,7 @@ $("f").onsubmit=async ev=>{
   const bubble=add("lara","…");
   $("send").disabled=true;
   try{
-    const model=store.get("lara_model","gemini-flash-latest");
-    const res=await tryFetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-goog-api-key":key},
-      body:JSON.stringify({
-        systemInstruction:{parts:[{text:buildSys()}]},
-        contents:history.slice(-30)
-      })
-    });
-    const data=await res.json();
-    if(!res.ok) throw new Error(data.error&&data.error.message?data.error.message:"Error "+res.status);
+    const data=await askGemini(key);
     const parts=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts;
     const reply=parts?parts.map(p=>p.text||"").join(""):"";
     if(!reply) throw new Error("Lara no devolvió respuesta. Intenta de nuevo.");
@@ -197,7 +206,7 @@ $("f").onsubmit=async ev=>{
   }catch(err){
     bubble.remove();
     history.pop();
-    add("err","No se pudo responder: "+err.message);
+    add("err",err.message);
   }
   $("send").disabled=false;
   $("chat").scrollTop=$("chat").scrollHeight;
