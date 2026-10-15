@@ -45,6 +45,7 @@ input,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:10px;p
 <div id="chat" aria-live="polite"></div>
 <form id="f">
   <textarea id="t" rows="1" placeholder="Escribe a Lara" aria-label="Mensaje"></textarea>
+  <button type="button" id="mic" aria-label="Hablar">🎤</button>
   <button class="main" id="send" type="submit">Enviar</button>
 </form>
 
@@ -62,6 +63,11 @@ input,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:10px;p
   <p class="hint">Lo que Lara recuerda de ti. Ella añade datos importantes sola; aquí puedes borrarlos o añadir otros.</p>
   <div id="mems"></div>
   <div class="row"><input id="newmem" placeholder="Ej: Me llamo Leo"><button id="addmem" type="button">Añadir</button></div>
+  <label style="display:flex;gap:8px;align-items:center"><input id="voice" type="checkbox" style="width:auto"> Lara responde en voz alta</label>
+  <label>Respaldo</label>
+  <p class="hint">Guarda la memoria y la personalidad en un archivo. No incluye tu clave.</p>
+  <div class="row"><button id="exp" type="button">Exportar</button><button id="imp" type="button">Importar</button></div>
+  <input id="impf" type="file" accept="application/json,.json" hidden>
   <div class="row">
     <button class="main" id="save" type="button">Guardar</button>
     <button id="close" type="button">Cerrar</button>
@@ -185,6 +191,7 @@ $("f").onsubmit=async ev=>{
     let clean=reply.replace(/\[\[MEMORIA:\s*([^\]]+?)\]\]/g,(m,t)=>{addMem(t);return ""}).trim();
     if(!clean) clean="Anotado.";
     bubble.textContent=clean;
+    speak(clean);
     history.push({role:"model",parts:[{text:clean}]});
     store.set("lara_hist",JSON.stringify(history.slice(-100)));
   }catch(err){
@@ -195,6 +202,41 @@ $("f").onsubmit=async ev=>{
   $("send").disabled=false;
   $("chat").scrollTop=$("chat").scrollHeight;
 };
+
+$("exp").onclick=()=>{
+  const data=JSON.stringify({lara:1,memoria:mems,personalidad:store.get("lara_sys",DEFAULT_SYS)},null,2);
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));
+  a.download="lara-respaldo.json";document.body.appendChild(a);a.click();a.remove();
+};
+$("imp").onclick=()=>$("impf").click();
+$("impf").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const d=JSON.parse(r.result);
+    if(Array.isArray(d.memoria)) d.memoria.forEach(addMem);
+    if(typeof d.personalidad==="string"&&d.personalidad.trim()){store.set("lara_sys",d.personalidad);$("sys").value=d.personalidad}
+    renderMems();alert("Respaldo importado.");
+  }catch(err){alert("El archivo no es un respaldo válido.")}};
+  r.readAsText(f);e.target.value="";
+};
+$("voice").checked=store.get("lara_voice","0")==="1";
+$("voice").onchange=e=>store.set("lara_voice",e.target.checked?"1":"0");
+function speak(t){
+  if(store.get("lara_voice","0")!=="1"||!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);u.lang="es-ES";speechSynthesis.speak(u);
+}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){$("mic").style.display="none"}else{
+  const rec=new SR();rec.lang="es-ES";rec.interimResults=false;
+  let on=false;
+  rec.onresult=e=>{$("t").value=($("t").value+" "+e.results[0][0].transcript).trim()};
+  rec.onend=()=>{on=false;$("mic").textContent="🎤"};
+  rec.onerror=()=>{on=false;$("mic").textContent="🎤"};
+  $("mic").onclick=()=>{if(on){rec.stop();return}try{rec.start();on=true;$("mic").textContent="⏹"}catch(e){}};
+}
 render();
 </script>
 </body>
