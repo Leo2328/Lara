@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v21</title>
+<title>Lara v22</title>
 <style>
 :root{color-scheme:light dark;--bg:#f2f5f4;--surface:#fff;--ink:#16211f;--muted:#5d6b68;--accent:#0f766e;--on-accent:#fff;--bubble:#e1ebe8;--line:#d5dedb;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -137,7 +137,7 @@ header button{padding:6px 10px}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 21. Incluye personalidad propia, tono que se adapta a tu ánimo, memoria emocional, saludos con iniciativa y voz con carácter.</p>
+  <p class="hint">Versión 22. Incluye personalidad propia, voz con carácter y avisos de conexión y cuota más amables, con botón para reintentar.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <label>Automejora de Lara (experimental)</label>
   <p class="hint">Carga el archivo HTML de Lara, describe la mejora y Gemini propondrá cambios concretos. Lara no se sobrescribe sola: revisas la propuesta, descargas primero un respaldo y autorizas la nueva versión. La clave no se incluye en el archivo exportado.</p>
@@ -425,7 +425,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=21;
+const APP_V=22;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -450,6 +450,16 @@ async function readStream(res,onChunk){
   }
   return {candidates:[{content:{parts:[{text:full}]},groundingMetadata:gm}]};
 }
+function mkErr(m,retry){const e=new Error(m);e.soft=true;e.retry=!!retry;return e}
+function quotaReset(){
+  try{
+    const parts=new Intl.DateTimeFormat("en-US",{timeZone:"America/Los_Angeles",hour12:false,hour:"2-digit",minute:"2-digit"}).formatToParts(new Date());
+    const h=(+parts.find(p=>p.type==="hour").value)%24,m=+parts.find(p=>p.type==="minute").value;
+    return new Date(Date.now()+((24-h)*60-m)*60000).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"});
+  }catch(e){return ""}
+}
+function retryText(t){$("t").value=t;$("f").requestSubmit()}
+window.addEventListener("online",()=>{if(window._retry){const t=window._retry;toast("Ya hay conexión otra vez. Toca aquí para reintentar tu mensaje.",true,()=>{window._retry=null;retryText(t)})}});
 async function askGemini(key,onChunk){
   const first=[store.get("lara_model",""),store.get("lara_model_ok","")].filter(Boolean);
   const hard=isHard();
@@ -458,13 +468,14 @@ async function askGemini(key,onChunk){
   const base={systemInstruction:{parts:[{text:buildSys()}]},contents:history.slice(-30)};
   let tools=forceSearch||store.get("lara_search","1")==="1";
   const wanted=tools;
-  let quota=false,busy=false;
+  let quota=false,busy=false,netFail=false;
+  if(!navigator.onLine) throw mkErr("Parece que no tengo conexión ahora mismo. Tu mensaje no se perdió: cuando vuelva el internet, toca Reintentar.",true);
   for(const model of models){
     for(let i=0;i<3;i++){
       let res;
       try{
         res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":streamGenerateContent?alt=sse",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({...base,...(tools?{tools:[{google_search:{}}]}:{}),...(think?{generationConfig:{thinkingConfig:{thinkingBudget:1024}}}:{})}),signal:ctrl?ctrl.signal:undefined});
-      }catch(e){if(e&&e.name==="AbortError") throw new Error("Detenido.");throw new Error("Sin conexión. Revisa tu internet e inténtalo de nuevo.")}
+      }catch(e){if(e&&e.name==="AbortError") throw new Error("Detenido.");netFail=true;if(i<1){await sleep(1500);continue}break}
       if(res.ok){const dd=await readStream(res,onChunk);store.set("lara_model_ok",model);bump(model);if(wanted&&!tools) dd._ns=1;return dd}
       let data={};try{data=await res.json()}catch(e){}
       if(res.ok){store.set("lara_model_ok",model);if(wanted&&!tools) data._ns=1;return data}
@@ -479,8 +490,9 @@ async function askGemini(key,onChunk){
       throw new Error("Error "+res.status+". Inténtalo de nuevo.");
     }
   }
-  if(quota) throw new Error("Se agotó la cuota gratis de hoy. Inténtalo más tarde.");
-  if(busy) throw new Error("Google está saturado. Inténtalo en un momento.");
+  if(quota){const q=quotaReset();throw mkErr("Hoy ya gasté la cuota gratis de Gemini 🌙"+(q?" Se renueva sobre las "+q+".":" Se renueva más tarde.")+" Mientras tanto puedes usar tus notas, tareas, hábitos y recordatorios, que no gastan cuota.",true)}
+  if(busy) throw mkErr("Google está muy ocupado ahora. Dame un momento y reintenta.",true);
+  if(netFail) throw mkErr("No logré hablar con Gemini esta vez. Suele pasar si Google está saturado o la cuota se está acabando. Espera un poco y reintenta.",true);
   throw new Error("Ningún modelo respondió. Revisa el modelo en Ajustes.");
 }
 $("addmem").onclick=()=>{addMem($("newmem").value);$("newmem").value="";renderMems()};
@@ -542,6 +554,7 @@ $("f").onsubmit=async ev=>{
   let text=$("t").value.trim();
   if(!text&&!pendingImg&&!pendingTxt) return;
   if(!text) text=pendingTxt?"Resume este archivo.":"Describe esta imagen.";
+  window._retry=null;
   const key=store.get("lara_key","");
   if(!key){add("err","Falta la clave. Ábrela en Ajustes.");return}
   $("t").value="";$("t").style.height="auto";
@@ -588,7 +601,15 @@ $("f").onsubmit=async ev=>{
   }catch(err){
     bubble.remove();
     history.pop();
-    add("err",err.message);
+    const el=add("err",err.message);
+    if(err.soft&&el) el.style.color="var(--muted)";
+    if(err.retry&&el){
+      window._retry=text;
+      const b=document.createElement("button");b.type="button";b.textContent="Reintentar";
+      b.style.cssText="display:block;margin:8px auto 0";
+      b.onclick=()=>{el.remove();window._retry=null;retryText(text)};
+      el.appendChild(b);
+    }
     if(hfActive&&recStart) setTimeout(recStart,800);
   }
   $("send").type="submit";$("send").textContent="Enviar";$("send").onclick=null;ctrl=null;forceSearch=false;
