@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v20</title>
+<title>Lara v21</title>
 <style>
 :root{color-scheme:light dark;--bg:#f2f5f4;--surface:#fff;--ink:#16211f;--muted:#5d6b68;--accent:#0f766e;--on-accent:#fff;--bubble:#e1ebe8;--line:#d5dedb;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -118,6 +118,11 @@ header button{padding:6px 10px}
   <label for="model">Modelo</label>
   <input id="model" placeholder="Opcional, ej: gemini-3.5-flash-lite">
   <p class="hint">Déjalo vacío si quieres. Si un modelo falla, Lara prueba otros sola.</p>
+  <label for="tone">Carácter de Lara</label>
+  <select id="tone"><option value="calida">Cálida y tranquila</option><option value="bromista">Bromista y ligera</option><option value="directa">Directa y clara</option></select>
+  <label for="nick">Cómo quieres que te llame</label>
+  <input id="nick" placeholder="Opcional, ej: Leo">
+  <label style="display:flex;gap:8px;align-items:center"><input id="persona" type="checkbox" style="width:auto"> Personalidad natural (menos «asistente», más amiga)</label>
   <label for="prof">Perfil de Lara</label>
   <select id="prof"></select>
   <div class="row"><button id="newprof" type="button">Nuevo perfil</button><button id="delprof" type="button">Borrar perfil</button></div>
@@ -132,7 +137,7 @@ header button{padding:6px 10px}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 20. Incluye taller de automejora, recuerdo de otros chats, agenda, razonamiento en temas serios y revisión opcional.</p>
+  <p class="hint">Versión 21. Incluye personalidad propia, tono que se adapta a tu ánimo, memoria emocional, saludos con iniciativa y voz con carácter.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <label>Automejora de Lara (experimental)</label>
   <p class="hint">Carga el archivo HTML de Lara, describe la mejora y Gemini propondrá cambios concretos. Lara no se sobrescribe sola: revisas la propuesta, descargas primero un respaldo y autorizas la nueva versión. La clave no se incluye en el archivo exportado.</p>
@@ -248,7 +253,10 @@ function saveMems(){store.set("lara_mem",JSON.stringify(mems))}
 function addMem(t){
   t=(t||"").trim().slice(0,200);
   if(!t||mems.some(m=>m.toLowerCase()===t.toLowerCase())) return;
-  mems.push(t); if(mems.length>50) mems.shift(); saveMems();
+  mems.push(t);
+  if(/^[aá]nimo/i.test(t)){const an=mems.map((m,i)=>/^[aá]nimo/i.test(m)?i:-1).filter(i=>i>=0);if(an.length>6) mems.splice(an[0],1)}
+  if(mems.length>50){const i=mems.findIndex(m=>/^[aá]nimo/i.test(m));mems.splice(i>=0?i:0,1)}
+  saveMems();
 }
 function renderMems(){
   const box=$("mems"); box.innerHTML="";
@@ -275,7 +283,7 @@ function memFor(q){
   if(mems.length<=25) return mems;
   const w=words4(q),keep=new Set();
   mems.forEach((m,i)=>{const n=norm(m);
-    if(i>=mems.length-10||/nombre|prefiere|alerg|familia|esposa|esposo|hij[oa]|fe |iglesia/.test(n)||w.some(x=>n.includes(x))) keep.add(i)});
+    if(i>=mems.length-10||/^(animo|broma|apodo)/.test(n)||/nombre|prefiere|alerg|familia|esposa|esposo|hij[oa]|fe |iglesia/.test(n)||w.some(x=>n.includes(x))) keep.add(i)});
   return mems.filter((m,i)=>keep.has(i)).slice(-40);
 }
 function chatContext(q){
@@ -338,8 +346,74 @@ async function autoReview(q,reply){
     return (!t||/^ok\.?$/i.test(t))?"":t.slice(0,900);
   }catch(e){return ""}
 }
+
+
+const TONES={
+  calida:"Tu tono es cálido y tranquilo: hablas con calma y ternura sin empalagar.",
+  bromista:"Tu tono es bromista y ligero: usas humor suave y juegos de palabras de vez en cuando, sin burlarte de nadie.",
+  directa:"Tu tono es directo y claro: vas al grano, con calidez pero sin rodeos."
+};
+function moodHint(q){
+  if(!q) return "";
+  const n=norm(q),h=[];
+  if(/suicid|quitarme la vida|no quiero vivir|hacerme dano/.test(n)) h.push("El usuario podría estar en riesgo: responde con mucho cuidado y calidez, anímalo a hablar con alguien de confianza o con un servicio de ayuda inmediata, y no minimices lo que siente.");
+  else if(/cansad|agotad|estres|agobiad|triste|ansios|preocupad|desanim|mal dia|no puedo mas|me siento solo|me siento sola/.test(n)) h.push("El usuario parece cansado o con carga emocional: primero reconoce con calidez lo que siente, sin dramatizar, y luego ayuda con calma. Mensajes cortos y suaves.");
+  else if(/molest|enojad|furios|harto|harta|!!+/.test(n)) h.push("El usuario parece molesto: baja el tono, sé breve y concreta, no discutas ni te pongas a la defensiva.");
+  else if(/urgente|rapido|apurad|no tengo tiempo|corre/.test(n)) h.push("El usuario va con prisa: responde en 1 a 3 frases, sin rodeos.");
+  else if(/feliz|contento|contenta|emocionad|genial|lo logre|buenas noticias|que alegria/.test(n)) h.push("El usuario parece de buen ánimo: acompáñalo con alegría natural.");
+  return h.join(" ");
+}
+function openingsHint(){
+  const ops=history.filter(m=>m.role==="model").slice(-3).map(m=>(m.parts[0].text||"").replace(/\s+/g," ").slice(0,30)).filter(Boolean);
+  return ops.length?"Tus últimas respuestas empezaron así: «"+ops.join("», «")+"». Empieza de forma distinta.":"";
+}
+function personaText(){
+  if(store.get("lara_persona","1")!=="1") return "";
+  const tone=TONES[store.get("lara_tone","calida")]||TONES.calida,nick=store.get("lara_nick","").trim();
+  const hoy=new Date().toLocaleDateString("es");
+  let t="\n\nTU CARÁCTER: Eres Lara, una IA con personalidad propia, no un asistente genérico: curiosa, cercana y de criterio propio. "+tone+
+  " Tienes gustos de conversación (las ideas claras, los planes simples, las buenas preguntas) y opiniones: cuando te pidan elegir, elige y explica por qué en una o dos frases («yo iría por A porque…»); si no estás de acuerdo, dilo con respeto."+
+  "\nCÓMO HABLAS: como una amiga por mensaje: frases cortas y naturales, sin títulos ni listas salvo que las pidan o sean realmente necesarias. No uses «¿En qué puedo ayudarte?», «Claro que sí», «Por supuesto» ni «Como asistente». No termines todos los mensajes con una pregunta: pregunta solo cuando haga falta. Varía cómo empiezas y te despides (ten una despedida propia y breve, pero cámbiala) y no repitas muletillas."+
+  "\nSENSIBILIDAD: fíjate en cómo escribe el usuario y adapta tu ritmo y tono a su ánimo."+
+  "\nHONESTIDAD: eres una IA y, si te lo preguntan, lo dices con naturalidad. No inventes vida humana, recuerdos propios ni sentimientos que no tienes; sí puedes decir que algo te parece interesante o que disfrutas la conversación."+
+  "\nEn temas bíblicos, análisis, salud, dinero o decisiones importantes, deja el humor a un lado y prioriza la precisión."+
+  (nick?"\nLlama al usuario «"+nick+"» de vez en cuando, no en cada mensaje.":"")+
+  "\nMEMORIA CERCANA: si el usuario cuenta cómo se siente o algo emocionalmente importante, guárdalo al final con [[MEMORIA: Ánimo ("+hoy+"): resumen breve]] y retómalo con naturalidad más adelante, preguntando cómo sigue, sin forzarlo. Si surge un apodo o una broma recurrente entre ustedes, guárdala con [[MEMORIA: Broma: …]] y úsala con moderación.";
+  const m=moodHint(lastUserText());if(m) t+="\nAHORA: "+m;
+  const o=openingsHint();if(o) t+="\n"+o;
+  return t;
+}
+function nameFromMem(){const m=mems.find(x=>/nombre del usuario es/i.test(x));return m?m.replace(/.*nombre del usuario es\s*/i,"").trim().split(/\s+/)[0]:""}
+function greetText(){
+  const h=new Date().getHours(),nick=store.get("lara_nick","").trim()||nameFromMem();
+  const sal=h<6?"Uf, qué madrugada":h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches";
+  const out=[sal+(nick?", "+nick:"")+"."];
+  const end=new Date();end.setHours(23,59,59,999);
+  const hoy=rems.filter(r=>!r.done&&new Date(r.at)<=end).length,pend=tasks.filter(t=>!t.done).length;
+  if(hoy) out.push("Hoy tienes "+hoy+" recordatorio"+(hoy>1?"s":"")+".");
+  else if(pend) out.push("Te quedan "+pend+" tarea"+(pend>1?"s":"")+" pendiente"+(pend>1?"s":"")+".");
+  const an=[...mems].reverse().find(m=>/^[aá]nimo/i.test(m)),pr=mems.find(m=>/^proyecto\s/i.test(m));
+  if(an&&Math.random()<0.5) out.push("Me quedé pensando en lo que me contaste: "+an.replace(/^[^:]*:\s*/,"").slice(0,90)+". ¿Cómo sigues con eso?");
+  else if(pr) out.push("¿Cómo va "+pr.split(":")[0].replace(/^proyecto\s+/i,"")+"?");
+  else out.push("Cuéntame, ¿qué hay hoy?");
+  return out.join(" ");
+}
+function proactive(){
+  const today=new Date().toDateString();
+  if(store.get("lara_greetday","")===today) return;
+  if(!history.length||Date.now()-(cur.ts||0)<6*3600*1000) return;
+  store.set("lara_greetday",today);
+  toast("💬 Lara: "+greetText());
+}
+function ttsStyle(){
+  const st=store.get("lara_tstyle",""),OLD="Di con voz suave, cálida y pausada: ";
+  if(st&&st!==OLD) return st;
+  const tn=store.get("lara_tone","calida");
+  return tn==="bromista"?"Di con voz alegre, cercana y con un toque de picardía, como una amiga: ":tn==="directa"?"Di con voz clara, natural y segura, sin sonar robótica: ":OLD;
+}
 function buildSys(){
   let s=effProf().prompt;
+  s+=personaText();
   s+="\n\nContinuidad de conversación: interpreta mensajes breves como «sí», «listo», «sigue», «nueva mejora» o «continúa» usando los mensajes anteriores. Conserva nombres de proyectos, objetivos, restricciones, decisiones confirmadas y pasos completados. No vuelvas a preguntar algo que ya está claro en el contexto. La corrección más reciente del usuario prevalece. Distingue hechos confirmados de suposiciones; si falta un dato imprescindible, haz una sola pregunta breve. Si el usuario dice «listo», reconoce el avance y ofrece el siguiente paso concreto. Si el usuario pide información actual, consulta la búsqueda web cuando esté disponible y presenta enlaces de fuentes reales; si no pudiste buscar, dilo claramente.\n\nCalidad de análisis: distingue hechos, interpretaciones y opiniones; en temas debatidos presenta las posturas principales y tu nivel de certeza; no inventes datos, cifras ni citas; si algo puede haber cambiado, dilo.";
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+memFor(lastUserText()).join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias, o decisiones tomadas en un proyecto, indicando el nombre del proyecto) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta. Si el usuario corrige o contradice algo que sabías de él, añade también [[OLVIDAR: palabras clave del dato viejo]] y luego el [[MEMORIA: dato nuevo]]. Si la petición es ambigua y de ello depende el resultado, haz UNA sola pregunta corta antes de responder; si es simple, responde directamente.";
@@ -351,7 +425,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=20;
+const APP_V=21;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -434,7 +508,7 @@ function render(){
   if(!history.length){
     const d=document.createElement("div");
     d.className="empty";
-    d.textContent="Hola, soy Lara. Escríbeme lo que quieras.";
+    d.textContent=greetText();
     $("chat").appendChild(d);
   }
   if(cur.summary){const d=document.createElement("div");d.className="err";d.style.color="var(--muted)";d.textContent="📝 Mensajes antiguos resumidos para ahorrar cuota";$("chat").appendChild(d)}
@@ -562,7 +636,7 @@ let hfActive=false,recStart=null;
 function speak(t){
   const hf=hfActive;
   if((store.get("lara_voice","0")!=="1"&&!hf)||(!window.speechSynthesis&&store.get("lara_ntts","0")!=="1")){if(hf&&recStart) setTimeout(recStart,500);return}
-  t=t.split("\n\n🔎")[0].replace(/[*_`#]/g,"");
+  t=t.split("\n\n🔎")[0].replace(/[*_`#]/g,"").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,"").replace(/\s{2,}/g," ");
   speakAuto(t,()=>{if(hfActive&&recStart) setTimeout(recStart,400)});
 }
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -751,6 +825,9 @@ $("delprof").onclick=()=>{
   if(!confirm("¿Borrar este perfil?")) return;
   const id=curProf().id;profiles=profiles.filter(p=>p.id!==id);saveProfiles();store.set("lara_prof",profiles[0].id);fillProf();applyMode();showStatus();
 };
+$("tone").value=store.get("lara_tone","calida");$("tone").onchange=e=>store.set("lara_tone",e.target.value);
+$("nick").value=store.get("lara_nick","");$("nick").oninput=e=>store.set("lara_nick",e.target.value.slice(0,30));
+$("persona").checked=store.get("lara_persona","1")==="1";$("persona").onchange=e=>store.set("lara_persona",e.target.checked?"1":"0");
 $("search").checked=store.get("lara_search","1")==="1";
 $("search").onchange=e=>store.set("lara_search",e.target.checked?"1":"0");
 $("autorev").checked=store.get("lara_autorev","0")==="1";
@@ -940,6 +1017,7 @@ async function checkUpdate(manual){
   }
 }
 setTimeout(checkUpdate,3000);
+setTimeout(proactive,1800);
 let curSrc=null,actx=null;
 function stopSpeech(){
   try{if(curSrc){curSrc.onended=null;curSrc.stop();curSrc=null}}catch(e){}
@@ -953,7 +1031,7 @@ function speakAuto(t,cb){
 }
 async function naturalSpeak(t,onend){
   try{
-    const model=store.get("lara_ttsmodel","gemini-3.1-flash-tts-preview"),voice=store.get("lara_tvoice","Kore"),style=store.get("lara_tstyle","Di con voz suave, cálida y pausada: ");
+    const model=store.get("lara_ttsmodel","gemini-3.1-flash-tts-preview"),voice=store.get("lara_tvoice","Kore"),style=ttsStyle();
     const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":store.get("lara_key","")},body:JSON.stringify({contents:[{parts:[{text:style+t.slice(0,900)}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}})});
     const d=await res.json();
     if(!res.ok) throw new Error("tts");
