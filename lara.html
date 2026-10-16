@@ -70,7 +70,7 @@ input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius
   <div id="rlist"></div>
   <input id="remtext" placeholder="¿Qué quieres recordar?">
   <input id="remat" type="datetime-local" style="margin-top:8px">
-  <div class="row"><button class="main" id="addrem" type="button">Añadir recordatorio</button><button id="closeNotes" type="button">Cerrar</button></div>
+  <div class="row"><button class="main" id="addrem" type="button">Añadir recordatorio</button><button id="testrem" type="button">Probar aviso</button><button id="closeNotes" type="button">Cerrar</button></div>
 </section>
 <section id="cfg" aria-label="Ajustes">
   <h1>Ajustes</h1>
@@ -137,7 +137,7 @@ function buildSys(){
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+mems.join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
   const now=new Date();
-  s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas.";
+  s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas. Nunca afirmes que enviaste un aviso, alarma o notificación: los recordatorios los dispara la aplicación. Solo confirma que quedó guardado.";
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
@@ -234,7 +234,7 @@ $("f").onsubmit=async ev=>{
     let extra=[];
     let clean=reply.replace(/\[\[MEMORIA:\s*([^\]]+?)\]\]/g,(m,t)=>{addMem(t);return ""})
       .replace(/\[\[NOTA:\s*([^\]]+?)\]\]/g,(m,t)=>{addNote(t);extra.push("📝 Nota guardada");return ""})
-      .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{addRem(at,t);extra.push("⏰ Recordatorio guardado");return ""}).trim();
+      .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{extra.push(addRem(at,t));return ""}).trim();
     if(!clean) clean="Listo.";
     if(extra.length) clean+="\n\n"+extra.join(" · ");
     bubble.textContent=clean;
@@ -333,10 +333,13 @@ function saveRems(){store.set("lara_rem",JSON.stringify(rems))}
 function addNote(t){t=(t||"").trim().slice(0,1000);if(!t)return;notes.push(t);if(notes.length>100)notes.shift();saveNotes()}
 function addRem(at,text){
   text=(text||"").trim().slice(0,200);
-  if(!text||isNaN(new Date(at).getTime())) return;
+  const d=new Date(at);
+  if(!text||isNaN(d.getTime())) return "⚠️ No pude guardar el recordatorio: fecha inválida";
+  if(d.getTime()<=Date.now()) return "⚠️ No lo guardé: esa hora ya pasó";
   rems.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),text,at,done:false});saveRems();
+  return "⏰ Guardado para "+d.toLocaleString("es",{dateStyle:"medium",timeStyle:"short"});
 }
-function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display="none",8000);t.onclick=()=>t.style.display="none"}
+function toast(m,sticky){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);if(!sticky) toast.h=setTimeout(()=>t.style.display="none",8000);t.onclick=()=>t.style.display="none"}
 function btn(label,fn){const b=document.createElement("button");b.type="button";b.textContent=label;b.onclick=fn;return b}
 function row(text,btns){
   const d=document.createElement("div");d.className="mem";
@@ -366,7 +369,9 @@ function renderNotes(){
 }
 function askPerm(){try{if("Notification" in window&&Notification.permission==="default") Notification.requestPermission()}catch(e){}}
 function notify(t){
-  toast("⏰ "+t);
+  toast("⏰ "+t+"  (toca para cerrar)",true);
+  try{navigator.vibrate&&navigator.vibrate([300,150,300,150,300])}catch(e){}
+  try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.2;o.start();o.stop(c.currentTime+.6)}catch(e){}
   if(!("Notification" in window)||Notification.permission!=="granted") return;
   const fb=()=>{try{new Notification("Lara",{body:t})}catch(e){}};
   if(navigator.serviceWorker&&navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r=>r.showNotification("Lara",{body:t,icon:"icon-192.png"})).catch(fb); else fb();
@@ -386,6 +391,8 @@ $("addrem").onclick=()=>{
   addRem(at,t);$("remtext").value="";$("remat").value="";askPerm();renderNotes();
 };
 setInterval(checkRems,15000);checkRems();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden) checkRems()});
+$("testrem").onclick=()=>{askPerm();notify("Prueba: así se verá tu aviso")};
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
