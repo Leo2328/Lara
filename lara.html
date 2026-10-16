@@ -43,9 +43,11 @@ input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius
 #notes,#chats{position:fixed;inset:0;background:var(--bg);padding:16px;overflow-y:auto;display:none;padding-top:calc(16px + env(safe-area-inset-top,0px))}
 #notes.open,#chats.open{display:block}
 header button{padding:6px 10px}
-#study{display:none;gap:6px;padding:6px 12px;background:var(--surface);border-top:1px solid var(--line);overflow-x:auto}
-#study.on{display:flex}
-#study button{white-space:nowrap;font-size:13px}
+#study,#shorts{display:none;gap:6px;padding:6px 12px;background:var(--surface);border-top:1px solid var(--line);overflow-x:auto}
+#study.on,#shorts.on{display:flex}
+.acts{display:flex;gap:6px;margin-top:6px}
+.acts button{font-size:12px;padding:3px 8px}
+#study button,#shorts button{white-space:nowrap;font-size:13px}
 #toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));background:var(--accent);color:var(--on-accent);padding:12px 14px;border-radius:12px;font:15px system-ui,sans-serif;z-index:50;display:none}
 .cp{display:block;margin-top:6px;font-size:12px;padding:3px 8px}
 .msg code{background:rgba(127,127,127,.2);padding:1px 4px;border-radius:4px;font-family:monospace;font-size:.9em}
@@ -60,8 +62,9 @@ header button{padding:6px 10px}
   <div style="display:flex;gap:6px"><button id="openChats" type="button">Chats</button><button id="openNotes" type="button">Notas</button><button id="openCfg" type="button">Ajustes</button></div>
 </header>
 <div id="chat" aria-live="polite"></div>
+<div id="shorts"></div>
 <div id="study"><button type="button" data-t="Explícame este pasaje: ">Explicar pasaje</button><button type="button" data-t="Dame el contexto histórico de: ">Contexto</button><button type="button" data-t="Compara las lecturas preterista, historicista, futurista e idealista de: ">Comparar enfoques</button></div>
-<div id="chip"><span>🖼️ Imagen adjunta</span><button id="rmimg" type="button">Quitar</button></div>
+<div id="chip"><span id="chiptxt">🖼️ Imagen adjunta</span><button id="rmimg" type="button">Quitar</button></div>
 <form id="f">
   <textarea id="t" rows="1" placeholder="Escribe a Lara" aria-label="Mensaje"></textarea>
   <button type="button" id="attach" aria-label="Adjuntar imagen">📎</button>
@@ -99,8 +102,11 @@ header button{padding:6px 10px}
   <p class="hint">Déjalo vacío si quieres. Si un modelo falla, Lara prueba otros sola.</p>
   <label for="sys">Personalidad de Lara</label>
   <textarea id="sys" rows="6"></textarea>
+  <label>Atajos (frases rápidas)</label>
+  <div id="slist"></div>
+  <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 7. Si la app instalada muestra algo viejo, toca Actualizar.</p>
+  <p class="hint">Versión 8. Si la app instalada muestra algo viejo, toca Actualizar.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button></div>
   <label for="mode">Modo</label>
   <select id="mode"><option value="general">General</option><option value="biblia">Estudio bíblico</option></select>
@@ -122,7 +128,7 @@ header button{padding:6px 10px}
   <label>Respaldo</label>
   <p class="hint">Guarda la memoria y la personalidad en un archivo. No incluye tu clave.</p>
   <div class="row"><button id="exp" type="button">Exportar</button><button id="imp" type="button">Importar</button></div>
-  <input id="imgf" type="file" accept="image/*" hidden>
+  <input id="imgf" type="file" accept="image/*,application/pdf,.txt,.md,.csv,.json" hidden>
   <input id="impf" type="file" accept="application/json,.json" hidden>
   <div class="row">
     <button class="main" id="save" type="button">Guardar</button>
@@ -144,7 +150,7 @@ try{chats=JSON.parse(store.get("lara_chats","[]"))||[]}catch(e){chats=[]}
 if(!chats.length){let old=[];try{old=JSON.parse(store.get("lara_hist","[]"))||[]}catch(e){}chats=[{id:uid(),title:"Conversación",ts:Date.now(),msgs:old}]}
 cur=chats.find(c=>c.id===store.get("lara_cur",""))||chats[chats.length-1];
 let history=cur.msgs;
-function saveChats(){cur.ts=Date.now();store.set("lara_chats",JSON.stringify(chats.slice(-60).map(c=>({id:c.id,title:c.title,ts:c.ts,msgs:c.msgs.slice(-100)}))));store.set("lara_cur",cur.id)}
+function saveChats(){cur.ts=Date.now();store.set("lara_chats",JSON.stringify(chats.slice(-60).map(c=>({id:c.id,title:c.title,ts:c.ts,msgs:c.msgs.slice(-100),summary:c.summary}))));store.set("lara_cur",cur.id)}
 
 let mems=[];
 try{mems=JSON.parse(store.get("lara_mem","[]"))||[]}catch(e){mems=[]}
@@ -170,6 +176,7 @@ function buildSys(){
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+mems.join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
   if(store.get("lara_mode","general")==="biblia") s+="\n\nMODO ESTUDIO BÍBLICO: cita siempre libro, capítulo y versículo. Si citas el texto, hazlo en pocas palabras e indica la versión; si no, parafrasea. Distingue lo que dice el texto de lo que interpretan las tradiciones, presenta las lecturas principales (preterista, historicista, futurista, idealista) y di cuál tiene mejor sustento sin imponerla. No señales a personas actuales ni fijes fechas. Nunca inventes versículos: si no estás segura, dilo y pídeme que lo verifique en mi Biblia.";
+  if(cur.summary) s+="\n\nResumen de lo anterior en esta conversación: "+cur.summary;
   const now=new Date();
   s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas. Nunca afirmes que enviaste un aviso, alarma o notificación: los recordatorios los dispara la aplicación. Solo confirma que quedó guardado.";
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
@@ -255,7 +262,9 @@ function render(){
     d.textContent="Hola, soy Lara. Escríbeme lo que quieras.";
     $("chat").appendChild(d);
   }
+  if(cur.summary){const d=document.createElement("div");d.className="err";d.style.color="var(--muted)";d.textContent="📝 Mensajes antiguos resumidos para ahorrar cuota";$("chat").appendChild(d)}
   history.forEach(m=>add(m.role==="user"?"user":"lara",m.parts[0].text));
+  addActions();
   showStatus();
 }
 function openCfg(){
@@ -281,16 +290,20 @@ $("t").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.
 $("f").onsubmit=async ev=>{
   ev.preventDefault();
   let text=$("t").value.trim();
-  if(!text&&!pendingImg) return;
-  if(!text) text="Describe esta imagen.";
+  if(!text&&!pendingImg&&!pendingTxt) return;
+  if(!text) text=pendingTxt?"Resume este archivo.":"Describe esta imagen.";
   const key=store.get("lara_key","");
   if(!key){add("err","Falta la clave. Ábrela en Ajustes.");return}
   $("t").value="";$("t").style.height="auto";
   if(!history.length) cur.title=text.slice(0,40);
-  const uparts=[{text}];
-  if(pendingImg) uparts.push({inlineData:{mimeType:"image/jpeg",data:pendingImg}});
-  history.push({role:"user",parts:uparts});
-  add("user",pendingImg?text+" 🖼️":text);
+  const sendText=(pendingTxt&&pendingTxt.text)?text+"\n\n[Archivo: "+pendingTxt.name+"]\n"+pendingTxt.text:text;
+  const uparts=[{text:sendText}];
+  if(pendingImg) uparts.push({inlineData:{mimeType:pendingMime,data:pendingImg}});
+  const entry={role:"user",parts:uparts};
+  if(pendingTxt&&pendingTxt.text) entry.short=text+" [archivo: "+pendingTxt.name+"]";
+  history.push(entry);
+  add("user",(pendingImg||pendingTxt)?text+" 📎":text);
+  document.querySelectorAll(".acts").forEach(x=>x.remove());
   const bubble=add("lara","…");
   $("send").disabled=true;
   try{
@@ -309,8 +322,8 @@ $("f").onsubmit=async ev=>{
     speak(clean);
     history.push({role:"model",parts:[{text:clean}]});
     clearImg();
-    history.forEach(m=>{if(m.parts.some(p=>p.inlineData)) m.parts=[{text:m.parts[0].text+" [imagen]"}]});
-    saveChats();showStatus();
+    history.forEach(m=>{if(m.short){m.parts=[{text:m.short}];delete m.short}else if(m.parts.some(p=>p.inlineData)) m.parts=[{text:m.parts[0].text+" [adjunto]"}]});
+    saveChats();showStatus();addActions();compact().then(ok=>{if(ok) render()});
   }catch(err){
     bubble.remove();
     history.pop();
@@ -361,21 +374,33 @@ if(!SR){$("mic").style.display="none"}else{
   rec.onerror=()=>{on=false;$("mic").textContent="🎤"};
   $("mic").onclick=()=>{if(on){rec.stop();return}try{rec.start();on=true;$("mic").textContent="⏹"}catch(e){}};
 }
-let pendingImg=null;
-function clearImg(){pendingImg=null;$("chip").classList.remove("on")}
+let pendingImg=null,pendingMime="image/jpeg",pendingTxt=null;
+function clearImg(){pendingImg=null;pendingTxt=null;pendingMime="image/jpeg";$("chip").classList.remove("on")}
 $("attach").onclick=()=>$("imgf").click();
 $("imgf").onchange=e=>{
-  const f=e.target.files[0];e.target.value="";if(!f)return;
-  const img=new Image();
-  img.onload=()=>{
-    const k=Math.min(1,1280/Math.max(img.width,img.height));
-    const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
-    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-    pendingImg=c.toDataURL("image/jpeg",0.8).split(",")[1];
-    $("chip").classList.add("on");URL.revokeObjectURL(img.src);
-  };
-  img.onerror=()=>alert("No se pudo leer la imagen.");
-  img.src=URL.createObjectURL(f);
+  const f=e.target.files[0];e.target.value="";if(!f) return;
+  const lab=$("chiptxt");
+  if(f.type.startsWith("image/")){
+    const img=new Image();
+    img.onload=()=>{
+      const k=Math.min(1,1280/Math.max(img.width,img.height));
+      const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      pendingImg=c.toDataURL("image/jpeg",0.8).split(",")[1];pendingMime="image/jpeg";pendingTxt=null;
+      lab.textContent="🖼️ Imagen adjunta";$("chip").classList.add("on");URL.revokeObjectURL(img.src);
+    };
+    img.onerror=()=>alert("No se pudo leer la imagen.");
+    img.src=URL.createObjectURL(f);
+  }else if(f.type==="application/pdf"){
+    if(f.size>8e6){toast("El PDF es muy grande (máximo 8 MB).");return}
+    const r=new FileReader();
+    r.onload=()=>{pendingImg=r.result.split(",")[1];pendingMime="application/pdf";pendingTxt={name:f.name};lab.textContent="📄 "+f.name;$("chip").classList.add("on")};
+    r.readAsDataURL(f);
+  }else{
+    const r=new FileReader();
+    r.onload=()=>{pendingImg=null;pendingTxt={name:f.name,text:String(r.result).slice(0,60000)};lab.textContent="📄 "+f.name;$("chip").classList.add("on")};
+    r.readAsText(f);
+  }
 };
 $("rmimg").onclick=clearImg;
 (function(){
@@ -538,6 +563,48 @@ $("upd").onclick=async()=>{
   }catch(e){}
   location.href=location.pathname+"?u="+Date.now();
 };
+async function compact(){
+  if(history.length<=40) return false;
+  const h=history,c=cur,old=h.splice(0,h.length-14);
+  const txt=old.map(m=>(m.role==="user"?"Usuario: ":"Lara: ")+(m.parts[0].text||"")).join("\n").slice(-20000);
+  const model=store.get("lara_model_ok","")||"gemini-3.5-flash-lite";
+  try{
+    const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":store.get("lara_key","")},body:JSON.stringify({contents:[{role:"user",parts:[{text:"Resume en español, en máximo 180 palabras, los datos y temas importantes de esta conversación. Incluye lo esencial del resumen previo.\n\nResumen previo: "+(c.summary||"ninguno")+"\n\nConversación:\n"+txt}]}]})});
+    const d=await res.json();
+    const r=(((d.candidates||[])[0].content||{}).parts||[]).map(p=>p.text||"").join("").trim();
+    if(!res.ok||!r) throw new Error("x");
+    c.summary=r.slice(0,1500);bump(model);saveChats();showStatus();return true;
+  }catch(e){h.unshift(...old);return false}
+}
+function redo(auto){
+  if(history.length<2||history[history.length-1].role!=="model") return;
+  const t=(history[history.length-2].parts[0].text||"").replace(/\s*\[(imagen|adjunto|archivo:[^\]]*)\]$/,"");
+  history.length-=2;saveChats();render();
+  $("t").value=t;$("t").focus();
+  if(auto) $("f").requestSubmit();
+}
+function addActions(){
+  document.querySelectorAll(".acts").forEach(x=>x.remove());
+  if(history.length<2||history[history.length-1].role!=="model") return;
+  const bs=document.querySelectorAll("#chat .lara"),last=bs[bs.length-1];if(!last) return;
+  const a=document.createElement("div");a.className="acts";
+  a.append(btn("Regenerar",()=>redo(true)),btn("Editar mi mensaje",()=>redo(false)));
+  last.appendChild(a);
+}
+let shorts=null;
+try{shorts=JSON.parse(store.get("lara_short","null"))}catch(e){}
+if(!Array.isArray(shorts)){shorts=["Resume esto en 3 puntos: ","Tradúcelo al inglés: ","Explícamelo más simple: "];store.set("lara_short",JSON.stringify(shorts))}
+function saveShorts(){store.set("lara_short",JSON.stringify(shorts))}
+function renderShorts(){
+  const bar=$("shorts");bar.innerHTML="";
+  shorts.forEach(t=>bar.appendChild(btn(t.trim().slice(0,24),()=>{$("t").value=($("t").value?$("t").value+" ":"")+t;$("t").focus()})));
+  bar.classList.toggle("on",shorts.length>0);
+  const sl=$("slist");sl.innerHTML="";
+  shorts.forEach((t,i)=>sl.appendChild(row(t,[btn("Borrar",()=>{shorts.splice(i,1);saveShorts();renderShorts()})])));
+}
+$("addshort").onclick=()=>{const v=$("newshort").value.trim().slice(0,200);if(!v) return;shorts.push(v);saveShorts();$("newshort").value="";renderShorts()};
+renderShorts();
+addActions();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
