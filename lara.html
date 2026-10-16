@@ -99,6 +99,9 @@ header button{padding:6px 10px}
   <p class="hint">Déjalo vacío si quieres. Si un modelo falla, Lara prueba otros sola.</p>
   <label for="sys">Personalidad de Lara</label>
   <textarea id="sys" rows="6"></textarea>
+  <label>Versión de la app</label>
+  <p class="hint">Versión 7. Si la app instalada muestra algo viejo, toca Actualizar.</p>
+  <div class="row"><button id="upd" type="button">Actualizar app</button></div>
   <label for="mode">Modo</label>
   <select id="mode"><option value="general">General</option><option value="biblia">Estudio bíblico</option></select>
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
@@ -528,6 +531,13 @@ $("rmpin").onclick=()=>{store.set("lara_pin","");toast("PIN quitado.")};
 let hiddenAt=0;
 document.addEventListener("visibilitychange",()=>{if(document.hidden) hiddenAt=Date.now(); else if(hiddenAt&&Date.now()-hiddenAt>60000) lockOn()});
 lockOn();
+$("upd").onclick=async()=>{
+  try{
+    const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()));
+    const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)));
+  }catch(e){}
+  location.href=location.pathname+"?u="+Date.now();
+};
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
