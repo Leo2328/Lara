@@ -7,66 +7,91 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v22</title>
+<title>Lara v24</title>
 <style>
-:root{color-scheme:light dark;--bg:#f2f5f4;--surface:#fff;--ink:#16211f;--muted:#5d6b68;--accent:#0f766e;--on-accent:#fff;--bubble:#e1ebe8;--line:#d5dedb;
+:root{color-scheme:light dark;
+--bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
+--bubble:#e4eeeb;--ui:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;--serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1514;--surface:#16201e;--ink:#e6efed;--muted:#92a39f;--accent:#2dd4bf;--on-accent:#06201c;--bubble:#1f2d2a;--line:#2a3a37}}
-:root[data-theme="dark"]{--bg:#0e1514;--surface:#16201e;--ink:#e6efed;--muted:#92a39f;--accent:#2dd4bf;--on-accent:#06201c;--bubble:#1f2d2a;--line:#2a3a37}
+@supports (color:color-mix(in srgb,red,blue)){:root{--bubble:color-mix(in srgb,var(--accent) 9%,var(--surface))}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1110;--surface:#131c1a;--ink:#e7f0ee;--muted:#8fa09c;--accent:#2dd4bf;--on-accent:#06201c;--line:#26352f;--danger:#ff8a80;--bubble:#1a2623}
+@supports (color:color-mix(in srgb,red,blue)){:root:not([data-theme="light"]){--bubble:color-mix(in srgb,var(--accent) 10%,var(--surface))}}}
+:root[data-theme="dark"]{--bg:#0b1110;--surface:#131c1a;--ink:#e7f0ee;--muted:#8fa09c;--accent:#2dd4bf;--on-accent:#06201c;--line:#26352f;--danger:#ff8a80;--bubble:#1a2623}
+@supports (color:color-mix(in srgb,red,blue)){:root[data-theme="dark"]{--bubble:color-mix(in srgb,var(--accent) 10%,var(--surface))}}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,"Times New Roman",serif;display:flex;flex-direction:column}
-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
-h1{margin:0;font-size:1.4rem;letter-spacing:.02em}
-.sub{font:12px system-ui,sans-serif;color:var(--muted)}
-button{font:600 14px system-ui,sans-serif;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 12px}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--ui);display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent}
+h1{margin:0;font:600 1.5rem/1.2 var(--serif);letter-spacing:.005em}
+section>h1{margin:4px 0 14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px 10px;background:var(--bg)}
+.brand{display:flex;align-items:center;gap:11px;min-width:0;flex:1}
+.brand h1{font-size:1.6rem}
+.orb{flex:none;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff 0,color-mix(in srgb,var(--accent) 45%,#fff) 22%,var(--accent) 62%,color-mix(in srgb,var(--accent) 60%,#000) 100%);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
+.sub{font:12px/1.3 var(--ui);color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nav{display:flex;gap:2px;flex:none}
+header button{background:transparent;border-color:transparent;color:var(--muted);padding:7px 8px;border-radius:999px;font-size:13px}
+header button:hover,header button:active{background:var(--bubble);color:var(--ink)}
+button{font:600 14px var(--ui);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 15px;cursor:pointer}
+button:active{transform:scale(.97)}
 button.main{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-#chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:86%;padding:10px 14px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere}
-.me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-bottom-right-radius:4px}
-.lara{align-self:flex-start;background:var(--bubble);border-bottom-left-radius:4px}
-.err{align-self:center;max-width:100%;overflow-wrap:anywhere;color:#b3261e;font:14px system-ui,sans-serif;text-align:center}
-.empty{margin:auto;text-align:center;color:var(--muted);max-width:28ch}
-form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--surface)}
-textarea{flex:1;resize:none;max-height:120px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);color:var(--ink);font:16px/1.4 Georgia,serif}
-#cfg{position:fixed;inset:0;background:var(--bg);padding:16px;overflow-y:auto;display:none;padding-top:calc(16px + env(safe-area-inset-top,0px))}
-#cfg.open{display:block}
-label{display:block;margin:14px 0 4px;font:600 14px system-ui,sans-serif}
-input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink);font:15px system-ui,sans-serif}
-.hint{font:13px system-ui,sans-serif;color:var(--muted);margin:4px 0 0}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#chat{flex:1;overflow-y:auto;padding:8px 16px 18px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+.msg{max-width:88%;padding:11px 16px;white-space:pre-wrap;overflow-wrap:anywhere}
+.me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-radius:22px 22px 6px 22px;font-family:var(--ui)}
+.lara{align-self:flex-start;background:var(--bubble);border:1px solid color-mix(in srgb,var(--accent) 16%,var(--line));border-radius:22px 22px 22px 6px;font-family:var(--serif);line-height:1.6}
+.err{align-self:center;max-width:94%;overflow-wrap:anywhere;color:var(--danger);font:14px/1.45 var(--ui);text-align:center;padding:10px 14px;border-radius:16px;background:color-mix(in srgb,var(--danger) 8%,transparent)}
+.err button{margin-top:8px}
+.empty{margin:auto;text-align:center;color:var(--ink);max-width:24ch;font:500 1.5rem/1.35 var(--serif);padding:0 8px}
+.empty::before{content:"";display:block;width:64px;height:64px;margin:0 auto 18px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff 0,color-mix(in srgb,var(--accent) 45%,#fff) 22%,var(--accent) 62%,color-mix(in srgb,var(--accent) 60%,#000) 100%);box-shadow:0 0 0 10px color-mix(in srgb,var(--accent) 12%,transparent)}
+form{display:grid;grid-template-columns:auto auto auto 1fr;align-items:center;gap:6px 6px;margin:6px 12px 10px;padding:10px 10px 8px 12px;border:1px solid var(--line);border-radius:26px;background:var(--surface)}
+form:focus-within{border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+textarea{resize:none;max-height:140px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);color:var(--ink);font:16px/1.45 var(--ui)}
+form textarea{grid-column:1/-1;border:0;background:transparent;padding:4px 2px 6px;border-radius:0}
+form textarea:focus-visible{outline:none}
+#attach,#mic,#conv{width:40px;height:40px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:var(--bg);border-color:transparent}
+#conv{outline-offset:2px}
+#send{justify-self:end;padding:10px 22px}
+#cfg,#notes,#chats{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
+#cfg.open,#notes.open,#chats.open{display:block}
+label{display:block;margin:18px 0 6px;font:600 14px var(--ui);color:var(--ink)}
+input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:var(--surface);color:var(--ink);font:15px var(--ui)}
+input[type=checkbox]{width:auto}
+.hint{font:13px/1.45 var(--ui);color:var(--muted);margin:6px 0 0}
 .row{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
-.mem{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:6px;font:14px system-ui,sans-serif}
-.mem button{padding:4px 8px}
-#chip{display:none;padding:6px 12px;background:var(--surface);border-top:1px solid var(--line);font:13px system-ui,sans-serif;align-items:center;justify-content:space-between}
+.mem{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:8px;font:14px/1.45 var(--ui)}
+.mem button{padding:4px 10px;font-size:13px}
+#chip{display:none;margin:0 12px;padding:8px 14px;background:var(--bubble);border-radius:16px;font:13px var(--ui);align-items:center;justify-content:space-between}
 #chip.on{display:flex}
-#notes,#chats{position:fixed;inset:0;background:var(--bg);padding:16px;overflow-y:auto;display:none;padding-top:calc(16px + env(safe-area-inset-top,0px))}
-#notes.open,#chats.open{display:block}
-header button{padding:6px 10px}
-#study,#shorts{display:none;gap:6px;padding:6px 12px;background:var(--surface);border-top:1px solid var(--line);overflow-x:auto}
+#study,#shorts{display:none;gap:8px;padding:4px 12px 8px;overflow-x:auto;scrollbar-width:none}
+#study::-webkit-scrollbar,#shorts::-webkit-scrollbar{display:none}
 #study.on,#shorts.on{display:flex}
-.acts{display:flex;gap:6px;margin-top:6px}
-.acts button{font-size:12px;padding:3px 8px}
-#study button,#shorts button{white-space:nowrap;font-size:13px}
-#toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));background:var(--accent);color:var(--on-accent);padding:12px 14px;border-radius:12px;font:15px system-ui,sans-serif;z-index:50;display:none}
-.cp{display:block;margin-top:6px;font-size:12px;padding:3px 8px}
-.msg code{background:rgba(127,127,127,.2);padding:1px 4px;border-radius:4px;font-family:monospace;font-size:.9em}
+#study button,#shorts button{white-space:nowrap;font-size:13px;background:var(--surface);padding:7px 13px}
+.acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;font-family:var(--ui)}
+.acts button{font-size:12px;padding:4px 10px;font-weight:500;color:var(--muted);background:transparent}
+.cp{display:inline-block;margin-top:8px;font:500 12px var(--ui);padding:4px 10px;color:var(--muted);background:transparent}
+.msg code{background:rgba(127,127,127,.2);padding:1px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:.88em}
+#toast{position:fixed;left:14px;right:14px;top:calc(12px + env(safe-area-inset-top,0px));margin:0 auto;max-width:520px;background:var(--accent);color:var(--on-accent);padding:13px 16px;border-radius:18px;font:15px/1.4 var(--ui);z-index:50;display:none;box-shadow:0 8px 28px rgba(0,0,0,.22)}
 #lock{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px}
 #lock.on{display:flex}
 #lock .box{width:100%;max-width:320px;text-align:center}
 #chat .msg{font-size:var(--fs,16px)}
 #t{font-size:var(--fs,16px)}
-#autolab{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:var(--surface)}
-#autolab textarea{width:100%;min-height:100px;margin-top:6px;font:14px/1.45 system-ui,sans-serif}
+#autolab{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;background:var(--surface)}
+#autolab textarea{width:100%;min-height:100px;margin-top:6px;font:14px/1.45 var(--ui)}
 #autolab .row{margin-top:8px}
-#autopreview{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:10px;font:13px/1.4 monospace;display:none}
-#autostatus{font:13px system-ui,sans-serif;color:var(--muted);white-space:pre-wrap}
+#autopreview{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;font:13px/1.4 ui-monospace,Menlo,monospace;display:none}
+#autostatus{font:13px var(--ui);color:var(--muted);white-space:pre-wrap}
+body.live .orb{animation:pulse 1.7s ease-in-out infinite}
+body.live #conv{background:var(--accent);color:var(--on-accent)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}50%{box-shadow:0 0 0 11px color-mix(in srgb,var(--accent) 24%,transparent)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media (min-width:700px){#chat,form,#study,#shorts,#chip,header{width:100%;max-width:760px;margin-left:auto;margin-right:auto}#chat{padding-left:8px;padding-right:8px}}
 </style>
 </head>
 <body>
 <header>
-  <div><h1>Lara</h1><div class="sub" id="status"></div></div>
-  <div style="display:flex;gap:6px"><button id="openChats" type="button">Chats</button><button id="openNotes" type="button">Notas</button><button id="openCfg" type="button">Ajustes</button></div>
+  <div class="brand"><span class="orb" aria-hidden="true"></span><div style="min-width:0"><h1>Lara</h1><div class="sub" id="status"></div></div></div>
+  <div class="nav"><button id="openChats" type="button">Chats</button><button id="openNotes" type="button">Notas</button><button id="openCfg" type="button">Ajustes</button></div>
 </header>
 <div id="chat" aria-live="polite"></div>
 <div id="shorts"></div>
@@ -76,6 +101,7 @@ header button{padding:6px 10px}
   <textarea id="t" rows="1" placeholder="Escribe a Lara" aria-label="Mensaje"></textarea>
   <button type="button" id="attach" aria-label="Adjuntar imagen">📎</button>
   <button type="button" id="mic" aria-label="Hablar">🎤</button>
+  <button type="button" id="conv" aria-label="Conversar por voz">🎧</button>
   <button class="main" id="send" type="submit">Enviar</button>
 </form>
 
@@ -137,7 +163,7 @@ header button{padding:6px 10px}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 22. Incluye personalidad propia, voz con carácter y avisos de conexión y cuota más amables, con botón para reintentar.</p>
+  <p class="hint">Versión 24. Incluye nuevo diseño, personalidad propia, avisos amables de conexión y cuota, y botón 🎧 para conversar por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <label>Automejora de Lara (experimental)</label>
   <p class="hint">Carga el archivo HTML de Lara, describe la mejora y Gemini propondrá cambios concretos. Lara no se sobrescribe sola: revisas la propuesta, descargas primero un respaldo y autorizas la nueva versión. La clave no se incluye en el archivo exportado.</p>
@@ -425,7 +451,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=22;
+const APP_V=24;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -661,18 +687,33 @@ function speak(t){
   speakAuto(t,()=>{if(hfActive&&recStart) setTimeout(recStart,400)});
 }
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(!SR){$("mic").style.display="none"}else{
+if(!SR){$("mic").style.display="none";$("conv").style.display="none"}else{
   const rec=new SR();rec.lang="es-ES";rec.interimResults=false;
-  let on=false;
-  const startRec=()=>{if(on) return;try{rec.start();on=true;$("mic").textContent="⏹"}catch(e){}};
+  let on=false,got=false,wl=null;
+  const startRec=()=>{if(on) return;got=false;try{rec.start();on=true;$("mic").textContent="⏹"}catch(e){}};
   recStart=startRec;
-  rec.onresult=e=>{$("t").value=($("t").value+" "+e.results[0][0].transcript).trim();if(hfActive) $("f").requestSubmit()};
-  rec.onend=()=>{on=false;$("mic").textContent=hfActive?"⏹":"🎤"};
-  rec.onerror=ev=>{on=false;if(hfActive&&ev.error==="no-speech") setTimeout(startRec,500); else if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){hfActive=false;$("mic").textContent="🎤"}};
+  const convUI=()=>{document.body.classList.toggle("live",hfActive);const c=$("conv");c.textContent=hfActive?"⏹":"🎧";$("mic").textContent=on||hfActive?"⏹":"🎤"};
+  const convSet=async v=>{
+    hfActive=v;
+    if(v){
+      store.set("lara_hf","1");try{$("hf").checked=true}catch(e){}
+      try{if(navigator.wakeLock) wl=await navigator.wakeLock.request("screen")}catch(e){}
+      toast("🎧 Te escucho. Habla y Lara responde sola. Toca ⏹ para terminar.");
+      startRec();
+    }else{
+      try{rec.stop()}catch(e){}stopSpeech();
+      try{if(wl){wl.release();wl=null}}catch(e){}
+    }
+    convUI();
+  };
+  $("conv").onclick=()=>convSet(!hfActive);
+  rec.onresult=e=>{got=true;$("t").value=($("t").value+" "+e.results[0][0].transcript).trim();if(hfActive) $("f").requestSubmit()};
+  rec.onend=()=>{on=false;convUI();if(hfActive&&!got&&!ctrl) setTimeout(startRec,400)};
+  rec.onerror=ev=>{on=false;if(hfActive&&ev.error==="no-speech") setTimeout(startRec,500); else if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){hfActive=false;convUI();toast("Necesito permiso del micrófono para escucharte. Actívalo en los permisos del navegador.",true)}};
   $("mic").onclick=()=>{
     if(store.get("lara_hf","0")==="1"){
-      if(hfActive){hfActive=false;try{rec.stop()}catch(e){}stopSpeech();$("mic").textContent="🎤"}
-      else{hfActive=true;startRec()}
+      if(hfActive){convSet(false)}
+      else{convSet(true)}
       return;
     }
     if(on){rec.stop();return}
