@@ -113,7 +113,7 @@ header button{padding:6px 10px}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 12. Si la app instalada muestra algo viejo, toca Actualizar.</p>
+  <p class="hint">Versión 13. Si la app instalada muestra algo viejo, toca Actualizar.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button></div>
   <label style="display:flex;gap:8px;align-items:center"><input id="hf" type="checkbox" style="width:auto"> Conversación por voz manos libres (toca 🎤 para empezar y parar)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
@@ -183,6 +183,10 @@ if(!Array.isArray(profiles)||!profiles.length){
   if(store.get("lara_mode","general")==="biblia") store.set("lara_prof","bib");
   saveProfiles();
 }
+if(!profiles.some(p=>p.id==="ana")){
+  profiles.push({id:"ana",name:"Analista",prompt:"Eres Lara en modo analista. En preguntas complejas responde con esta estructura: 1) Respuesta breve. 2) Evidencias y datos que la respaldan. 3) Otras interpretaciones o posturas, y por qué alguien las defendería. 4) Puntos débiles o lo que no se sabe. 5) Nivel de certeza (alto, medio o bajo) y por qué. 6) Qué convendría verificar. Sé concreta y no te alargues sin necesidad. Si hay búsqueda web disponible, úsala para datos actuales y nombra las fuentes."});
+  saveProfiles();
+}
 function curProf(){return profiles.find(p=>p.id===store.get("lara_prof",""))||profiles[0]}
 function fillProf(){
   const sel=$("prof");sel.innerHTML="";
@@ -218,6 +222,7 @@ function renderMems(){
 }
 function buildSys(){
   let s=curProf().prompt;
+  s+="\n\nCalidad de análisis: distingue hechos, interpretaciones y opiniones; en temas debatidos presenta las posturas principales y tu nivel de certeza; no inventes datos, cifras ni citas; si algo puede haber cambiado, dilo.";
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+mems.join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
   if(cur.summary) s+="\n\nResumen de lo anterior en esta conversación: "+cur.summary;
@@ -226,7 +231,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=12;
+const APP_V=13;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -653,6 +658,10 @@ async function compact(){
     c.summary=r.slice(0,1500);bump(model);saveChats();showStatus();return true;
   }catch(e){h.unshift(...old);return false}
 }
+function verify(){
+  $("t").value="Revisa críticamente tu respuesta anterior: señala errores, afirmaciones sin respaldo o dudosas y corrígelas. Termina con tu nivel de certeza.";
+  $("f").requestSubmit();
+}
 function redo(auto){
   if(history.length<2||history[history.length-1].role!=="model") return;
   const t=(history[history.length-2].parts[0].text||"").replace(/\s*\[(imagen|adjunto|archivo:[^\]]*)\]$/,"");
@@ -665,7 +674,7 @@ function addActions(){
   if(history.length<2||history[history.length-1].role!=="model") return;
   const bs=document.querySelectorAll("#chat .lara"),last=bs[bs.length-1];if(!last) return;
   const a=document.createElement("div");a.className="acts";
-  a.append(btn("Regenerar",()=>redo(true)),btn("Editar mi mensaje",()=>redo(false)));
+  a.append(btn("Regenerar",()=>redo(true)),btn("Editar mi mensaje",()=>redo(false)),btn("Verificar",verify));
   last.appendChild(a);
 }
 let shorts=null;
@@ -675,6 +684,7 @@ function saveShorts(){store.set("lara_short",JSON.stringify(shorts))}
 function renderShorts(){
   const bar=$("shorts");bar.innerHTML="";
   bar.appendChild(btn("📅 Mi día",myDay));
+  bar.appendChild(btn("🔍 A fondo",()=>{$("t").value="Analiza a fondo, con evidencias, otras interpretaciones y tu nivel de certeza: "+$("t").value;$("t").focus()}));
   shorts.forEach(t=>bar.appendChild(btn(t.trim().slice(0,24),()=>{$("t").value=($("t").value?$("t").value+" ":"")+t;$("t").focus()})));
   bar.classList.add("on");
   const sl=$("slist");sl.innerHTML="";
