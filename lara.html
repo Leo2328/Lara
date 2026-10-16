@@ -40,17 +40,22 @@ input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius
 .mem button{padding:4px 8px}
 #chip{display:none;padding:6px 12px;background:var(--surface);border-top:1px solid var(--line);font:13px system-ui,sans-serif;align-items:center;justify-content:space-between}
 #chip.on{display:flex}
-#notes{position:fixed;inset:0;background:var(--bg);padding:16px;overflow-y:auto;display:none;padding-top:calc(16px + env(safe-area-inset-top,0px))}
-#notes.open{display:block}
+#notes,#chats{position:fixed;inset:0;background:var(--bg);padding:16px;overflow-y:auto;display:none;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+#notes.open,#chats.open{display:block}
+header button{padding:6px 10px}
+#study{display:none;gap:6px;padding:6px 12px;background:var(--surface);border-top:1px solid var(--line);overflow-x:auto}
+#study.on{display:flex}
+#study button{white-space:nowrap;font-size:13px}
 #toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));background:var(--accent);color:var(--on-accent);padding:12px 14px;border-radius:12px;font:15px system-ui,sans-serif;z-index:50;display:none}
 </style>
 </head>
 <body>
 <header>
   <div><h1>Lara</h1><div class="sub" id="status"></div></div>
-  <div style="display:flex;gap:8px"><button id="openNotes" type="button">Notas</button><button id="openCfg" type="button">Ajustes</button></div>
+  <div style="display:flex;gap:6px"><button id="openChats" type="button">Chats</button><button id="openNotes" type="button">Notas</button><button id="openCfg" type="button">Ajustes</button></div>
 </header>
 <div id="chat" aria-live="polite"></div>
+<div id="study"><button type="button" data-t="Explícame este pasaje: ">Explicar pasaje</button><button type="button" data-t="Dame el contexto histórico de: ">Contexto</button><button type="button" data-t="Compara las lecturas preterista, historicista, futurista e idealista de: ">Comparar enfoques</button></div>
 <div id="chip"><span>🖼️ Imagen adjunta</span><button id="rmimg" type="button">Quitar</button></div>
 <form id="f">
   <textarea id="t" rows="1" placeholder="Escribe a Lara" aria-label="Mensaje"></textarea>
@@ -60,6 +65,12 @@ input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius
 </form>
 
 <div id="toast" role="status"></div>
+<section id="chats" aria-label="Conversaciones">
+  <h1>Conversaciones</h1>
+  <input id="chatq" type="search" placeholder="Buscar en las conversaciones">
+  <div id="clist" style="margin-top:8px"></div>
+  <div class="row"><button class="main" id="newchat" type="button">Nueva conversación</button><button id="closeChats" type="button">Cerrar</button></div>
+</section>
 <section id="notes" aria-label="Notas y recordatorios">
   <h1>Notas y recordatorios</h1>
   <label>Notas</label>
@@ -82,6 +93,9 @@ input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius
   <p class="hint">Déjalo vacío si quieres. Si un modelo falla, Lara prueba otros sola.</p>
   <label for="sys">Personalidad de Lara</label>
   <textarea id="sys" rows="6"></textarea>
+  <label for="mode">Modo</label>
+  <select id="mode"><option value="general">General</option><option value="biblia">Estudio bíblico</option></select>
+  <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
   <label for="theme">Tema</label>
   <select id="theme"><option value="auto">Automático</option><option value="light">Claro</option><option value="dark">Oscuro</option></select>
   <label for="accent">Color</label>
@@ -110,8 +124,13 @@ const store={
   get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},
   set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 };
-let history=[];
-try{history=JSON.parse(store.get("lara_hist","[]"))||[]}catch(e){history=[]}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let chats=[],cur=null;
+try{chats=JSON.parse(store.get("lara_chats","[]"))||[]}catch(e){chats=[]}
+if(!chats.length){let old=[];try{old=JSON.parse(store.get("lara_hist","[]"))||[]}catch(e){}chats=[{id:uid(),title:"Conversación",ts:Date.now(),msgs:old}]}
+cur=chats.find(c=>c.id===store.get("lara_cur",""))||chats[chats.length-1];
+let history=cur.msgs;
+function saveChats(){cur.ts=Date.now();store.set("lara_chats",JSON.stringify(chats.slice(-60).map(c=>({id:c.id,title:c.title,ts:c.ts,msgs:c.msgs.slice(-100)}))));store.set("lara_cur",cur.id)}
 
 let mems=[];
 try{mems=JSON.parse(store.get("lara_mem","[]"))||[]}catch(e){mems=[]}
@@ -136,6 +155,7 @@ function buildSys(){
   let s=store.get("lara_sys",DEFAULT_SYS);
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+mems.join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
+  if(store.get("lara_mode","general")==="biblia") s+="\n\nMODO ESTUDIO BÍBLICO: cita siempre libro, capítulo y versículo. Si citas el texto, hazlo en pocas palabras e indica la versión; si no, parafrasea. Distingue lo que dice el texto de lo que interpretan las tradiciones, presenta las lecturas principales (preterista, historicista, futurista, idealista) y di cuál tiene mejor sustento sin imponerla. No señales a personas actuales ni fijes fechas. Nunca inventes versículos: si no estás segura, dilo y pídeme que lo verifique en mi Biblia.";
   const now=new Date();
   s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas. Nunca afirmes que enviaste un aviso, alarma o notificación: los recordatorios los dispara la aplicación. Solo confirma que quedó guardado.";
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
@@ -146,17 +166,19 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function askGemini(key){
   const first=[store.get("lara_model",""),store.get("lara_model_ok","")].filter(Boolean);
   const models=[...new Set([...first,...FALLBACK])];
-  const body=JSON.stringify({systemInstruction:{parts:[{text:buildSys()}]},contents:history.slice(-30)});
+  const base={systemInstruction:{parts:[{text:buildSys()}]},contents:history.slice(-30)};
+  let tools=store.get("lara_search","1")==="1";
   let quota=false,busy=false;
   for(const model of models){
     for(let i=0;i<3;i++){
       let res;
       try{
-        res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body});
+        res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(tools?{...base,tools:[{google_search:{}}]}:base)});
       }catch(e){throw new Error("Sin conexión. Revisa tu internet e inténtalo de nuevo.")}
       let data={};try{data=await res.json()}catch(e){}
       if(res.ok){store.set("lara_model_ok",model);return data}
       const msg=(data.error&&data.error.message)||"";
+      if(res.status===400&&tools&&/search|tool|ground/i.test(msg)){tools=false;i--;continue}
       if(res.status===503){busy=true;if(i<2){await sleep(2000*(i+1));continue}break}
       if(res.status===429){quota=true;break}
       if(res.status===404||/no longer available|not found/i.test(msg)) break;
@@ -208,7 +230,7 @@ $("save").onclick=()=>{
   $("cfg").classList.remove("open");render();
 };
 $("clear").onclick=()=>{
-  if(confirm("¿Borrar toda la conversación?")){history=[];store.set("lara_hist","[]");$("cfg").classList.remove("open");render()}
+  if(confirm("¿Borrar toda la conversación?")){history.length=0;cur.title="Conversación";saveChats();$("cfg").classList.remove("open");render()}
 };
 $("t").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"});
 
@@ -220,6 +242,7 @@ $("f").onsubmit=async ev=>{
   const key=store.get("lara_key","");
   if(!key){add("err","Falta la clave. Ábrela en Ajustes.");return}
   $("t").value="";$("t").style.height="auto";
+  if(!history.length) cur.title=text.slice(0,40);
   const uparts=[{text}];
   if(pendingImg) uparts.push({inlineData:{mimeType:"image/jpeg",data:pendingImg}});
   history.push({role:"user",parts:uparts});
@@ -237,12 +260,13 @@ $("f").onsubmit=async ev=>{
       .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{extra.push(addRem(at,t));return ""}).trim();
     if(!clean) clean="Listo.";
     if(extra.length) clean+="\n\n"+extra.join(" · ");
+    clean+=sourcesText(data);
     bubble.textContent=clean;
     speak(clean);
     history.push({role:"model",parts:[{text:clean}]});
     clearImg();
     history.forEach(m=>{if(m.parts.some(p=>p.inlineData)) m.parts=[{text:m.parts[0].text+" [imagen]"}]});
-    store.set("lara_hist",JSON.stringify(history.slice(-100)));
+    saveChats();
   }catch(err){
     bubble.remove();
     history.pop();
@@ -252,12 +276,14 @@ $("f").onsubmit=async ev=>{
   $("chat").scrollTop=$("chat").scrollHeight;
 };
 
-$("exp").onclick=()=>{
-  const data=JSON.stringify({lara:1,memoria:mems,personalidad:store.get("lara_sys",DEFAULT_SYS)},null,2);
+function exportAll(){
+  const data=JSON.stringify({lara:2,memoria:mems,notas:notes,recordatorios:rems,chats:chats,personalidad:store.get("lara_sys",DEFAULT_SYS),ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")}},null,2);
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));
   a.download="lara-respaldo.json";document.body.appendChild(a);a.click();a.remove();
-};
+  store.set("lara_backup",String(Date.now()));
+}
+$("exp").onclick=exportAll;
 $("imp").onclick=()=>$("impf").click();
 $("impf").onchange=e=>{
   const f=e.target.files[0];if(!f)return;
@@ -265,8 +291,13 @@ $("impf").onchange=e=>{
   r.onload=()=>{try{
     const d=JSON.parse(r.result);
     if(Array.isArray(d.memoria)) d.memoria.forEach(addMem);
+    if(Array.isArray(d.notas)) d.notas.forEach(n=>{if(typeof n==="string"&&!notes.includes(n)) notes.push(n)});
+    if(Array.isArray(d.recordatorios)) d.recordatorios.forEach(x=>{if(x&&x.id&&!rems.some(q=>q.id===x.id)) rems.push(x)});
+    if(Array.isArray(d.chats)) d.chats.forEach(c=>{if(c&&c.id&&Array.isArray(c.msgs)&&!chats.some(k=>k.id===c.id)) chats.push(c)});
     if(typeof d.personalidad==="string"&&d.personalidad.trim()){store.set("lara_sys",d.personalidad);$("sys").value=d.personalidad}
-    renderMems();alert("Respaldo importado.");
+    const a=d.ajustes||{};
+    ["theme","accent","mode","search"].forEach(k=>{if(a[k]) store.set("lara_"+k,a[k])});
+    saveNotes();saveRems();saveChats();renderMems();applyTheme();applyMode();render();alert("Respaldo importado.");
   }catch(err){alert("El archivo no es un respaldo válido.")}};
   r.readAsText(f);e.target.value="";
 };
@@ -339,7 +370,7 @@ function addRem(at,text){
   rems.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),text,at,done:false});saveRems();
   return "⏰ Guardado para "+d.toLocaleString("es",{dateStyle:"medium",timeStyle:"short"});
 }
-function toast(m,sticky){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);if(!sticky) toast.h=setTimeout(()=>t.style.display="none",8000);t.onclick=()=>t.style.display="none"}
+function toast(m,sticky,fn){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);if(!sticky) toast.h=setTimeout(()=>t.style.display="none",8000);t.onclick=()=>{t.style.display="none";if(fn)fn()}}
 function btn(label,fn){const b=document.createElement("button");b.type="button";b.textContent=label;b.onclick=fn;return b}
 function row(text,btns){
   const d=document.createElement("div");d.className="mem";
@@ -393,6 +424,47 @@ $("addrem").onclick=()=>{
 setInterval(checkRems,15000);checkRems();
 document.addEventListener("visibilitychange",()=>{if(!document.hidden) checkRems()});
 $("testrem").onclick=()=>{askPerm();notify("Prueba: así se verá tu aviso")};
+function sourcesText(data){
+  try{
+    const gm=data.candidates[0].groundingMetadata;
+    const t=[...new Set(((gm&&gm.groundingChunks)||[]).map(c=>c.web&&(c.web.title||c.web.uri)).filter(Boolean))].slice(0,3);
+    return t.length?"\n\n🔎 Fuentes: "+t.join(", "):"";
+  }catch(e){return ""}
+}
+function renderChats(){
+  const q=$("chatq").value.trim().toLowerCase(),box=$("clist");box.innerHTML="";
+  const list=chats.slice().sort((a,b)=>b.ts-a.ts).filter(c=>!q||c.title.toLowerCase().includes(q)||c.msgs.some(m=>m.parts[0]&&m.parts[0].text&&m.parts[0].text.toLowerCase().includes(q)));
+  if(!list.length) empty(box,"Sin resultados.");
+  list.forEach(c=>box.appendChild(row((c.id===cur.id?"● ":"")+c.title+"\n"+new Date(c.ts).toLocaleDateString("es",{dateStyle:"medium"})+" · "+c.msgs.length+" mensajes",[btn("Abrir",()=>openChat(c.id)),btn("Borrar",()=>delChat(c.id))])));
+}
+function openChat(id){cur=chats.find(c=>c.id===id)||cur;history=cur.msgs;store.set("lara_cur",cur.id);$("chats").classList.remove("open");render()}
+function delChat(id){
+  if(!confirm("¿Borrar esta conversación?")) return;
+  chats=chats.filter(c=>c.id!==id);
+  if(!chats.length) chats=[{id:uid(),title:"Conversación",ts:Date.now(),msgs:[]}];
+  if(cur.id===id){cur=chats[chats.length-1];history=cur.msgs}
+  saveChats();renderChats();render();
+}
+$("openChats").onclick=()=>{$("chatq").value="";renderChats();$("chats").classList.add("open")};
+$("closeChats").onclick=()=>$("chats").classList.remove("open");
+$("chatq").oninput=renderChats;
+$("newchat").onclick=()=>{
+  if(history.length){cur={id:uid(),title:"Conversación",ts:Date.now(),msgs:[]};chats.push(cur);history=cur.msgs;saveChats();render()}
+  $("chats").classList.remove("open");
+};
+function applyMode(){$("study").classList.toggle("on",store.get("lara_mode","general")==="biblia")}
+$("mode").value=store.get("lara_mode","general");
+$("mode").onchange=e=>{store.set("lara_mode",e.target.value);applyMode()};
+$("search").checked=store.get("lara_search","1")==="1";
+$("search").onchange=e=>store.set("lara_search",e.target.checked?"1":"0");
+document.querySelectorAll("#study button").forEach(b=>b.onclick=()=>{$("t").value=b.dataset.t;$("t").focus()});
+applyMode();
+(function(){
+  const last=+store.get("lara_backup","0"),has=mems.length||notes.length||chats.some(c=>c.msgs.length);
+  if(!has) return;
+  if(!last){store.set("lara_backup",String(Date.now()));return}
+  if(Date.now()-last>7*864e5) toast("💾 Toca aquí para guardar tu respaldo semanal",true,exportAll);
+})();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
