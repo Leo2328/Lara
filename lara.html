@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v26</title>
+<title>Lara v28</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -165,7 +165,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 26. Incluye automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 28. Incluye automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <label>Lecciones que Lara ha aprendido</label>
   <div id="lessons"></div>
@@ -475,7 +475,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=26;
+const APP_V=28;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1410,7 +1410,7 @@ $("autoapply").onclick=()=>{
   if(!autoBackupDownloaded){autoStatus("Primero descarga el respaldo original.");return}
   const base=(autoSourceFile&&autoSourceFile.name||"lara.html").replace(/\.(html?)$/i,"");
   const m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)\s*;/);const v=m?m[1]:"actualizada";
-  autoDownload(autoPatchedText,base+"_v"+v+".html");{const C=getChanges();C.push({t:Date.now(),v:v,s:String(autoSummary||"Mejora").slice(0,140)});store.set("lara_changes",JSON.stringify(C.slice(-30)));renderChanges()}autoStatus("Nueva versión descargada. Abre y prueba el archivo nuevo; conserva el respaldo por si algo falla. Esta acción no reemplaza automáticamente un APK ni la app instalada.");$("autoapply").disabled=true;
+  autoDownload(autoPatchedText,"lara.html");{const C=getChanges();C.push({t:Date.now(),v:v,s:String(autoSummary||"Mejora").slice(0,140)});store.set("lara_changes",JSON.stringify(C.slice(-30)));renderChanges()}autoStatus("Versión "+v+" descargada con el nombre lara.html. Ábrela primero desde tus descargas para probarla. Para publicarla, súbela a GitHub con ESE mismo nombre (lara.html) y reemplaza la anterior; si la subes con otro nombre, la app no se actualiza. Si tu teléfono la guardó como «lara (1).html», renómbrala antes de subirla.");$("autoapply").disabled=true;
 };
 render();
 </script>
