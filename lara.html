@@ -54,6 +54,8 @@ header button{padding:6px 10px}
 #lock{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px}
 #lock.on{display:flex}
 #lock .box{width:100%;max-width:320px;text-align:center}
+#chat .msg{font-size:var(--fs,16px)}
+#t{font-size:var(--fs,16px)}
 </style>
 </head>
 <body>
@@ -111,10 +113,12 @@ header button{padding:6px 10px}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 10. Si la app instalada muestra algo viejo, toca Actualizar.</p>
+  <p class="hint">Versión 11. Si la app instalada muestra algo viejo, toca Actualizar.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button></div>
   <label style="display:flex;gap:8px;align-items:center"><input id="hf" type="checkbox" style="width:auto"> Conversación por voz manos libres (toca 🎤 para empezar y parar)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
+  <label for="fs">Tamaño de letra</label>
+  <input id="fs" type="range" min="14" max="24" step="1">
   <label for="theme">Tema</label>
   <select id="theme"><option value="auto">Automático</option><option value="light">Claro</option><option value="dark">Oscuro</option></select>
   <label for="accent">Color</label>
@@ -214,13 +218,16 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
+const APP_V=11;
+let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function readStream(res,onChunk){
   const rd=res.body.getReader(),dec=new TextDecoder();
   let buf="",full="",gm=null;
   for(;;){
-    const r=await rd.read(); if(r.done) break;
+    let r;try{r=await rd.read()}catch(e){if(e&&e.name==="AbortError") break;throw e}
+    if(r.done) break;
     buf+=dec.decode(r.value,{stream:true});
     let i;
     while((i=buf.indexOf("\n"))>=0){
@@ -247,8 +254,8 @@ async function askGemini(key,onChunk){
     for(let i=0;i<3;i++){
       let res;
       try{
-        res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":streamGenerateContent?alt=sse",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(tools?{...base,tools:[{google_search:{}}]}:base)});
-      }catch(e){throw new Error("Sin conexión. Revisa tu internet e inténtalo de nuevo.")}
+        res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":streamGenerateContent?alt=sse",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(tools?{...base,tools:[{google_search:{}}]}:base),signal:ctrl?ctrl.signal:undefined});
+      }catch(e){if(e&&e.name==="AbortError") throw new Error("Detenido.");throw new Error("Sin conexión. Revisa tu internet e inténtalo de nuevo.")}
       if(res.ok){const dd=await readStream(res,onChunk);store.set("lara_model_ok",model);bump(model);if(wanted&&!tools) dd._ns=1;return dd}
       let data={};try{data=await res.json()}catch(e){}
       if(res.ok){store.set("lara_model_ok",model);if(wanted&&!tools) data._ns=1;return data}
@@ -321,6 +328,7 @@ $("t").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.
 
 $("f").onsubmit=async ev=>{
   ev.preventDefault();
+  if(ctrl) return;
   let text=$("t").value.trim();
   if(!text&&!pendingImg&&!pendingTxt) return;
   if(!text) text=pendingTxt?"Resume este archivo.":"Describe esta imagen.";
@@ -337,7 +345,7 @@ $("f").onsubmit=async ev=>{
   add("user",(pendingImg||pendingTxt)?text+" 📎":text);
   document.querySelectorAll(".acts").forEach(x=>x.remove());
   const bubble=add("lara","…");
-  $("send").disabled=true;
+  ctrl=new AbortController();$("send").type="button";$("send").textContent="Detener";$("send").onclick=()=>{if(ctrl) ctrl.abort()};
   try{
     const data=await askGemini(key,t=>{setText(bubble,t.replace(/\[\[[\s\S]*$/,"")||"…");$("chat").scrollTop=$("chat").scrollHeight});
     const parts=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts;
@@ -362,7 +370,7 @@ $("f").onsubmit=async ev=>{
     add("err",err.message);
     if(hfActive&&recStart) setTimeout(recStart,800);
   }
-  $("send").disabled=false;
+  $("send").type="submit";$("send").textContent="Enviar";$("send").onclick=null;ctrl=null;
   $("chat").scrollTop=$("chat").scrollHeight;
 };
 
@@ -659,8 +667,9 @@ if(!Array.isArray(shorts)){shorts=["Resume esto en 3 puntos: ","Tradúcelo al in
 function saveShorts(){store.set("lara_short",JSON.stringify(shorts))}
 function renderShorts(){
   const bar=$("shorts");bar.innerHTML="";
+  bar.appendChild(btn("📅 Mi día",myDay));
   shorts.forEach(t=>bar.appendChild(btn(t.trim().slice(0,24),()=>{$("t").value=($("t").value?$("t").value+" ":"")+t;$("t").focus()})));
-  bar.classList.toggle("on",shorts.length>0);
+  bar.classList.add("on");
   const sl=$("slist");sl.innerHTML="";
   shorts.forEach((t,i)=>sl.appendChild(row(t,[btn("Borrar",()=>{shorts.splice(i,1);saveShorts();renderShorts()})])));
 }
@@ -724,6 +733,25 @@ $("pitch").value=store.get("lara_pitch","1");$("rate").value=store.get("lara_rat
 $("pitch").oninput=e=>store.set("lara_pitch",e.target.value);
 $("rate").oninput=e=>store.set("lara_rate",e.target.value);
 $("testvoice").onclick=()=>{if(!window.speechSynthesis) return;speechSynthesis.cancel();speakNow("Hola, soy Lara. Así sueno ahora.")};
+function myDay(){
+  const end=new Date();end.setHours(23,59,59,999);
+  const pend=rems.filter(r=>!r.done&&new Date(r.at)<=end).sort((a,b)=>a.at<b.at?-1:1).map(r=>"- "+new Date(r.at).toLocaleTimeString("es",{timeStyle:"short"})+" "+r.text);
+  const nt=notes.slice(-5).map(n=>"- "+n.slice(0,100));
+  $("t").value="Hazme un resumen breve y motivador de mi día. Recordatorios de hoy:\n"+(pend.join("\n")||"- ninguno")+"\nNotas recientes:\n"+(nt.join("\n")||"- ninguna")+"\nAl final sugiere un siguiente paso.";
+  $("f").requestSubmit();
+}
+function applyFs(){document.documentElement.style.setProperty("--fs",store.get("lara_fs","16")+"px")}
+$("fs").value=store.get("lara_fs","16");
+$("fs").oninput=e=>{store.set("lara_fs",e.target.value);applyFs()};
+applyFs();
+async function checkUpdate(){
+  try{
+    const r=await fetch("lara.html?c="+Date.now(),{cache:"no-store"});
+    const m=(await r.text()).match(/const APP_V=(\d+)/);
+    if(m&&+m[1]>APP_V) toast("🔄 Hay una versión nueva de Lara. Toca aquí para actualizar.",true,()=>$("upd").click());
+  }catch(e){}
+}
+setTimeout(checkUpdate,3000);
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
