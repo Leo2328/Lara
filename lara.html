@@ -113,12 +113,13 @@ header button{padding:6px 10px}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 13. Si la app instalada muestra algo viejo, toca Actualizar.</p>
+  <p class="hint">Versión 14. Si la app instalada muestra algo viejo, toca Actualizar.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button></div>
   <label style="display:flex;gap:8px;align-items:center"><input id="hf" type="checkbox" style="width:auto"> Conversación por voz manos libres (toca 🎤 para empezar y parar)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
-  <label for="fs">Tamaño de letra</label>
-  <input id="fs" type="range" min="14" max="24" step="1">
+  <label for="fs">Tamaño de letra: <span id="fv"></span> (normal = 16)</label>
+  <input id="fs" type="range" min="12" max="24" step="1">
+  <div class="row"><button id="resetfs" type="button">Letra normal</button></div>
   <label for="theme">Tema</label>
   <select id="theme"><option value="auto">Automático</option><option value="light">Claro</option><option value="dark">Oscuro</option></select>
   <label for="accent">Color</label>
@@ -136,11 +137,11 @@ header button{padding:6px 10px}
   <label style="display:flex;gap:8px;align-items:center"><input id="voice" type="checkbox" style="width:auto"> Lara responde en voz alta</label>
   <label for="voicesel">Voz de Lara</label>
   <select id="voicesel"></select>
-  <label for="pitch">Tono de voz</label>
+  <label for="pitch">Tono de voz: <span id="pv"></span> (normal = 1.0)</label>
   <input id="pitch" type="range" min="0.5" max="2" step="0.1">
-  <label for="rate">Velocidad</label>
+  <label for="rate">Velocidad: <span id="rv"></span> (normal = 1.0)</label>
   <input id="rate" type="range" min="0.6" max="1.6" step="0.1">
-  <div class="row"><button id="testvoice" type="button">Probar voz</button></div>
+  <div class="row"><button id="testvoice" type="button">Probar voz</button><button id="resetvoice" type="button">Restablecer voz</button></div>
   <p class="hint">Solo puedes elegir entre las voces de tu móvil. Lara no puede imitar la voz de una persona ni de un personaje.</p>
   <label style="display:flex;gap:8px;align-items:center"><input id="ntts" type="checkbox" style="width:auto"> Voz natural de Gemini (más humana, usa tu cuota)</label>
   <label for="tvoice">Voz natural</label>
@@ -231,7 +232,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=13;
+const APP_V=14;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -747,8 +748,8 @@ function loadVoices(){
 if(window.speechSynthesis){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
 $("voicesel").onchange=e=>store.set("lara_vname",e.target.value);
 $("pitch").value=store.get("lara_pitch","1");$("rate").value=store.get("lara_rate","1");
-$("pitch").oninput=e=>store.set("lara_pitch",e.target.value);
-$("rate").oninput=e=>store.set("lara_rate",e.target.value);
+$("pitch").oninput=e=>{store.set("lara_pitch",e.target.value);showVals()};
+$("rate").oninput=e=>{store.set("lara_rate",e.target.value);showVals()};
 $("testvoice").onclick=()=>{speakAuto("Hola, soy Lara. Así sueno ahora.")};
 function myDay(){
   const end=new Date();end.setHours(23,59,59,999);
@@ -759,7 +760,7 @@ function myDay(){
 }
 function applyFs(){document.documentElement.style.setProperty("--fs",store.get("lara_fs","16")+"px")}
 $("fs").value=store.get("lara_fs","16");
-$("fs").oninput=e=>{store.set("lara_fs",e.target.value);applyFs()};
+$("fs").oninput=e=>{store.set("lara_fs",e.target.value);applyFs();showVals()};
 applyFs();
 async function checkUpdate(){
   try{
@@ -810,6 +811,18 @@ $("tstyle").value=store.get("lara_tstyle","Di con voz suave, cálida y pausada: 
 $("tstyle").oninput=e=>store.set("lara_tstyle",e.target.value);
 $("ttsmodel").value=store.get("lara_ttsmodel","gemini-3.1-flash-tts-preview");
 $("ttsmodel").oninput=e=>store.set("lara_ttsmodel",e.target.value.trim());
+function showVals(){
+  $("pv").textContent=(+store.get("lara_pitch","1")).toFixed(1);
+  $("rv").textContent=(+store.get("lara_rate","1")).toFixed(1);
+  $("fv").textContent=store.get("lara_fs","16");
+}
+$("resetvoice").onclick=()=>{
+  store.set("lara_pitch","1");store.set("lara_rate","1");store.set("lara_ntts","0");store.set("lara_vname","");
+  $("pitch").value=1;$("rate").value=1;$("ntts").checked=false;$("voicesel").value="";
+  showVals();toast("Voz restablecida a la de siempre.");
+};
+$("resetfs").onclick=()=>{store.set("lara_fs","16");$("fs").value=16;applyFs();showVals()};
+showVals();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
