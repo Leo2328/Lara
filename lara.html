@@ -113,7 +113,7 @@ header button{padding:6px 10px}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 11. Si la app instalada muestra algo viejo, toca Actualizar.</p>
+  <p class="hint">Versión 12. Si la app instalada muestra algo viejo, toca Actualizar.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button></div>
   <label style="display:flex;gap:8px;align-items:center"><input id="hf" type="checkbox" style="width:auto"> Conversación por voz manos libres (toca 🎤 para empezar y parar)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
@@ -142,6 +142,14 @@ header button{padding:6px 10px}
   <input id="rate" type="range" min="0.6" max="1.6" step="0.1">
   <div class="row"><button id="testvoice" type="button">Probar voz</button></div>
   <p class="hint">Solo puedes elegir entre las voces de tu móvil. Lara no puede imitar la voz de una persona ni de un personaje.</p>
+  <label style="display:flex;gap:8px;align-items:center"><input id="ntts" type="checkbox" style="width:auto"> Voz natural de Gemini (más humana, usa tu cuota)</label>
+  <label for="tvoice">Voz natural</label>
+  <select id="tvoice"><option>Kore</option><option>Aoede</option><option>Leda</option><option>Zephyr</option><option>Puck</option><option>Charon</option></select>
+  <label for="tstyle">Estilo al hablar</label>
+  <input id="tstyle">
+  <label for="ttsmodel">Modelo de voz</label>
+  <input id="ttsmodel">
+  <p class="hint">Si falla, Lara usa la voz de tu móvil. En el plan gratis esta voz tiene límites bajos, y solo lee el inicio de respuestas largas.</p>
   <label>Respaldo</label>
   <p class="hint">Guarda la memoria y la personalidad en un archivo. No incluye tu clave.</p>
   <div class="row"><button id="exp" type="button">Exportar</button><button id="imp" type="button">Importar</button></div>
@@ -218,7 +226,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=11;
+const APP_V=12;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -414,10 +422,9 @@ function speakNow(t,onend){
 let hfActive=false,recStart=null;
 function speak(t){
   const hf=hfActive;
-  if((store.get("lara_voice","0")!=="1"&&!hf)||!window.speechSynthesis){if(hf&&recStart) setTimeout(recStart,500);return}
+  if((store.get("lara_voice","0")!=="1"&&!hf)||(!window.speechSynthesis&&store.get("lara_ntts","0")!=="1")){if(hf&&recStart) setTimeout(recStart,500);return}
   t=t.split("\n\n🔎")[0].replace(/[*_`#]/g,"");
-  speechSynthesis.cancel();
-  speakNow(t,()=>{if(hfActive&&recStart) setTimeout(recStart,400)});
+  speakAuto(t,()=>{if(hfActive&&recStart) setTimeout(recStart,400)});
 }
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SR){$("mic").style.display="none"}else{
@@ -430,7 +437,7 @@ if(!SR){$("mic").style.display="none"}else{
   rec.onerror=ev=>{on=false;if(hfActive&&ev.error==="no-speech") setTimeout(startRec,500); else if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){hfActive=false;$("mic").textContent="🎤"}};
   $("mic").onclick=()=>{
     if(store.get("lara_hf","0")==="1"){
-      if(hfActive){hfActive=false;try{rec.stop()}catch(e){}if(window.speechSynthesis) speechSynthesis.cancel();$("mic").textContent="🎤"}
+      if(hfActive){hfActive=false;try{rec.stop()}catch(e){}stopSpeech();$("mic").textContent="🎤"}
       else{hfActive=true;startRec()}
       return;
     }
@@ -732,7 +739,7 @@ $("voicesel").onchange=e=>store.set("lara_vname",e.target.value);
 $("pitch").value=store.get("lara_pitch","1");$("rate").value=store.get("lara_rate","1");
 $("pitch").oninput=e=>store.set("lara_pitch",e.target.value);
 $("rate").oninput=e=>store.set("lara_rate",e.target.value);
-$("testvoice").onclick=()=>{if(!window.speechSynthesis) return;speechSynthesis.cancel();speakNow("Hola, soy Lara. Así sueno ahora.")};
+$("testvoice").onclick=()=>{speakAuto("Hola, soy Lara. Así sueno ahora.")};
 function myDay(){
   const end=new Date();end.setHours(23,59,59,999);
   const pend=rems.filter(r=>!r.done&&new Date(r.at)<=end).sort((a,b)=>a.at<b.at?-1:1).map(r=>"- "+new Date(r.at).toLocaleTimeString("es",{timeStyle:"short"})+" "+r.text);
@@ -752,6 +759,47 @@ async function checkUpdate(){
   }catch(e){}
 }
 setTimeout(checkUpdate,3000);
+let curSrc=null,actx=null;
+function stopSpeech(){
+  try{if(curSrc){curSrc.onended=null;curSrc.stop();curSrc=null}}catch(e){}
+  try{if(window.speechSynthesis) speechSynthesis.cancel()}catch(e){}
+}
+function speakAuto(t,cb){
+  stopSpeech();
+  if(store.get("lara_ntts","0")==="1") naturalSpeak(t,cb);
+  else if(window.speechSynthesis) speakNow(t,cb);
+  else if(cb) cb();
+}
+async function naturalSpeak(t,onend){
+  try{
+    const model=store.get("lara_ttsmodel","gemini-3.1-flash-tts-preview"),voice=store.get("lara_tvoice","Kore"),style=store.get("lara_tstyle","Di con voz suave, cálida y pausada: ");
+    const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":store.get("lara_key","")},body:JSON.stringify({contents:[{parts:[{text:style+t.slice(0,900)}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}})});
+    const d=await res.json();
+    if(!res.ok) throw new Error("tts");
+    const part=d.candidates[0].content.parts.find(p=>p.inlineData);
+    const bin=atob(part.inlineData.data),n=bin.length>>1,f=new Float32Array(n);
+    for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);if(v>=32768) v-=65536;f[i]=v/32768}
+    const m=/rate=(\d+)/.exec(part.inlineData.mimeType||""),rate=m?+m[1]:24000;
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==="suspended") await actx.resume();
+    const buf=actx.createBuffer(1,n,rate);buf.copyToChannel(f,0);
+    stopSpeech();
+    const src=actx.createBufferSource();src.buffer=buf;src.connect(actx.destination);
+    src.onended=()=>{if(onend) onend()};curSrc=src;src.start();
+    bump(model);showStatus();
+  }catch(e){
+    if(!naturalSpeak.warned){naturalSpeak.warned=true;toast("La voz natural no está disponible ahora; usé la voz del móvil.")}
+    if(window.speechSynthesis) speakNow(t,onend); else if(onend) onend();
+  }
+}
+$("ntts").checked=store.get("lara_ntts","0")==="1";
+$("ntts").onchange=e=>{store.set("lara_ntts",e.target.checked?"1":"0");naturalSpeak.warned=false};
+$("tvoice").value=store.get("lara_tvoice","Kore");
+$("tvoice").onchange=e=>store.set("lara_tvoice",e.target.value);
+$("tstyle").value=store.get("lara_tstyle","Di con voz suave, cálida y pausada: ");
+$("tstyle").oninput=e=>store.set("lara_tstyle",e.target.value);
+$("ttsmodel").value=store.get("lara_ttsmodel","gemini-3.1-flash-tts-preview");
+$("ttsmodel").oninput=e=>store.set("lara_ttsmodel",e.target.value.trim());
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
