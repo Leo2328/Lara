@@ -111,7 +111,7 @@ header button{padding:6px 10px}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 9. Si la app instalada muestra algo viejo, toca Actualizar.</p>
+  <p class="hint">Versión 10. Si la app instalada muestra algo viejo, toca Actualizar.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button></div>
   <label style="display:flex;gap:8px;align-items:center"><input id="hf" type="checkbox" style="width:auto"> Conversación por voz manos libres (toca 🎤 para empezar y parar)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
@@ -127,8 +127,17 @@ header button{padding:6px 10px}
   <label>Memoria de Lara</label>
   <p class="hint">Lo que Lara recuerda de ti. Ella añade datos importantes sola; aquí puedes borrarlos o añadir otros.</p>
   <div id="mems"></div>
+  <div class="row"><button id="tidy" type="button">Ordenar memoria</button></div>
   <div class="row"><input id="newmem" placeholder="Ej: Me llamo Leo"><button id="addmem" type="button">Añadir</button></div>
   <label style="display:flex;gap:8px;align-items:center"><input id="voice" type="checkbox" style="width:auto"> Lara responde en voz alta</label>
+  <label for="voicesel">Voz de Lara</label>
+  <select id="voicesel"></select>
+  <label for="pitch">Tono de voz</label>
+  <input id="pitch" type="range" min="0.5" max="2" step="0.1">
+  <label for="rate">Velocidad</label>
+  <input id="rate" type="range" min="0.6" max="1.6" step="0.1">
+  <div class="row"><button id="testvoice" type="button">Probar voz</button></div>
+  <p class="hint">Solo puedes elegir entre las voces de tu móvil. Lara no puede imitar la voz de una persona ni de un personaje.</p>
   <label>Respaldo</label>
   <p class="hint">Guarda la memoria y la personalidad en un archivo. No incluye tu clave.</p>
   <div class="row"><button id="exp" type="button">Exportar</button><button id="imp" type="button">Importar</button></div>
@@ -386,15 +395,21 @@ $("impf").onchange=e=>{
 };
 $("voice").checked=store.get("lara_voice","0")==="1";
 $("voice").onchange=e=>store.set("lara_voice",e.target.checked?"1":"0");
+function speakNow(t,onend){
+  const u=new SpeechSynthesisUtterance(t);u.lang="es-ES";
+  const v=speechSynthesis.getVoices().find(x=>x.name===store.get("lara_vname",""));
+  if(v){u.voice=v;u.lang=v.lang}
+  u.pitch=+store.get("lara_pitch","1")||1;u.rate=+store.get("lara_rate","1")||1;
+  if(onend) u.onend=u.onerror=onend;
+  speechSynthesis.speak(u);
+}
 let hfActive=false,recStart=null;
 function speak(t){
   const hf=hfActive;
   if((store.get("lara_voice","0")!=="1"&&!hf)||!window.speechSynthesis){if(hf&&recStart) setTimeout(recStart,500);return}
   t=t.split("\n\n🔎")[0].replace(/[*_`#]/g,"");
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(t);u.lang="es-ES";
-  u.onend=u.onerror=()=>{if(hfActive&&recStart) setTimeout(recStart,400)};
-  speechSynthesis.speak(u);
+  speakNow(t,()=>{if(hfActive&&recStart) setTimeout(recStart,400)});
 }
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SR){$("mic").style.display="none"}else{
@@ -477,6 +492,7 @@ function addRem(at,text){
   const d=new Date(at);
   if(!text||isNaN(d.getTime())) return "⚠️ No pude guardar el recordatorio: fecha inválida";
   if(d.getTime()<=Date.now()) return "⚠️ No lo guardé: esa hora ya pasó";
+  if(rems.some(x=>!x.done&&x.at===at&&x.text.toLowerCase()===text.toLowerCase())) return "ℹ️ Ya tenías ese recordatorio";
   rems.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),text,at,done:false});saveRems();
   return "⏰ Guardado para "+d.toLocaleString("es",{dateStyle:"medium",timeStyle:"short"});
 }
@@ -505,7 +521,7 @@ function renderNotes(){
   if(!rems.length) empty(rl,"Sin recordatorios.");
   rems.slice().sort((a,b)=>a.at<b.at?-1:1).forEach(r=>{
     const when=new Date(r.at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"});
-    rl.appendChild(row((r.done?"✓ ":"⏰ ")+when+"\n"+r.text,[btn("Calendario",()=>icsDownload(r)),btn("Borrar",()=>{rems=rems.filter(x=>x.id!==r.id);saveRems();renderNotes()})]));
+    rl.appendChild(row((r.done?"✓ ":"⏰ ")+when+"\n"+r.text,[btn("Reloj",()=>clockAlarm(r)),btn("Calendario",()=>icsDownload(r)),btn("Borrar",()=>{rems=rems.filter(x=>x.id!==r.id);saveRems();renderNotes()})]));
   });
 }
 function askPerm(){try{if("Notification" in window&&Notification.permission==="default") Notification.requestPermission()}catch(e){}}
@@ -668,6 +684,46 @@ $("hf").onchange=e=>store.set("lara_hf",e.target.checked?"1":"0");
   else if(a==="voz") setTimeout(()=>$("mic").click(),600);
 })();
 applyMode();
+function clockAlarm(r){
+  const d=new Date(r.at);
+  setTimeout(()=>toast("Si no se abrió el reloj, usa el botón Calendario."),1500);
+  location.href="intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR="+d.getHours()+";i.android.intent.extra.alarm.MINUTES="+d.getMinutes()+";S.android.intent.extra.alarm.MESSAGE="+encodeURIComponent(r.text.slice(0,60))+";end";
+}
+function dedupeRems(){
+  const seen=new Set();
+  const n=rems.filter(r=>{if(r.done) return true;const k=r.at+"|"+r.text.toLowerCase();if(seen.has(k)) return false;seen.add(k);return true});
+  if(n.length!==rems.length){rems=n;saveRems()}
+}
+dedupeRems();
+async function tidyMem(){
+  if(mems.length<3){toast("Hay muy pocos datos para ordenar.");return}
+  const prev=mems.slice(),model=store.get("lara_model_ok","")||"gemini-3.5-flash-lite";
+  toast("Ordenando la memoria…");
+  try{
+    const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":store.get("lara_key","")},body:JSON.stringify({contents:[{role:"user",parts:[{text:"Esta es la lista de datos que recuerdo de un usuario. Elimina duplicados, une los que dicen lo mismo y mejora la redacción. No inventes datos ni quites ninguno que sea distinto. Responde SOLO con un arreglo JSON de textos cortos en español.\n"+JSON.stringify(prev)}]}]})});
+    const d=await res.json();
+    const t=d.candidates[0].content.parts.map(p=>p.text||"").join("").replace(/```json|```/g,"").trim();
+    const arr=JSON.parse(t);
+    if(!res.ok||!Array.isArray(arr)||arr.some(x=>typeof x!=="string")||arr.length<Math.ceil(prev.length/3)||arr.length>prev.length+2) throw new Error("x");
+    mems=arr.map(x=>x.trim().slice(0,200)).filter(Boolean);saveMems();renderMems();bump(model);showStatus();
+    toast("Memoria ordenada: "+mems.length+" datos. Toca aquí para deshacer.",true,()=>{mems=prev;saveMems();renderMems()});
+  }catch(e){toast("No pude ordenar la memoria ahora. Inténtalo más tarde.")}
+}
+$("tidy").onclick=tidyMem;
+function loadVoices(){
+  const sel=$("voicesel"),all=window.speechSynthesis?speechSynthesis.getVoices():[];
+  const es=all.filter(v=>v.lang&&v.lang.toLowerCase().startsWith("es")),list=es.length?es:all;
+  sel.innerHTML="";
+  const d=document.createElement("option");d.value="";d.textContent="Predeterminada";sel.appendChild(d);
+  list.forEach(v=>{const o=document.createElement("option");o.value=v.name;o.textContent=v.name+" ("+v.lang+")";sel.appendChild(o)});
+  sel.value=store.get("lara_vname","");
+}
+if(window.speechSynthesis){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+$("voicesel").onchange=e=>store.set("lara_vname",e.target.value);
+$("pitch").value=store.get("lara_pitch","1");$("rate").value=store.get("lara_rate","1");
+$("pitch").oninput=e=>store.set("lara_pitch",e.target.value);
+$("rate").oninput=e=>store.set("lara_rate",e.target.value);
+$("testvoice").onclick=()=>{if(!window.speechSynthesis) return;speechSynthesis.cancel();speakNow("Hola, soy Lara. Así sueno ahora.")};
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
