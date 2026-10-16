@@ -202,6 +202,13 @@ if(!profiles.some(p=>p.id==="ana")){
   profiles.push({id:"ana",name:"Analista",prompt:"Eres Lara en modo analista. En preguntas complejas responde con esta estructura: 1) Respuesta breve. 2) Evidencias y datos que la respaldan. 3) Otras interpretaciones o posturas, y por qué alguien las defendería. 4) Puntos débiles o lo que no se sabe. 5) Nivel de certeza (alto, medio o bajo) y por qué. 6) Qué convendría verificar. Sé concreta y no te alargues sin necesidad. Si hay búsqueda web disponible, úsala para datos actuales y nombra las fuentes."});
   saveProfiles();
 }
+if(!profiles.some(p=>p.id==="pla")){
+  profiles.push({id:"pla",name:"Planificador",prompt:"Eres Lara, una asistente que ayuda a planificar proyectos de forma sencilla. Habla en español con calidez. Haz UNA pregunta a la vez. Primero aclara el objetivo, luego propón un plan en pasos pequeños y realistas (máximo 5), y al final resume las decisiones tomadas para que el usuario pueda guardarlas. No inventes detalles que el usuario no haya dicho."});
+  saveProfiles();
+}
+(function(){const g=profiles.find(p=>p.id==="gen");if(!g||typeof g.prompt!=="string")return;
+  const L=g.prompt.split("\n");const i=L.findIndex(x=>x.startsWith("Eres Lara, una asistente personal"));
+  if(i>=0&&L.slice(i+1).some(x=>x.startsWith("Eres Lara, una asistente personal"))){L.splice(i,1);g.prompt=L.join("\n");saveProfiles()}})();
 function curProf(){return profiles.find(p=>p.id===store.get("lara_prof",""))||profiles[0]}
 function fillProf(){
   const sel=$("prof");sel.innerHTML="";
@@ -235,19 +242,27 @@ function renderMems(){
     d.append(s,b);box.appendChild(d);
   });
 }
+const BIBLE_RE=/\b(biblia|b[ií]blic[oa]s?|vers[ií]culo|cap[ií]tulo|g[eé]nesis|[eé]xodo|salmos?|proverbios|isa[ií]as|daniel|apocalipsis|evangelio|mateo|marcos|lucas|juan|romanos|hebreos|jes[uú]s|cristo|profec[ií]a|escatolog[ií]a|teolog[ií]a|pecado|salvaci[oó]n|santuario|sábado|sabado)\b/i;
+function effProf(){
+  const p=curProf();
+  if(p.id!=="gen") return p;
+  const lu=history.length?history[history.length-1]:null;
+  const t=lu&&lu.role==="user"&&lu.parts&&lu.parts[0]?(lu.parts[0].text||""):"";
+  return (t&&BIBLE_RE.test(t)&&profiles.find(x=>x.id==="bib"))||p;
+}
 function buildSys(){
-  let s=curProf().prompt;
+  let s=effProf().prompt;
   s+="\n\nCalidad de análisis: distingue hechos, interpretaciones y opiniones; en temas debatidos presenta las posturas principales y tu nivel de certeza; no inventes datos, cifras ni citas; si algo puede haber cambiado, dilo.";
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+mems.join("\n- ");
-  s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
+  s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias, o decisiones tomadas en un proyecto, indicando el nombre del proyecto) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
   if(cur.summary) s+="\n\nResumen de lo anterior en esta conversación: "+cur.summary;
   { const lu=history.length?history[history.length-1]:null; if(lu&&lu.role==="user") s+=libContext((lu.parts[0].text||"").slice(0,500)); }
   const now=new Date();
-  s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide anotar una tarea pendiente, añade [[TAREA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas. Nunca afirmes que enviaste un aviso, alarma o notificación: los recordatorios los dispara la aplicación. Solo confirma que quedó guardado.";
+  s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide anotar una tarea pendiente, añade [[TAREA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si el recordatorio debe repetirse, añade al final ` | diario`, ` | laborales` (lunes a viernes) o ` | semanal`. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas. Nunca afirmes que enviaste un aviso, alarma o notificación: los recordatorios los dispara la aplicación. Solo confirma que quedó guardado.";
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=15;
+const APP_V=17;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -384,7 +399,7 @@ $("f").onsubmit=async ev=>{
     let clean=reply.replace(/\[\[MEMORIA:\s*([^\]]+?)\]\]/g,(m,t)=>{addMem(t);return ""})
       .replace(/\[\[NOTA:\s*([^\]]+?)\]\]/g,(m,t)=>{addNote(t);extra.push("📝 Nota guardada");return ""})
       .replace(/\[\[TAREA:\s*([^\]]+?)\]\]/g,(m,t)=>{addTask(t);extra.push("✅ Tarea añadida");return ""})
-      .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{extra.push(addRem(at,t));return ""}).trim();
+      .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{let rp="";const mm=t.match(/\|\s*(diario|laborales|semanal)\s*$/i);if(mm){rp=mm[1].toLowerCase();t=t.replace(/\|\s*(diario|laborales|semanal)\s*$/i,"")}extra.push(addRem(at,t,rp));return ""}).trim();
     if(!clean) clean="Listo.";
     if(extra.length) clean+="\n\n"+extra.join(" · ");
     clean+=sourcesText(data);
@@ -408,7 +423,7 @@ function exportAll(){
   const data=JSON.stringify({lara:2,memoria:mems,notas:notes,tareas:tasks,habitos:habits,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")}},null,2);
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));
-  a.download="lara-respaldo.json";document.body.appendChild(a);a.click();a.remove();
+  a.download="lara-respaldo-"+isoLocal(new Date()).slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();
   store.set("lara_backup",String(Date.now()));
 }
 $("exp").onclick=exportAll;
@@ -524,14 +539,14 @@ try{rems=JSON.parse(store.get("lara_rem","[]"))||[]}catch(e){}
 function saveNotes(){store.set("lara_notes",JSON.stringify(notes))}
 function saveRems(){store.set("lara_rem",JSON.stringify(rems))}
 function addNote(t){t=(t||"").trim().slice(0,1000);if(!t)return;notes.push(t);if(notes.length>100)notes.shift();saveNotes()}
-function addRem(at,text){
+function addRem(at,text,rep){
   text=(text||"").trim().slice(0,200);
   const d=new Date(at);
   if(!text||isNaN(d.getTime())) return "⚠️ No pude guardar el recordatorio: fecha inválida";
   if(d.getTime()<=Date.now()) return "⚠️ No lo guardé: esa hora ya pasó";
   if(rems.some(x=>!x.done&&x.at===at&&x.text.toLowerCase()===text.toLowerCase())) return "ℹ️ Ya tenías ese recordatorio";
-  rems.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),text,at,done:false});saveRems();
-  return "⏰ Guardado para "+d.toLocaleString("es",{dateStyle:"medium",timeStyle:"short"});
+  rems.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),text,at,done:false,rep:rep||""});saveRems();
+  return "⏰ Guardado para "+d.toLocaleString("es",{dateStyle:"medium",timeStyle:"short"})+(rep?" (se repite: "+rep+")":"");
 }
 function toast(m,sticky,fn){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);if(!sticky) toast.h=setTimeout(()=>t.style.display="none",8000);t.onclick=()=>{t.style.display="none";if(fn)fn()}}
 function btn(label,fn){const b=document.createElement("button");b.type="button";b.textContent=label;b.onclick=fn;return b}
@@ -559,7 +574,7 @@ function renderNotes(){
   if(!rems.length) empty(rl,"Sin recordatorios.");
   rems.slice().sort((a,b)=>a.at<b.at?-1:1).forEach(r=>{
     const when=new Date(r.at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"});
-    rl.appendChild(row((r.done?"✓ ":"⏰ ")+when+"\n"+r.text,[btn("Reloj",()=>clockAlarm(r)),btn("Calendario",()=>icsDownload(r)),btn("Borrar",()=>{rems=rems.filter(x=>x.id!==r.id);saveRems();renderNotes()})]));
+    rl.appendChild(row((r.done?"✓ ":"⏰ ")+when+(r.rep?" 🔁 "+r.rep:"")+"\n"+r.text,[btn("Reloj",()=>clockAlarm(r)),btn("Calendario",()=>icsDownload(r)),btn("Borrar",()=>{rems=rems.filter(x=>x.id!==r.id);saveRems();renderNotes()})]));
   });
 }
 function askPerm(){try{if("Notification" in window&&Notification.permission==="default") Notification.requestPermission()}catch(e){}}
@@ -573,7 +588,15 @@ function notify(t){
 }
 function checkRems(){
   const now=Date.now();let ch=false;
-  rems.forEach(r=>{if(!r.done&&new Date(r.at).getTime()<=now){r.done=true;ch=true;notify(r.text)}});
+  rems.forEach(r=>{if(!r.done&&new Date(r.at).getTime()<=now){
+    notify(r.text);ch=true;
+    if(r.rep){const d=new Date(r.at);let g=0;
+      do{d.setDate(d.getDate()+(r.rep==="semanal"?7:1));g++;
+        if(r.rep==="laborales"){while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1)}
+      }while(d.getTime()<=now&&g<800);
+      r.at=isoLocal(d);
+    } else r.done=true;
+  }});
   if(ch){saveRems();if($("notes").classList.contains("open")) renderNotes()}
 }
 $("openNotes").onclick=()=>{renderNotes();$("notes").classList.add("open");askPerm()};
@@ -924,6 +947,23 @@ setTimeout(()=>{
     const c=await caches.open("lara-share"),r=await c.match("shared-file");
     if(r){const b=await r.blob(),name=decodeURIComponent(r.headers.get("X-Name")||"archivo");await c.delete("shared-file");attachFile(new File([b],name,{type:b.type}))}
   }catch(e){}
+})();
+/* Datos actualizados (se aplican una sola vez, sin borrar nada tuyo) */
+(function(){
+  if(store.get("lara_seed16","")==="1") return;
+  const nuevos=[
+    "El nombre del usuario es Leo",
+    "Leo considera a Lara su amiga",
+    "Leo prefiere opciones sencillas y pasos pequeños",
+    "Proyecto Aurora: Leo lo está preparando; aún no hay decisiones definidas. Cuando se definan, guardar: objetivo, para qué sirve y decisiones tomadas"
+  ];
+  mems=mems.filter(m=>m.trim()!=="Proyecto Aurora");
+  const has=t=>mems.some(m=>norm(m)===norm(t)||(t.startsWith("Proyecto Aurora")&&m.startsWith("Proyecto Aurora")));
+  nuevos.forEach(t=>{if(!has(t)) mems.push(t)});
+  saveMems();
+  store.set("lara_search","1");
+  store.set("lara_seed16","1");
+  try{renderMems();if(typeof applyMode==="function")showStatus()}catch(e){}
 })();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
