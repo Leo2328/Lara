@@ -47,6 +47,11 @@ header button{padding:6px 10px}
 #study.on{display:flex}
 #study button{white-space:nowrap;font-size:13px}
 #toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));background:var(--accent);color:var(--on-accent);padding:12px 14px;border-radius:12px;font:15px system-ui,sans-serif;z-index:50;display:none}
+.cp{display:block;margin-top:6px;font-size:12px;padding:3px 8px}
+.msg code{background:rgba(127,127,127,.2);padding:1px 4px;border-radius:4px;font-family:monospace;font-size:.9em}
+#lock{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px}
+#lock.on{display:flex}
+#lock .box{width:100%;max-width:320px;text-align:center}
 </style>
 </head>
 <body>
@@ -65,6 +70,7 @@ header button{padding:6px 10px}
 </form>
 
 <div id="toast" role="status"></div>
+<div id="lock"><div class="box"><h1>Lara</h1><p class="hint">Escribe tu PIN</p><input id="pin" type="password" inputmode="numeric" autocomplete="off"><p id="lockerr" class="hint"></p><div class="row" style="justify-content:center"><button class="main" id="unlock" type="button">Entrar</button></div></div></div>
 <section id="chats" aria-label="Conversaciones">
   <h1>Conversaciones</h1>
   <input id="chatq" type="search" placeholder="Buscar en las conversaciones">
@@ -100,6 +106,11 @@ header button{padding:6px 10px}
   <select id="theme"><option value="auto">Automático</option><option value="light">Claro</option><option value="dark">Oscuro</option></select>
   <label for="accent">Color</label>
   <select id="accent"><option value="teal">Verde azulado</option><option value="indigo">Índigo</option><option value="rose">Rosa</option></select>
+  <p class="hint" id="usage"></p>
+  <label for="newpin">PIN de bloqueo</label>
+  <input id="newpin" type="password" inputmode="numeric" autocomplete="off" placeholder="4 a 8 números">
+  <div class="row"><button id="setpin" type="button">Guardar PIN</button><button id="rmpin" type="button">Quitar PIN</button></div>
+  <p class="hint">Bloquea la app al abrirla o tras 1 minuto en segundo plano. No cifra tus datos: si lo olvidas, tendrás que borrar los datos del sitio y restaurar tu respaldo.</p>
   <label>Memoria de Lara</label>
   <p class="hint">Lo que Lara recuerda de ti. Ella añade datos importantes sola; aquí puedes borrarlos o añadir otros.</p>
   <div id="mems"></div>
@@ -163,7 +174,27 @@ function buildSys(){
 }
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function askGemini(key){
+async function readStream(res,onChunk){
+  const rd=res.body.getReader(),dec=new TextDecoder();
+  let buf="",full="",gm=null;
+  for(;;){
+    const r=await rd.read(); if(r.done) break;
+    buf+=dec.decode(r.value,{stream:true});
+    let i;
+    while((i=buf.indexOf("\n"))>=0){
+      const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+      if(!line.startsWith("data:")) continue;
+      try{
+        const c=(JSON.parse(line.slice(5)).candidates||[])[0]; if(!c) continue;
+        if(c.content&&c.content.parts) full+=c.content.parts.map(p=>p.text||"").join("");
+        if(c.groundingMetadata) gm=c.groundingMetadata;
+      }catch(e){}
+      if(onChunk) onChunk(full);
+    }
+  }
+  return {candidates:[{content:{parts:[{text:full}]},groundingMetadata:gm}]};
+}
+async function askGemini(key,onChunk){
   const first=[store.get("lara_model",""),store.get("lara_model_ok","")].filter(Boolean);
   const models=[...new Set([...first,...FALLBACK])];
   const base={systemInstruction:{parts:[{text:buildSys()}]},contents:history.slice(-30)};
@@ -174,8 +205,9 @@ async function askGemini(key){
     for(let i=0;i<3;i++){
       let res;
       try{
-        res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(tools?{...base,tools:[{google_search:{}}]}:base)});
+        res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":streamGenerateContent?alt=sse",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(tools?{...base,tools:[{google_search:{}}]}:base)});
       }catch(e){throw new Error("Sin conexión. Revisa tu internet e inténtalo de nuevo.")}
+      if(res.ok){const dd=await readStream(res,onChunk);store.set("lara_model_ok",model);bump(model);if(wanted&&!tools) dd._ns=1;return dd}
       let data={};try{data=await res.json()}catch(e){}
       if(res.ok){store.set("lara_model_ok",model);if(wanted&&!tools) data._ns=1;return data}
       const msg=(data.error&&data.error.message)||"";
@@ -193,13 +225,21 @@ async function askGemini(key){
   throw new Error("Ningún modelo respondió. Revisa el modelo en Ajustes.");
 }
 $("addmem").onclick=()=>{addMem($("newmem").value);$("newmem").value="";renderMems()};
+function esc(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function md(t){return esc(t).replace(/^#{1,6}\s*(.+)$/gm,"<b>$1</b>").replace(/^[*-]\s+/gm,"• ").replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[\s(])\*([^*\n]+)\*/g,"$1<i>$2</i>").replace(/`([^`\n]+)`/g,"<code>$1</code>")}
+function setText(d,t){d.dataset.raw=t;d.querySelector(".t").innerHTML=md(t)}
 function add(role,text){
   const chat=$("chat");
   const e=chat.querySelector(".empty"); if(e) e.remove();
   const d=document.createElement("div");
   d.className="msg "+(role==="user"?"me":role==="err"?"err":"lara");
   if(role==="err") d.className="err";
-  d.textContent=text;
+  if(role==="lara"){
+    d.innerHTML='<span class="t"></span><button type="button" class="cp">Copiar</button>';
+    setText(d,text);
+    const cb=d.querySelector(".cp");
+    cb.onclick=()=>{try{navigator.clipboard.writeText(d.dataset.raw).then(()=>{cb.textContent="Copiado";setTimeout(()=>cb.textContent="Copiar",1500)})}catch(e){}};
+  }else d.textContent=text;
   chat.appendChild(d);
   chat.scrollTop=chat.scrollHeight;
   return d;
@@ -213,14 +253,14 @@ function render(){
     $("chat").appendChild(d);
   }
   history.forEach(m=>add(m.role==="user"?"user":"lara",m.parts[0].text));
-  $("status").textContent=store.get("lara_key","")?"Lista":"Falta la clave en Ajustes";
+  showStatus();
 }
 function openCfg(){
   $("key").value=store.get("lara_key","");
   $("model").value=store.get("lara_model","");
   $("sys").value=store.get("lara_sys",DEFAULT_SYS);
   $("cfg").classList.add("open");
-  renderMems();
+  renderMems();$("usage").textContent=usageText();
 }
 $("openCfg").onclick=openCfg;
 $("close").onclick=()=>{$("cfg").classList.remove("open");render()};
@@ -251,7 +291,7 @@ $("f").onsubmit=async ev=>{
   const bubble=add("lara","…");
   $("send").disabled=true;
   try{
-    const data=await askGemini(key);
+    const data=await askGemini(key,t=>{setText(bubble,t.replace(/\[\[[\s\S]*$/,"")||"…");$("chat").scrollTop=$("chat").scrollHeight});
     const parts=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts;
     const reply=parts?parts.map(p=>p.text||"").join(""):"";
     if(!reply) throw new Error("Lara no devolvió respuesta. Intenta de nuevo.");
@@ -262,12 +302,12 @@ $("f").onsubmit=async ev=>{
     if(!clean) clean="Listo.";
     if(extra.length) clean+="\n\n"+extra.join(" · ");
     clean+=sourcesText(data);
-    bubble.textContent=clean;
+    setText(bubble,clean);
     speak(clean);
     history.push({role:"model",parts:[{text:clean}]});
     clearImg();
     history.forEach(m=>{if(m.parts.some(p=>p.inlineData)) m.parts=[{text:m.parts[0].text+" [imagen]"}]});
-    saveChats();
+    saveChats();showStatus();
   }catch(err){
     bubble.remove();
     history.pop();
@@ -467,6 +507,27 @@ applyMode();
   if(!last){store.set("lara_backup",String(Date.now()));return}
   if(Date.now()-last>7*864e5) toast("💾 Toca aquí para guardar tu respaldo semanal",true,exportAll);
 })();
+function useData(){const t=new Date().toDateString();let u=null;try{u=JSON.parse(store.get("lara_use","null"))}catch(e){}if(!u||u.d!==t) u={d:t,n:0,m:{}};return u}
+function bump(model){const u=useData();u.n++;u.m[model]=(u.m[model]||0)+1;store.set("lara_use",JSON.stringify(u))}
+function showStatus(){$("status").textContent=(store.get("lara_key","")?"Lista":"Falta la clave en Ajustes")+" · hoy: "+useData().n+" msj"}
+function usageText(){const u=useData();return "Uso de hoy: "+u.n+" mensajes"+Object.entries(u.m).map(e=>" · "+e[0]+": "+e[1]).join("")+". El plan gratis tiene límites por modelo que Google puede cambiar."}
+showStatus();
+async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("lara:"+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function lockOn(){if(store.get("lara_pin","")){$("lock").classList.add("on");$("pin").value="";$("lockerr").textContent="";setTimeout(()=>$("pin").focus(),50)}}
+$("unlock").onclick=async()=>{
+  if(await sha($("pin").value)===store.get("lara_pin","")){$("lock").classList.remove("on");$("pin").value="";$("lockerr").textContent=""}
+  else{$("lockerr").textContent="PIN incorrecto";$("pin").value=""}
+};
+$("pin").addEventListener("keydown",e=>{if(e.key==="Enter") $("unlock").click()});
+$("setpin").onclick=async()=>{
+  const v=$("newpin").value.trim();
+  if(!/^\d{4,8}$/.test(v)){toast("El PIN debe tener de 4 a 8 números.");return}
+  store.set("lara_pin",await sha(v));$("newpin").value="";toast("PIN guardado.");
+};
+$("rmpin").onclick=()=>{store.set("lara_pin","");toast("PIN quitado.")};
+let hiddenAt=0;
+document.addEventListener("visibilitychange",()=>{if(document.hidden) hiddenAt=Date.now(); else if(hiddenAt&&Date.now()-hiddenAt>60000) lockOn()});
+lockOn();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
