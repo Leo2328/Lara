@@ -87,6 +87,17 @@ header button{padding:6px 10px}
   <label>Notas</label>
   <div id="nlist"></div>
   <div class="row"><input id="newnote" placeholder="Escribe una nota"><button id="addnote" type="button">Guardar nota</button></div>
+  <label>Tareas</label>
+  <div id="tlist"></div>
+  <div class="row"><input id="newtask" placeholder="Nueva tarea"><button id="addtask" type="button">Añadir</button></div>
+  <label>Hábitos</label>
+  <div id="hlist"></div>
+  <div class="row"><input id="newhabit" placeholder="Nuevo hábito, ej: Leer 10 minutos"><button id="addhabit" type="button">Añadir</button></div>
+  <label>Biblioteca</label>
+  <p class="hint">Archivos de texto que Lara consulta al responder (.txt, .md, .csv, .json). Máximo 5. Los fragmentos relevantes se envían a Google.</p>
+  <div id="dlist"></div>
+  <div class="row"><button id="adddoc" type="button">Añadir archivo</button></div>
+  <input id="docf" type="file" accept=".txt,.md,.csv,.json,text/plain" hidden>
   <label>Recordatorios</label>
   <p class="hint">Avisan solo si Lara está abierta. Para que avisen siempre, toca Calendario y ábrelo en tu app de calendario.</p>
   <div id="rlist"></div>
@@ -109,11 +120,14 @@ header button{padding:6px 10px}
   <input id="profname">
   <label for="sys">Personalidad de este perfil</label>
   <textarea id="sys" rows="6"></textarea>
+  <label for="topics">Temas de noticias</label>
+  <input id="topics" placeholder="Ej: tecnología, fe, anime">
+  <label style="display:flex;gap:8px;align-items:center"><input id="autonews" type="checkbox" style="width:auto"> Resumen de noticias al abrir (1 vez al día)</label>
   <label>Atajos (frases rápidas)</label>
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 14. Si la app instalada muestra algo viejo, toca Actualizar.</p>
+  <p class="hint">Versión 15. Si la app instalada muestra algo viejo, toca Actualizar.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button></div>
   <label style="display:flex;gap:8px;align-items:center"><input id="hf" type="checkbox" style="width:auto"> Conversación por voz manos libres (toca 🎤 para empezar y parar)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
@@ -227,12 +241,13 @@ function buildSys(){
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+mems.join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
   if(cur.summary) s+="\n\nResumen de lo anterior en esta conversación: "+cur.summary;
+  { const lu=history.length?history[history.length-1]:null; if(lu&&lu.role==="user") s+=libContext((lu.parts[0].text||"").slice(0,500)); }
   const now=new Date();
-  s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas. Nunca afirmes que enviaste un aviso, alarma o notificación: los recordatorios los dispara la aplicación. Solo confirma que quedó guardado.";
+  s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide anotar una tarea pendiente, añade [[TAREA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas. Nunca afirmes que enviaste un aviso, alarma o notificación: los recordatorios los dispara la aplicación. Solo confirma que quedó guardado.";
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=14;
+const APP_V=15;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -261,7 +276,7 @@ async function askGemini(key,onChunk){
   const first=[store.get("lara_model",""),store.get("lara_model_ok","")].filter(Boolean);
   const models=[...new Set([...first,...FALLBACK])];
   const base={systemInstruction:{parts:[{text:buildSys()}]},contents:history.slice(-30)};
-  let tools=store.get("lara_search","1")==="1";
+  let tools=forceSearch||store.get("lara_search","1")==="1";
   const wanted=tools;
   let quota=false,busy=false;
   for(const model of models){
@@ -368,6 +383,7 @@ $("f").onsubmit=async ev=>{
     let extra=[];
     let clean=reply.replace(/\[\[MEMORIA:\s*([^\]]+?)\]\]/g,(m,t)=>{addMem(t);return ""})
       .replace(/\[\[NOTA:\s*([^\]]+?)\]\]/g,(m,t)=>{addNote(t);extra.push("📝 Nota guardada");return ""})
+      .replace(/\[\[TAREA:\s*([^\]]+?)\]\]/g,(m,t)=>{addTask(t);extra.push("✅ Tarea añadida");return ""})
       .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{extra.push(addRem(at,t));return ""}).trim();
     if(!clean) clean="Listo.";
     if(extra.length) clean+="\n\n"+extra.join(" · ");
@@ -384,12 +400,12 @@ $("f").onsubmit=async ev=>{
     add("err",err.message);
     if(hfActive&&recStart) setTimeout(recStart,800);
   }
-  $("send").type="submit";$("send").textContent="Enviar";$("send").onclick=null;ctrl=null;
+  $("send").type="submit";$("send").textContent="Enviar";$("send").onclick=null;ctrl=null;forceSearch=false;
   $("chat").scrollTop=$("chat").scrollHeight;
 };
 
 function exportAll(){
-  const data=JSON.stringify({lara:2,memoria:mems,notas:notes,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")}},null,2);
+  const data=JSON.stringify({lara:2,memoria:mems,notas:notes,tareas:tasks,habitos:habits,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")}},null,2);
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));
   a.download="lara-respaldo.json";document.body.appendChild(a);a.click();a.remove();
@@ -411,7 +427,7 @@ $("impf").onchange=e=>{
     saveProfiles();
     const a=d.ajustes||{};
     ["theme","accent","mode","search"].forEach(k=>{if(a[k]) store.set("lara_"+k,a[k])});
-    saveNotes();saveRems();saveChats();renderMems();applyTheme();applyMode();render();alert("Respaldo importado.");
+    if(Array.isArray(d.tareas)) d.tareas.forEach(x=>{if(x&&x.id&&!tasks.some(y=>y.id===x.id)) tasks.push(x)});if(Array.isArray(d.habitos)) d.habitos.forEach(x=>{if(x&&x.id&&!habits.some(y=>y.id===x.id)) habits.push(x)});saveTasks();saveHabits();saveNotes();saveRems();saveChats();renderMems();applyTheme();applyMode();render();alert("Respaldo importado.");
   }catch(err){alert("El archivo no es un respaldo válido.")}};
   r.readAsText(f);e.target.value="";
 };
@@ -454,8 +470,8 @@ if(!SR){$("mic").style.display="none"}else{
 let pendingImg=null,pendingMime="image/jpeg",pendingTxt=null;
 function clearImg(){pendingImg=null;pendingTxt=null;pendingMime="image/jpeg";$("chip").classList.remove("on")}
 $("attach").onclick=()=>$("imgf").click();
-$("imgf").onchange=e=>{
-  const f=e.target.files[0];e.target.value="";if(!f) return;
+$("imgf").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f) attachFile(f)};
+function attachFile(f){
   const lab=$("chiptxt");
   if(f.type.startsWith("image/")){
     const img=new Image();
@@ -535,6 +551,7 @@ function icsDownload(r){
   a.download="lara-recordatorio.ics";document.body.appendChild(a);a.click();a.remove();
 }
 function renderNotes(){
+  renderMore();
   const nl=$("nlist");nl.innerHTML="";
   if(!notes.length) empty(nl,"Sin notas.");
   notes.forEach((n,i)=>nl.appendChild(row(n,[btn("Borrar",()=>{notes.splice(i,1);saveNotes();renderNotes()})])));
@@ -685,6 +702,7 @@ function saveShorts(){store.set("lara_short",JSON.stringify(shorts))}
 function renderShorts(){
   const bar=$("shorts");bar.innerHTML="";
   bar.appendChild(btn("📅 Mi día",myDay));
+  bar.appendChild(btn("📰 Noticias",()=>newsBrief(false)));
   bar.appendChild(btn("🔍 A fondo",()=>{$("t").value="Analiza a fondo, con evidencias, otras interpretaciones y tu nivel de certeza: "+$("t").value;$("t").focus()}));
   shorts.forEach(t=>bar.appendChild(btn(t.trim().slice(0,24),()=>{$("t").value=($("t").value?$("t").value+" ":"")+t;$("t").focus()})));
   bar.classList.add("on");
@@ -823,6 +841,90 @@ $("resetvoice").onclick=()=>{
 };
 $("resetfs").onclick=()=>{store.set("lara_fs","16");$("fs").value=16;applyFs();showVals()};
 showVals();
+let forceSearch=false;
+let tasks=[],habits=[],docs=[];
+try{tasks=JSON.parse(store.get("lara_tasks","[]"))||[]}catch(e){}
+try{habits=JSON.parse(store.get("lara_habits","[]"))||[]}catch(e){}
+try{docs=JSON.parse(store.get("lara_docs","[]"))||[]}catch(e){}
+function saveTasks(){store.set("lara_tasks",JSON.stringify(tasks))}
+function saveHabits(){store.set("lara_habits",JSON.stringify(habits))}
+function saveDocs(){try{localStorage.setItem("lara_docs",JSON.stringify(docs));return true}catch(e){return false}}
+function addTask(t){t=(t||"").trim().slice(0,200);if(!t) return;tasks.push({id:uid(),text:t,done:false});saveTasks()}
+const dkey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+function streak(h){let n=0;const d=new Date();if(!h.days.includes(dkey(d))) d.setDate(d.getDate()-1);while(h.days.includes(dkey(d))){n++;d.setDate(d.getDate()-1)}return n}
+function renderMore(){
+  const tl=$("tlist");tl.innerHTML="";
+  if(!tasks.length) empty(tl,"Sin tareas.");
+  tasks.forEach((t,i)=>{
+    const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!t.done;cb.style.width="auto";
+    cb.onchange=()=>{t.done=cb.checked;saveTasks();renderMore()};
+    const r=row((t.done?"✓ ":"")+t.text,[btn("Borrar",()=>{tasks.splice(i,1);saveTasks();renderMore()})]);
+    r.insertBefore(cb,r.firstChild);if(t.done) r.style.opacity=.6;tl.appendChild(r);
+  });
+  const hl=$("hlist");hl.innerHTML="";
+  if(!habits.length) empty(hl,"Sin hábitos.");
+  habits.forEach((h,i)=>{
+    const today=dkey(new Date()),done=h.days.includes(today);
+    hl.appendChild(row(h.name+"\n🔥 Racha: "+streak(h)+" días",[
+      btn(done?"Hecho ✓":"Hoy",()=>{h.days=done?h.days.filter(x=>x!==today):h.days.concat(today);h.days=h.days.slice(-400);saveHabits();renderMore()}),
+      btn("Borrar",()=>{habits.splice(i,1);saveHabits();renderMore()})]));
+  });
+  const dl=$("dlist");dl.innerHTML="";
+  if(!docs.length) empty(dl,"Sin archivos.");
+  docs.forEach((d,i)=>dl.appendChild(row(d.name+"\n"+d.text.length.toLocaleString("es")+" caracteres",[btn("Borrar",()=>{docs.splice(i,1);saveDocs();renderMore()})])));
+}
+$("addtask").onclick=()=>{addTask($("newtask").value);$("newtask").value="";renderMore()};
+$("addhabit").onclick=()=>{const v=$("newhabit").value.trim().slice(0,80);if(!v) return;habits.push({id:uid(),name:v,days:[]});saveHabits();$("newhabit").value="";renderMore()};
+function norm(t){return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+function libContext(q){
+  if(!docs.length||!q) return "";
+  const words=[...new Set(norm(q).match(/[a-z0-9]{4,}/g)||[])];
+  if(!words.length) return "";
+  const chunks=[];
+  docs.forEach(d=>{for(let i=0;i<d.text.length;i+=1200){const c=d.text.slice(i,i+1200),n=norm(c);let sc=0;words.forEach(w=>{if(n.includes(w)) sc++});if(sc>0) chunks.push({sc,name:d.name,c})}});
+  chunks.sort((a,b)=>b.sc-a.sc);
+  const top=chunks.slice(0,3);
+  return top.length?"\n\nFragmentos de la biblioteca del usuario (úsalos solo si son relevantes y menciona el nombre del documento):\n"+top.map(x=>"["+x.name+"] "+x.c).join("\n---\n"):"";
+}
+$("adddoc").onclick=()=>$("docf").click();
+$("docf").onchange=e=>{
+  const f=e.target.files[0];e.target.value="";if(!f) return;
+  if(docs.length>=5){toast("La biblioteca admite hasta 5 archivos.");return}
+  const r=new FileReader();
+  r.onload=()=>{
+    const text=String(r.result).slice(0,150000);
+    if(docs.reduce((a,d)=>a+d.text.length,0)+text.length>600000){toast("La biblioteca está llena. Borra un archivo.");return}
+    docs.push({id:uid(),name:f.name,text});
+    if(!saveDocs()){docs.pop();toast("No hay espacio en el teléfono para este archivo.")}
+    renderMore();
+  };
+  r.readAsText(f);
+};
+function newsBrief(auto){
+  const tp=store.get("lara_topics","").trim();
+  if(!tp){toast("Escribe tus temas de noticias en Ajustes.");return}
+  if(ctrl) return;
+  forceSearch=true;
+  if(auto) store.set("lara_newsday",new Date().toDateString());
+  $("t").value="Busca las noticias más recientes sobre: "+tp+". Dame hasta 5 titulares, una línea cada uno, con la fuente y la fecha si puedes.";
+  $("f").requestSubmit();
+}
+$("topics").value=store.get("lara_topics","");
+$("topics").oninput=e=>store.set("lara_topics",e.target.value);
+$("autonews").checked=store.get("lara_autonews","0")==="1";
+$("autonews").onchange=e=>store.set("lara_autonews",e.target.checked?"1":"0");
+setTimeout(()=>{
+  if(store.get("lara_autonews","0")==="1"&&store.get("lara_topics","").trim()&&store.get("lara_key","")&&store.get("lara_newsday","")!==new Date().toDateString()&&!$("lock").classList.contains("on")&&!ctrl) newsBrief(true);
+},4000);
+(async function(){
+  const q=new URLSearchParams(location.search);
+  if(q.get("share")!=="1") return;
+  window.history.replaceState(null,"",location.pathname);
+  try{
+    const c=await caches.open("lara-share"),r=await c.match("shared-file");
+    if(r){const b=await r.blob(),name=decodeURIComponent(r.headers.get("X-Name")||"archivo");await c.delete("shared-file");attachFile(new File([b],name,{type:b.type}))}
+  }catch(e){}
+})();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
