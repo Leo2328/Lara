@@ -8,12 +8,61 @@
   "background_color": "#0e1514",
   "theme_color": "#0f766e",
   "icons": [
-    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
-    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
   "share_target": {
     "action": "lara.html",
     "method": "GET",
-    "params": {"title": "title", "text": "text", "url": "url"}
-  }
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "shortcuts": [
+    {
+      "name": "Nueva conversación",
+      "short_name": "Nueva",
+      "url": "lara.html?accion=nueva",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Notas y recordatorios",
+      "short_name": "Notas",
+      "url": "lara.html?accion=notas",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Hablar con Lara",
+      "short_name": "Voz",
+      "url": "lara.html?accion=voz",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
 }

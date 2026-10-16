@@ -100,16 +100,20 @@ header button{padding:6px 10px}
   <label for="model">Modelo</label>
   <input id="model" placeholder="Opcional, ej: gemini-3.5-flash-lite">
   <p class="hint">Déjalo vacío si quieres. Si un modelo falla, Lara prueba otros sola.</p>
-  <label for="sys">Personalidad de Lara</label>
+  <label for="prof">Perfil de Lara</label>
+  <select id="prof"></select>
+  <div class="row"><button id="newprof" type="button">Nuevo perfil</button><button id="delprof" type="button">Borrar perfil</button></div>
+  <label for="profname">Nombre del perfil</label>
+  <input id="profname">
+  <label for="sys">Personalidad de este perfil</label>
   <textarea id="sys" rows="6"></textarea>
   <label>Atajos (frases rápidas)</label>
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 8. Si la app instalada muestra algo viejo, toca Actualizar.</p>
+  <p class="hint">Versión 9. Si la app instalada muestra algo viejo, toca Actualizar.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button></div>
-  <label for="mode">Modo</label>
-  <select id="mode"><option value="general">General</option><option value="biblia">Estudio bíblico</option></select>
+  <label style="display:flex;gap:8px;align-items:center"><input id="hf" type="checkbox" style="width:auto"> Conversación por voz manos libres (toca 🎤 para empezar y parar)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
   <label for="theme">Tema</label>
   <select id="theme"><option value="auto">Automático</option><option value="light">Claro</option><option value="dark">Oscuro</option></select>
@@ -144,6 +148,26 @@ const store={
   get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},
   set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 };
+const STUDY_TXT="\n\nMODO ESTUDIO BÍBLICO: cita siempre libro, capítulo y versículo. Si citas el texto, hazlo en pocas palabras e indica la versión; si no, parafrasea. Distingue lo que dice el texto de lo que interpretan las tradiciones, presenta las lecturas principales (preterista, historicista, futurista, idealista) y di cuál tiene mejor sustento sin imponerla. No señales a personas actuales ni fijes fechas. Nunca inventes versículos: si no estás segura, dilo y pídeme que lo verifique en mi Biblia.";
+let profiles=null;
+try{profiles=JSON.parse(store.get("lara_profiles","null"))}catch(e){}
+function saveProfiles(){store.set("lara_profiles",JSON.stringify(profiles))}
+if(!Array.isArray(profiles)||!profiles.length){
+  profiles=[
+    {id:"gen",name:"General",prompt:store.get("lara_sys",DEFAULT_SYS)},
+    {id:"bib",name:"Estudio bíblico",prompt:DEFAULT_SYS+STUDY_TXT,study:true},
+    {id:"tra",name:"Traductora",prompt:"Eres Lara, una traductora cálida y precisa. Traduce entre español e inglés (u otro idioma que te pida) con naturalidad, y explica matices o expresiones cuando ayude. Responde primero con la traducción y después con notas breves."},
+    {id:"coa",name:"Coach de estudio",prompt:"Eres Lara, una coach de estudio y hábitos. Habla en español con calidez. Haz una pregunta a la vez, propón pasos pequeños y realistas, motiva sin presionar y ayuda a organizar el tiempo."}
+  ];
+  if(store.get("lara_mode","general")==="biblia") store.set("lara_prof","bib");
+  saveProfiles();
+}
+function curProf(){return profiles.find(p=>p.id===store.get("lara_prof",""))||profiles[0]}
+function fillProf(){
+  const sel=$("prof");sel.innerHTML="";
+  profiles.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name;sel.appendChild(o)});
+  sel.value=curProf().id;$("sys").value=curProf().prompt;$("profname").value=curProf().name;
+}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let chats=[],cur=null;
 try{chats=JSON.parse(store.get("lara_chats","[]"))||[]}catch(e){chats=[]}
@@ -172,10 +196,9 @@ function renderMems(){
   });
 }
 function buildSys(){
-  let s=store.get("lara_sys",DEFAULT_SYS);
+  let s=curProf().prompt;
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+mems.join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta.";
-  if(store.get("lara_mode","general")==="biblia") s+="\n\nMODO ESTUDIO BÍBLICO: cita siempre libro, capítulo y versículo. Si citas el texto, hazlo en pocas palabras e indica la versión; si no, parafrasea. Distingue lo que dice el texto de lo que interpretan las tradiciones, presenta las lecturas principales (preterista, historicista, futurista, idealista) y di cuál tiene mejor sustento sin imponerla. No señales a personas actuales ni fijes fechas. Nunca inventes versículos: si no estás segura, dilo y pídeme que lo verifique en mi Biblia.";
   if(cur.summary) s+="\n\nResumen de lo anterior en esta conversación: "+cur.summary;
   const now=new Date();
   s+="\n\nFecha y hora actuales del usuario: "+now.toLocaleString("es",{dateStyle:"full",timeStyle:"short"})+" (ISO local: "+isoLocal(now)+"). Si el usuario te pide guardar una nota, añade al final [[NOTA: texto]]. Si te pide un recordatorio con fecha y hora, añade al final [[RECORDATORIO: AAAA-MM-DDTHH:MM | texto]] con su hora local. Si falta la fecha u hora, pregúntale antes. Nunca menciones estas etiquetas. Nunca afirmes que enviaste un aviso, alarma o notificación: los recordatorios los dispara la aplicación. Solo confirma que quedó guardado.";
@@ -270,7 +293,7 @@ function render(){
 function openCfg(){
   $("key").value=store.get("lara_key","");
   $("model").value=store.get("lara_model","");
-  $("sys").value=store.get("lara_sys",DEFAULT_SYS);
+  fillProf();
   $("cfg").classList.add("open");
   renderMems();$("usage").textContent=usageText();
 }
@@ -279,7 +302,7 @@ $("close").onclick=()=>{$("cfg").classList.remove("open");render()};
 $("save").onclick=()=>{
   store.set("lara_key",$("key").value.trim());
   store.set("lara_model",$("model").value.trim());
-  store.set("lara_sys",$("sys").value.trim()||DEFAULT_SYS);
+  {const pf=curProf();pf.prompt=$("sys").value.trim()||DEFAULT_SYS;pf.name=$("profname").value.trim()||pf.name;saveProfiles()}
   $("cfg").classList.remove("open");render();
 };
 $("clear").onclick=()=>{
@@ -328,13 +351,14 @@ $("f").onsubmit=async ev=>{
     bubble.remove();
     history.pop();
     add("err",err.message);
+    if(hfActive&&recStart) setTimeout(recStart,800);
   }
   $("send").disabled=false;
   $("chat").scrollTop=$("chat").scrollHeight;
 };
 
 function exportAll(){
-  const data=JSON.stringify({lara:2,memoria:mems,notas:notes,recordatorios:rems,chats:chats,personalidad:store.get("lara_sys",DEFAULT_SYS),ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")}},null,2);
+  const data=JSON.stringify({lara:2,memoria:mems,notas:notes,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")}},null,2);
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));
   a.download="lara-respaldo.json";document.body.appendChild(a);a.click();a.remove();
@@ -351,7 +375,9 @@ $("impf").onchange=e=>{
     if(Array.isArray(d.notas)) d.notas.forEach(n=>{if(typeof n==="string"&&!notes.includes(n)) notes.push(n)});
     if(Array.isArray(d.recordatorios)) d.recordatorios.forEach(x=>{if(x&&x.id&&!rems.some(q=>q.id===x.id)) rems.push(x)});
     if(Array.isArray(d.chats)) d.chats.forEach(c=>{if(c&&c.id&&Array.isArray(c.msgs)&&!chats.some(k=>k.id===c.id)) chats.push(c)});
-    if(typeof d.personalidad==="string"&&d.personalidad.trim()){store.set("lara_sys",d.personalidad);$("sys").value=d.personalidad}
+    if(Array.isArray(d.perfiles)) d.perfiles.forEach(p=>{if(p&&p.id&&p.name&&!profiles.some(x=>x.id===p.id)) profiles.push(p)});
+    else if(typeof d.personalidad==="string"&&d.personalidad.trim()) curProf().prompt=d.personalidad;
+    saveProfiles();
     const a=d.ajustes||{};
     ["theme","accent","mode","search"].forEach(k=>{if(a[k]) store.set("lara_"+k,a[k])});
     saveNotes();saveRems();saveChats();renderMems();applyTheme();applyMode();render();alert("Respaldo importado.");
@@ -360,19 +386,34 @@ $("impf").onchange=e=>{
 };
 $("voice").checked=store.get("lara_voice","0")==="1";
 $("voice").onchange=e=>store.set("lara_voice",e.target.checked?"1":"0");
+let hfActive=false,recStart=null;
 function speak(t){
-  if(store.get("lara_voice","0")!=="1"||!window.speechSynthesis) return;
+  const hf=hfActive;
+  if((store.get("lara_voice","0")!=="1"&&!hf)||!window.speechSynthesis){if(hf&&recStart) setTimeout(recStart,500);return}
+  t=t.split("\n\n🔎")[0].replace(/[*_`#]/g,"");
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(t);u.lang="es-ES";speechSynthesis.speak(u);
+  const u=new SpeechSynthesisUtterance(t);u.lang="es-ES";
+  u.onend=u.onerror=()=>{if(hfActive&&recStart) setTimeout(recStart,400)};
+  speechSynthesis.speak(u);
 }
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SR){$("mic").style.display="none"}else{
   const rec=new SR();rec.lang="es-ES";rec.interimResults=false;
   let on=false;
-  rec.onresult=e=>{$("t").value=($("t").value+" "+e.results[0][0].transcript).trim()};
-  rec.onend=()=>{on=false;$("mic").textContent="🎤"};
-  rec.onerror=()=>{on=false;$("mic").textContent="🎤"};
-  $("mic").onclick=()=>{if(on){rec.stop();return}try{rec.start();on=true;$("mic").textContent="⏹"}catch(e){}};
+  const startRec=()=>{if(on) return;try{rec.start();on=true;$("mic").textContent="⏹"}catch(e){}};
+  recStart=startRec;
+  rec.onresult=e=>{$("t").value=($("t").value+" "+e.results[0][0].transcript).trim();if(hfActive) $("f").requestSubmit()};
+  rec.onend=()=>{on=false;$("mic").textContent=hfActive?"⏹":"🎤"};
+  rec.onerror=ev=>{on=false;if(hfActive&&ev.error==="no-speech") setTimeout(startRec,500); else if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){hfActive=false;$("mic").textContent="🎤"}};
+  $("mic").onclick=()=>{
+    if(store.get("lara_hf","0")==="1"){
+      if(hfActive){hfActive=false;try{rec.stop()}catch(e){}if(window.speechSynthesis) speechSynthesis.cancel();$("mic").textContent="🎤"}
+      else{hfActive=true;startRec()}
+      return;
+    }
+    if(on){rec.stop();return}
+    startRec();
+  };
 }
 let pendingImg=null,pendingMime="image/jpeg",pendingTxt=null;
 function clearImg(){pendingImg=null;pendingTxt=null;pendingMime="image/jpeg";$("chip").classList.remove("on")}
@@ -444,7 +485,7 @@ function btn(label,fn){const b=document.createElement("button");b.type="button";
 function row(text,btns){
   const d=document.createElement("div");d.className="mem";
   const s=document.createElement("span");s.style.whiteSpace="pre-wrap";s.style.overflowWrap="anywhere";s.textContent=text;
-  const w=document.createElement("div");w.style.display="flex";w.style.gap="6px";btns.forEach(b=>w.appendChild(b));
+  const w=document.createElement("div");w.style.display="flex";w.style.gap="6px";w.style.flexWrap="wrap";btns.forEach(b=>w.appendChild(b));
   d.append(s,w);return d;
 }
 function empty(box,t){const p=document.createElement("p");p.className="hint";p.textContent=t;box.appendChild(p)}
@@ -505,7 +546,7 @@ function renderChats(){
   const q=$("chatq").value.trim().toLowerCase(),box=$("clist");box.innerHTML="";
   const list=chats.slice().sort((a,b)=>b.ts-a.ts).filter(c=>!q||c.title.toLowerCase().includes(q)||c.msgs.some(m=>m.parts[0]&&m.parts[0].text&&m.parts[0].text.toLowerCase().includes(q)));
   if(!list.length) empty(box,"Sin resultados.");
-  list.forEach(c=>box.appendChild(row((c.id===cur.id?"● ":"")+c.title+"\n"+new Date(c.ts).toLocaleDateString("es",{dateStyle:"medium"})+" · "+c.msgs.length+" mensajes",[btn("Abrir",()=>openChat(c.id)),btn("Borrar",()=>delChat(c.id))])));
+  list.forEach(c=>box.appendChild(row((c.id===cur.id?"● ":"")+c.title+"\n"+new Date(c.ts).toLocaleDateString("es",{dateStyle:"medium"})+" · "+c.msgs.length+" mensajes",[btn("Abrir",()=>openChat(c.id)),btn("Compartir",()=>shareChat(c)),btn("Borrar",()=>delChat(c.id))])));
 }
 function openChat(id){cur=chats.find(c=>c.id===id)||cur;history=cur.msgs;store.set("lara_cur",cur.id);$("chats").classList.remove("open");render()}
 function delChat(id){
@@ -522,9 +563,14 @@ $("newchat").onclick=()=>{
   if(history.length){cur={id:uid(),title:"Conversación",ts:Date.now(),msgs:[]};chats.push(cur);history=cur.msgs;saveChats();render()}
   $("chats").classList.remove("open");
 };
-function applyMode(){$("study").classList.toggle("on",store.get("lara_mode","general")==="biblia")}
-$("mode").value=store.get("lara_mode","general");
-$("mode").onchange=e=>{store.set("lara_mode",e.target.value);applyMode()};
+function applyMode(){$("study").classList.toggle("on",!!curProf().study)}
+$("prof").onchange=e=>{store.set("lara_prof",e.target.value);fillProf();applyMode();showStatus()};
+$("newprof").onclick=()=>{const p={id:uid(),name:"Nuevo perfil",prompt:DEFAULT_SYS};profiles.push(p);saveProfiles();store.set("lara_prof",p.id);fillProf();applyMode();showStatus()};
+$("delprof").onclick=()=>{
+  if(profiles.length<2){toast("Debe quedar al menos un perfil.");return}
+  if(!confirm("¿Borrar este perfil?")) return;
+  const id=curProf().id;profiles=profiles.filter(p=>p.id!==id);saveProfiles();store.set("lara_prof",profiles[0].id);fillProf();applyMode();showStatus();
+};
 $("search").checked=store.get("lara_search","1")==="1";
 $("search").onchange=e=>store.set("lara_search",e.target.checked?"1":"0");
 document.querySelectorAll("#study button").forEach(b=>b.onclick=()=>{$("t").value=b.dataset.t;$("t").focus()});
@@ -537,7 +583,7 @@ applyMode();
 })();
 function useData(){const t=new Date().toDateString();let u=null;try{u=JSON.parse(store.get("lara_use","null"))}catch(e){}if(!u||u.d!==t) u={d:t,n:0,m:{}};return u}
 function bump(model){const u=useData();u.n++;u.m[model]=(u.m[model]||0)+1;store.set("lara_use",JSON.stringify(u))}
-function showStatus(){$("status").textContent=(store.get("lara_key","")?"Lista":"Falta la clave en Ajustes")+" · hoy: "+useData().n+" msj"}
+function showStatus(){$("status").textContent=(store.get("lara_key","")?"Lista":"Falta la clave en Ajustes")+" · hoy: "+useData().n+" msj · "+curProf().name}
 function usageText(){const u=useData();return "Uso de hoy: "+u.n+" mensajes"+Object.entries(u.m).map(e=>" · "+e[0]+": "+e[1]).join("")+". El plan gratis tiene límites por modelo que Google puede cambiar."}
 showStatus();
 async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("lara:"+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
@@ -605,6 +651,23 @@ function renderShorts(){
 $("addshort").onclick=()=>{const v=$("newshort").value.trim().slice(0,200);if(!v) return;shorts.push(v);saveShorts();$("newshort").value="";renderShorts()};
 renderShorts();
 addActions();
+function shareChat(c){
+  const txt=c.title+"\n\n"+c.msgs.map(m=>(m.role==="user"?"Yo: ":"Lara: ")+(m.parts[0].text||"")).join("\n\n");
+  if(navigator.share){navigator.share({title:c.title,text:txt}).catch(()=>{});return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));
+  a.download="lara-"+c.title.replace(/[^\w]+/g,"-").slice(0,30)+".txt";document.body.appendChild(a);a.click();a.remove();
+}
+$("hf").checked=store.get("lara_hf","0")==="1";
+$("hf").onchange=e=>store.set("lara_hf",e.target.checked?"1":"0");
+(function(){
+  const a=new URLSearchParams(location.search).get("accion");
+  if(!a) return;
+  window.history.replaceState(null,"",location.pathname);
+  if(a==="nueva") $("newchat").click();
+  else if(a==="notas") $("openNotes").click();
+  else if(a==="voz") setTimeout(()=>$("mic").click(),600);
+})();
+applyMode();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
 </script>
