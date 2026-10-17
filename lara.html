@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v33</title>
+<title>Lara v34</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -78,16 +78,15 @@ input[type=checkbox]{width:auto}
 #lock.on{display:flex}
 #lock .box{width:100%;max-width:320px;text-align:center}
 #chat .msg{font-size:var(--fs,16px)}
-body.clean-view #chat{max-width:720px;margin:0 auto;padding:24px 20px;font-family:var(--serif);line-height:1.8}
-body.clean-view #chat .msg{background:transparent !important;border:0 !important;padding:0 0 24px 0 !important;max-width:100% !important;border-radius:0 !important;box-shadow:none !important}
-body.clean-view #chat .msg.me{display:none}
-body.clean-view .acts, body.clean-view .cp{display:none}
 #t{font-size:var(--fs,16px)}
 #autolab{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;background:var(--surface)}
 #autolab textarea{width:100%;min-height:100px;margin-top:6px;font:14px/1.45 var(--ui)}
 #autolab .row{margin-top:8px}
 #autopreview{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;font:13px/1.4 ui-monospace,Menlo,monospace;display:none}
 #autostatus{font:13px var(--ui);color:var(--muted);white-space:pre-wrap}
+body.clean .msg{background:none;border:none;border-radius:0;padding:6px 2px;max-width:100%}
+body.clean .me{align-self:stretch;color:var(--accent);font-weight:600}
+body.clean .lara{align-self:stretch}
 body.live .orb{animation:pulse 1.7s ease-in-out infinite}
 body.live #conv{background:var(--accent);color:var(--on-accent)}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}50%{box-shadow:0 0 0 11px color-mix(in srgb,var(--accent) 24%,transparent)}}
@@ -109,7 +108,6 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <button type="button" id="attach" aria-label="Adjuntar imagen">📎</button>
   <button type="button" id="mic" aria-label="Hablar">🎤</button>
   <button type="button" id="conv" aria-label="Conversar por voz">🎧</button>
-  <button type="button" id="cleanViewToggle" aria-label="Vista limpia">📄</button>
   <button class="main" id="send" type="submit">Enviar</button>
 </form>
 
@@ -171,7 +169,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 33. Incluye publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 34. Incluye espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <label>Lecciones que Lara ha aprendido</label>
   <div id="lessons"></div>
@@ -193,6 +191,8 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
     <div id="pubstatus" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
     <div class="row" style="margin-top:8px"><button id="ghtest" type="button">Probar conexión con GitHub</button></div>
     <div id="ghtestmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
+    <div class="row" style="margin-top:8px"><button id="ghclean" type="button">🧹 Limpiar repositorio</button></div>
+    <div id="ghcleanbox" class="hint" style="font-size:14px;color:var(--ink)"></div>
     <div class="row"><button id="autoapply" type="button" disabled>Solo descargar nueva versión</button><button id="autocancel" type="button" disabled>Cancelar propuesta</button></div>
     <div class="row"><button id="autoundo" type="button">↩ Deshacer última publicación</button></div>
     <details id="ghbox"><summary>Conexión con GitHub (una sola vez)</summary>
@@ -208,6 +208,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="autorev" type="checkbox" style="width:auto"> Revisar sola sus respuestas (modo bíblico y Analista)</label>
   <p class="hint">Lara usa Google Search integrado con Gemini cuando está disponible. No necesitas otra clave de búsqueda. La cuota gratuita tiene límites; si se agota, Lara te avisará y podrá responder sin búsqueda.</p>
+  <label style="display:flex;gap:8px;align-items:center"><input id="clean" type="checkbox" style="width:auto"> Vista limpia (mensajes sin burbujas)</label>
   <label for="fs">Tamaño de letra: <span id="fv"></span> (normal = 16)</label>
   <input id="fs" type="range" min="12" max="24" step="1">
   <div class="row"><button id="resetfs" type="button">Letra normal</button></div>
@@ -494,7 +495,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=33;
+const APP_V=34;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -917,7 +918,6 @@ function delChat(id){
   if(cur.id===id){cur=chats[chats.length-1];history=cur.msgs}
   saveChats();renderChats();render();
 }
-$("cleanViewToggle").onclick=()=>document.body.classList.toggle("clean-view");
 $("openChats").onclick=()=>{$("chatq").value="";renderChats();$("chats").classList.add("open")};
 $("closeChats").onclick=()=>$("chats").classList.remove("open");
 $("chatq").oninput=renderChats;
@@ -935,6 +935,7 @@ $("delprof").onclick=()=>{
 };
 $("tone").value=store.get("lara_tone","calida");$("tone").onchange=e=>store.set("lara_tone",e.target.value);
 $("nick").value=store.get("lara_nick","");$("nick").oninput=e=>store.set("lara_nick",e.target.value.slice(0,30));
+document.body.classList.toggle("clean",store.get("lara_clean","0")==="1");$("clean").checked=store.get("lara_clean","0")==="1";$("clean").onchange=e=>{store.set("lara_clean",e.target.checked?"1":"0");document.body.classList.toggle("clean",e.target.checked)};
 $("persona").checked=store.get("lara_persona","1")==="1";$("persona").onchange=e=>store.set("lara_persona",e.target.checked?"1":"0");
 $("search").checked=store.get("lara_search","1")==="1";
 $("search").onchange=e=>store.set("lara_search",e.target.checked?"1":"0");
@@ -1313,7 +1314,7 @@ function renderIdeas(){
   const box=$("autoideas");if(!box)return;box.innerHTML="";
   getIdeas().forEach((it,idx)=>{
     const d=document.createElement("div");d.className="mem";
-    const sp=document.createElement("span");sp.textContent="💡 "+it.title;
+    const sp=document.createElement("span");const tt=document.createElement("b");tt.textContent="💡 "+it.title;sp.appendChild(tt);if(it.why){const w2=document.createElement("small");w2.style.cssText="display:block;color:var(--muted);margin-top:2px";w2.textContent=String(it.why).slice(0,160);sp.appendChild(w2)}
     const w=document.createElement("div");w.style.cssText="display:flex;gap:6px;flex:none";
     const use=document.createElement("button");use.type="button";use.textContent="Usar";use.className="main";
     const del=document.createElement("button");del.type="button";del.textContent="Descartar";
@@ -1345,6 +1346,16 @@ function autoSmoke(html){
     document.body.appendChild(fr);setTimeout(end,3500);
   });
 }
+function recentUserMsgs(){
+  const out=[];
+  for(let i=chats.length-1;i>=0&&out.length<8;i--){
+    const ms=chats[i].msgs||[];
+    for(let j=ms.length-1;j>=0&&out.length<8;j--){
+      if(ms[j].role==="user"){const t=(ms[j].parts&&ms[j].parts[0]&&ms[j].parts[0].text)||"";if(t&&t.length>6) out.push(t.replace(/\s+/g," ").slice(0,110))}
+    }
+  }
+  return out;
+}
 $("autosuggest").onclick=async()=>{
   const key=store.get("lara_key","");
   if(!key){autoStatus("Falta la clave de Gemini en Ajustes.");return}
@@ -1353,10 +1364,12 @@ $("autosuggest").onclick=async()=>{
   const cnt={};L.forEach(x=>{const k=x.k+": "+x.d.slice(0,60);cnt[k]=(cnt[k]||0)+1});
   const resumen=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([k,v])=>k+" (x"+v+")").join("\n")||"(todavía sin eventos registrados)";
   const les=getLessons().join("; ")||"ninguna";
-  $("autosuggest").disabled=true;autoStatus("Lara está revisando cómo le ha ido…");$("autoideas").innerHTML="";
+  const hechas=getChanges().slice(-8).map(c=>c.s).join("; ")||"ninguna";
+  const msgs=recentUserMsgs().map(t=>"- "+t).join("\n")||"(sin mensajes recientes)";
+  $("autosuggest").disabled=true;autoStatus("Lara está revisando cómo la usas…");$("autoideas").innerHTML="";
   try{
     const model=store.get("lara_model_ok","")||store.get("lara_model","")||FALLBACK[0];
-    const prompt="Eres Lara, una app personal de chat con IA (notas, tareas, hábitos, recordatorios, voz, búsqueda web, memoria, perfiles, proyectos). Revisa tu propio uso reciente y propón 3 mejoras pequeñas que el usuario note al usarte (conversación, voz, recordatorios, proyectos, estudio bíblico, diseño), no optimizaciones técnicas internas como cachés, validaciones o esquemas. Evita proponer funciones que ya existen. Ideas que el usuario ya descartó, no las repitas ni propongas algo parecido: "+(getDismissed().join("; ")||"ninguna")+". Eventos recientes (errores, valoraciones, regeneraciones):\n"+resumen+"\nLecciones aprendidas del usuario: "+les+"\nDevuelve SOLO JSON: {\"ideas\":[{\"title\":\"título corto en español\",\"request\":\"petición técnica clara para el taller de automejora, pequeña y segura, que no borre funciones existentes\"}]}";
+    const prompt="Eres Lara, una app personal de chat con IA (notas, tareas, hábitos, recordatorios, voz manos libres, búsqueda web, memoria, perfiles, proyectos, lecciones aprendidas, vista limpia). Propón 3 mejoras pequeñas que el usuario note al usarte. Básate SOLO en evidencia real de este uso:\n\nMensajes recientes del usuario:\n"+msgs+"\n\nEventos recientes (errores, 👎, regeneraciones):\n"+resumen+"\n\nLecciones aprendidas: "+les+"\nMejoras ya aprobadas (no las repitas): "+hechas+"\nIdeas que el usuario descartó (no repitas ni algo parecido): "+(getDismissed().join("; ")||"ninguna")+"\n\nReglas: nada de optimizaciones técnicas internas (cachés, esquemas, validaciones). Cada idea debe explicar en «why» qué dato concreto de arriba la motiva; si no hay datos suficientes, di «pocos datos» y propón algo básico y seguro. Devuelve SOLO JSON: {\"ideas\":[{\"title\":\"título corto en español\",\"why\":\"motivo breve con el dato\",\"request\":\"petición técnica clara para el taller, pequeña y segura, que no borre funciones existentes\"}]}";
     const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{temperature:0.5,responseMimeType:"application/json"}})});
     const data=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error((data.error&&data.error.message)||("Error "+res.status));
@@ -1485,7 +1498,76 @@ $("ghtest").onclick=async()=>{
     out(msg);
   }catch(e){out("❌ "+(e.message||e))}
 };
-function watchUpdate(){let n=0;const iv=setInterval(()=>{n++;checkUpdate(false);if(n>=10)clearInterval(iv)},20000)}
+const GH_KEEP=/^(lara\.html|sw\.js|manifest\.json|index\.html|readme(\.md)?|\.nojekyll|cname|license(\.md)?|icono[-\w.]*|favicon[-\w.]*)$/i;
+const GH_OLD=/^lara(?: \(\d+\)|__\d+_|[_-]v\d+)\.html$|^lara-respaldo|^lara_v\d+/i;
+async function ghDelete(c,path,sha,msg){
+  const r=await fetch(ghUrl(c,path),{method:"DELETE",headers:{...ghHeaders(c.token),"Content-Type":"application/json"},body:JSON.stringify({message:msg,sha:sha,branch:c.branch})});
+  const d=await r.json().catch(()=>({}));if(!r.ok) throw ghErr(r.status,d);
+}
+async function ghList(c,path){
+  const r=await fetch(ghUrl(c,path)+"?ref="+encodeURIComponent(c.branch)+"&t="+Date.now(),{headers:ghHeaders(c.token),cache:"no-store"});
+  if(r.status===404) return [];
+  const d=await r.json().catch(()=>[]);if(!r.ok) throw ghErr(r.status,d);
+  return Array.isArray(d)?d:[];
+}
+async function ghPrune(c){
+  try{
+    const f=(await ghList(c,"respaldos")).filter(x=>x.type==="file"&&/^lara_v(\d+)\.html$/.test(x.name));
+    f.sort((a,b)=>(+b.name.match(/\d+/)[0])-(+a.name.match(/\d+/)[0]));
+    for(const x of f.slice(10)) await ghDelete(c,"respaldos/"+x.name,x.sha,"Limpieza automática de respaldos antiguos");
+  }catch(e){}
+}
+$("ghclean").onclick=async()=>{
+  const box=$("ghcleanbox");box.innerHTML="";
+  if(!ghReady()){box.textContent="Faltan datos de GitHub: usuario, repositorio y token.";$("ghbox").open=true;ghFill();return}
+  const c=ghCfg();
+  try{
+    box.textContent="⏳ Revisando el repositorio…";
+    await ghResolve(c);
+    const files=(await ghList(c,"")).filter(x=>x.type==="file"&&!GH_KEEP.test(x.name));
+    box.innerHTML="";
+    if(!files.length){box.textContent="✅ El repositorio ya está ordenado: solo quedan los archivos que Lara necesita.";return}
+    const p=document.createElement("p");p.textContent="Marca lo que quieres borrar. Lo marcado de entrada son copias y respaldos viejos. Lo demás no lo reconozco, así que revísalo. Todo queda en el historial de GitHub por si te arrepientes.";box.appendChild(p);
+    const checks=[];
+    files.forEach(f=>{
+      const l=document.createElement("label");l.style.cssText="display:flex;gap:8px;align-items:center;font-weight:400;margin:6px 0";
+      const cb=document.createElement("input");cb.type="checkbox";cb.style.width="auto";cb.checked=GH_OLD.test(f.name);
+      const sp=document.createElement("span");sp.textContent=f.name+" ("+Math.max(1,Math.round((f.size||0)/1024))+" KB)"+(cb.checked?"":" · no reconocido");
+      l.append(cb,sp);box.appendChild(l);checks.push({cb,f});
+    });
+    const bt=document.createElement("button");bt.type="button";bt.className="main";bt.textContent="Borrar seleccionados";
+    bt.onclick=async()=>{
+      const sel=checks.filter(x=>x.cb.checked).map(x=>x.f);
+      if(!sel.length){toast("No marcaste ningún archivo.");return}
+      if(!confirm("¿Borrar "+sel.length+" archivo"+(sel.length>1?"s":"")+" del repositorio? Quedan en el historial de GitHub.")) return;
+      bt.disabled=true;let n=0;
+      try{
+        for(const f of sel){
+          if(GH_KEEP.test(f.name)) continue;
+          box.firstChild.textContent="⏳ Borrando "+f.name+"…";
+          await ghDelete(c,f.name,f.sha,"Limpieza: borrar "+f.name);n++;
+        }
+        box.innerHTML="";box.textContent="🧹 Listo: borré "+n+" archivo"+(n===1?"":"s")+".";toast("🧹 Repositorio limpiado ("+n+").");
+      }catch(e){box.textContent="No pude terminar: "+(e.message||e)+" Borré "+n+" antes del error."}
+    };
+    box.appendChild(bt);
+  }catch(e){box.textContent="❌ "+(e.message||e)}
+};
+function watchUpdate(){
+  clearInterval(window._wu);let n=0;const max=45;
+  const set=t=>{autoStatus(t);const e=$("pubstatus");if(e) e.textContent=t};
+  const tick=async()=>{
+    n++;
+    try{
+      const r=await fetch(selfFile()+"?c="+Date.now(),{cache:"no-store"});
+      const m=(await r.text()).match(/const APP_V=(\d+)/),v=m?+m[1]:0;
+      if(v>APP_V){clearInterval(window._wu);set("✅ GitHub ya publicó la versión "+v+".");toast("🔄 Versión "+v+" lista. Toca aquí para actualizar.",true,()=>$("upd").click());return}
+    }catch(e){}
+    if(n>=max){clearInterval(window._wu);set("GitHub está tardando más de lo normal. Más tarde toca «Buscar actualización».");return}
+    set("⏳ Esperando a que GitHub publique la página… ("+n+" de "+max+")");
+  };
+  window._wu=setInterval(tick,20000);
+}
 function recordChange(v){const C=getChanges();C.push({t:Date.now(),v:v,s:String(autoSummary||"Mejora").slice(0,140)});store.set("lara_changes",JSON.stringify(C.slice(-30)));renderChanges()}
 $("autopublish").onclick=async()=>{
   if(!autoPatches||!autoPatchedText) return;
@@ -1507,7 +1589,7 @@ $("autopublish").onclick=async()=>{
     pubStatus("Publicando la versión "+v+"…");
     await ghPut(c,c.path,autoPatchedText,"Mejora automática v"+v+": "+String(autoSummary||"mejora").slice(0,100),cur.sha);
     store.set("lara_lastpub",JSON.stringify({prev:pv,bpath:bpath,v:v}));
-    recordChange(v);
+    recordChange(v);ghPrune(c);
     pubStatus("✅ Versión "+v+" publicada. GitHub tarda de 1 a 2 minutos en mostrarla; te aviso aquí cuando esté lista para actualizar.");
     toast("✅ Versión "+v+" publicada. En 1 a 2 minutos podrás actualizar.");
     autoClearProposal();watchUpdate();
