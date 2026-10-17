@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v30</title>
+<title>Lara v31</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -166,13 +166,13 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 30. Incluye publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 31. Incluye publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <label>Lecciones que Lara ha aprendido</label>
   <div id="lessons"></div>
   <p class="hint">Lara las guarda cuando la corriges y las sigue en cada respuesta. Puedes borrar las que no quieras.</p>
   <label>Automejora de Lara (experimental)</label>
-  <p class="hint">Carga el archivo HTML de Lara, describe la mejora y Gemini propondrá cambios concretos. Lara no se sobrescribe sola: revisas la propuesta, descargas primero un respaldo y autorizas la nueva versión. La clave no se incluye en el archivo exportado.</p>
+  <p class="hint">Describe la mejora y Gemini propone cambios pequeños. Lara los prueba, tú revisas y apruebas, y ella publica la versión nueva en GitHub guardando antes un respaldo. Nada cambia sin tu aprobación. La clave y el token no se incluyen en el archivo exportado.</p>
   <div id="autolab">
     <div class="row" style="margin-top:0"><button id="autosuggest" type="button">💡 Que Lara sugiera mejoras</button></div>
     <div id="autoideas" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
@@ -185,6 +185,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
     <pre id="autopreview"></pre>
     <div id="autohist" class="hint"></div>
     <div class="row"><button class="main" id="autopublish" type="button" disabled>2. Publicar en GitHub (automático)</button></div>
+    <div id="pubstatus" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
     <div class="row"><button id="autoapply" type="button" disabled>Solo descargar nueva versión</button><button id="autocancel" type="button" disabled>Cancelar propuesta</button></div>
     <div class="row"><button id="autoundo" type="button">↩ Deshacer última publicación</button></div>
     <details id="ghbox"><summary>Conexión con GitHub (una sola vez)</summary>
@@ -486,7 +487,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=30;
+const APP_V=31;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1451,51 +1452,52 @@ async function ghPut(c,path,text,msg,sha){
   const r=await fetch(ghUrl(c,path),{method:"PUT",headers:{...ghHeaders(c.token),"Content-Type":"application/json"},body:JSON.stringify(body)});
   const d=await r.json().catch(()=>({}));if(!r.ok) throw ghErr(r.status,d);return d;
 }
+function pubStatus(t){autoStatus(t);const e=$("pubstatus");e.textContent=t;toast(t);try{e.scrollIntoView({block:"center",behavior:"smooth"})}catch(x){}}
 function watchUpdate(){let n=0;const iv=setInterval(()=>{n++;checkUpdate(false);if(n>=10)clearInterval(iv)},20000)}
 function recordChange(v){const C=getChanges();C.push({t:Date.now(),v:v,s:String(autoSummary||"Mejora").slice(0,140)});store.set("lara_changes",JSON.stringify(C.slice(-30)));renderChanges()}
 $("autopublish").onclick=async()=>{
   if(!autoPatches||!autoPatchedText) return;
-  if(!ghReady()){autoStatus("Falta configurar GitHub: usuario, repositorio y token.");$("ghbox").open=true;ghFill();return}
+  if(!ghReady()){pubStatus("Falta configurar GitHub: usuario, repositorio y token.");$("ghbox").open=true;ghFill();return}
   const c=ghCfg(),m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)\s*;/),v=m?m[1]:"?";
   if(!confirm("¿Publicar la versión "+v+" en GitHub? Antes se guardará un respaldo de la versión actual.")) return;
   $("autopublish").disabled=true;
   try{
-    autoStatus("Conectando con GitHub…");
+    pubStatus("⏳ Conectando con GitHub…");
     const cur=await ghGet(c,c.path);
     if(!cur) throw new Error("No encontré «"+c.path+"» en el repositorio. Revisa el nombre del archivo.");
     const curText=b64dec(cur.content),pv=(curText.match(/const\s+APP_V\s*=\s*(\d+)/)||[])[1]||"0";
     if(curText!==autoSourceText) throw new Error("El archivo en GitHub no es el mismo que usé para la propuesta (versión "+pv+"). Genera la propuesta otra vez.");
     if(+v<=+pv) throw new Error("La versión del repositorio ("+pv+") ya es igual o mayor que la nueva ("+v+"). Genera la propuesta otra vez.");
-    autoStatus("Guardando respaldo de la versión "+pv+"…");
+    pubStatus("Guardando respaldo de la versión "+pv+"…");
     const bpath="respaldos/lara_v"+pv+".html",ex=await ghGet(c,bpath);
     await ghPut(c,bpath,curText,"Respaldo automático de la versión "+pv,ex&&ex.sha);
-    autoStatus("Publicando la versión "+v+"…");
+    pubStatus("Publicando la versión "+v+"…");
     await ghPut(c,c.path,autoPatchedText,"Mejora automática v"+v+": "+String(autoSummary||"mejora").slice(0,100),cur.sha);
     store.set("lara_lastpub",JSON.stringify({prev:pv,bpath:bpath,v:v}));
     recordChange(v);
-    autoStatus("✅ Versión "+v+" publicada. GitHub tarda de 1 a 2 minutos en mostrarla; te aviso aquí cuando esté lista para actualizar.");
+    pubStatus("✅ Versión "+v+" publicada. GitHub tarda de 1 a 2 minutos en mostrarla; te aviso aquí cuando esté lista para actualizar.");
     toast("✅ Versión "+v+" publicada. En 1 a 2 minutos podrás actualizar.");
     autoClearProposal();watchUpdate();
-  }catch(e){autoStatus("No pude publicar: "+(e.message||e)+" Tu versión actual sigue intacta.")}
+  }catch(e){pubStatus("No pude publicar: "+(e.message||e)+" Tu versión actual sigue intacta.")}
   finally{syncPub()}
 };
 $("autoundo").onclick=async()=>{
   let L={};try{L=JSON.parse(store.get("lara_lastpub","{}"))||{}}catch(e){}
-  if(!L.bpath){autoStatus("No hay una publicación reciente para deshacer.");return}
-  if(!ghReady()){autoStatus("Falta configurar GitHub.");$("ghbox").open=true;ghFill();return}
+  if(!L.bpath){pubStatus("No hay una publicación reciente para deshacer.");return}
+  if(!ghReady()){pubStatus("Falta configurar GitHub.");$("ghbox").open=true;ghFill();return}
   if(!confirm("¿Volver al contenido de la versión "+L.prev+"? Se publicará como versión "+(+L.v+1)+" para mantener la secuencia.")) return;
   const c=ghCfg();
   try{
-    autoStatus("Restaurando…");
+    pubStatus("Restaurando…");
     const b=await ghGet(c,L.bpath);if(!b) throw new Error("No encontré el respaldo "+L.bpath+".");
     const cur=await ghGet(c,c.path);if(!cur) throw new Error("No encontré «"+c.path+"».");
     const nv=+L.v+1;
     let txt=b64dec(b.content).replace(/const\s+APP_V\s*=\s*\d+\s*;/,"const APP_V="+nv+";").replace(/Versión\s+\d+\./g,"Versión "+nv+".").replace(/<title>Lara(?:\s+v\d+)?<\/title>/i,"<title>Lara v"+nv+"</title>");
     await ghPut(c,c.path,txt,"Deshacer: contenido de la versión "+L.prev+" publicado como v"+nv,cur.sha);
     store.set("lara_lastpub","{}");
-    autoStatus("↩ Restaurado el contenido de la versión "+L.prev+" como versión "+nv+". En 1 a 2 minutos podrás actualizar.");
+    pubStatus("↩ Restaurado el contenido de la versión "+L.prev+" como versión "+nv+". En 1 a 2 minutos podrás actualizar.");
     watchUpdate();
-  }catch(e){autoStatus("No pude deshacer: "+(e.message||e))}
+  }catch(e){pubStatus("No pude deshacer: "+(e.message||e))}
 };
 $("autoapply").onclick=()=>{
   if(!autoPatches||!autoPatchedText)return;
