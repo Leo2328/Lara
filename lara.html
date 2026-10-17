@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v41</title>
+<title>Lara v42</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -176,7 +176,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 41. Incluye automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 42. Incluye automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <pre id="diagout" style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--surface)"></pre>
@@ -549,7 +549,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=41;
+const APP_V=42;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -710,7 +710,7 @@ $("f").onsubmit=async ev=>{
       .replace(/\[\[TAREA:\s*([^\]]+?)\]\]/g,(m,t)=>{addTask(t);extra.push("✅ Tarea añadida");return ""})
       .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{let rp="";const mm=t.match(/\|\s*(diario|laborales|semanal)\s*$/i);if(mm){rp=mm[1].toLowerCase();t=t.replace(/\|\s*(diario|laborales|semanal)\s*$/i,"")}extra.push(addRem(at,t,rp));return ""}).trim();
     let selfBtns=false;
-    if(!mejoraReq&&selfRefusal(clean)){clean="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";selfBtns=true}
+    if(!mejoraReq&&selfRefusal(clean)&&selfTopic(text)){window._selfCtxT=Date.now();clean="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";selfBtns=true}
     if(!clean) clean="Listo.";
     if(extra.length) clean+="\n\n"+extra.join(" · ");
     clean+=sourcesText(data);
@@ -1523,7 +1523,7 @@ $("autosuggest").onclick=async()=>{
   $("autosuggest").disabled=true;autoStatus("Lara está revisando cómo la usas…");$("autoideas").innerHTML="";
   try{
     const model=store.get("lara_model_ok","")||store.get("lara_model","")||FALLBACK[0];
-    const prompt="Eres Lara, una app personal de chat con IA (notas, tareas, hábitos, recordatorios, voz manos libres, búsqueda web, memoria, perfiles, proyectos, lecciones aprendidas, vista limpia). Propón 3 mejoras pequeñas que el usuario note al usarte. Básate SOLO en evidencia real de este uso:\n\nMensajes recientes del usuario:\n"+msgs+"\n\nEventos recientes (errores, 👎, regeneraciones):\n"+resumen+"\n\nLecciones aprendidas: "+les+"\nMejoras ya aprobadas (no las repitas): "+hechas+"\nIdeas que el usuario descartó (no repitas ni algo parecido): "+(getDismissed().join("; ")||"ninguna")+"\n\nReglas: nada de optimizaciones técnicas internas (cachés, esquemas, validaciones). Cada idea debe explicar en «why» qué dato concreto de arriba la motiva; si no hay datos suficientes, di «pocos datos» y propón algo básico y seguro. Devuelve SOLO JSON: {\"ideas\":[{\"title\":\"título corto en español\",\"why\":\"motivo breve con el dato\",\"request\":\"petición técnica clara para el taller, pequeña y segura, que no borre funciones existentes\"}]}";
+    const prompt="Eres Lara, una app personal de chat con IA (notas, tareas, hábitos, recordatorios, voz manos libres, búsqueda web, memoria, perfiles, proyectos, lecciones aprendidas, vista limpia). Propón 3 mejoras pequeñas que el usuario note al usarte, incluyendo al menos una función nueva y útil que aún no tengas. Básate en evidencia real de este uso cuando exista:\n\nMensajes recientes del usuario:\n"+msgs+"\n\nEventos recientes (errores, 👎, regeneraciones):\n"+resumen+"\n\nLecciones aprendidas: "+les+"\nMejoras ya aprobadas (no las repitas): "+hechas+"\nIdeas que el usuario descartó (no repitas ni algo parecido): "+(getDismissed().join("; ")||"ninguna")+"\n\nReglas: nada de optimizaciones técnicas internas (cachés, esquemas, validaciones). Cada idea debe explicar en «why» qué dato concreto de arriba la motiva; si no hay datos suficientes, di «pocos datos» y propón algo básico y seguro. Devuelve SOLO JSON: {\"ideas\":[{\"title\":\"título corto en español\",\"why\":\"motivo breve con el dato\",\"request\":\"petición técnica clara para el taller, pequeña y segura, que no borre funciones existentes\"}]}";
     const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{temperature:0.5,responseMimeType:"application/json"}})});
     const data=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error((data.error&&data.error.message)||("Error "+res.status));
@@ -1922,19 +1922,38 @@ setTimeout(()=>{if(store.get("lara_dbkauto","0")==="1"&&ghReady()&&Date.now()-(+
 
 
 /* ===== Automejora desde el chat (siempre con autorización) ===== */
-const SELF_RE=/\b((auto ?)?mejor(ate|arte)|(auto ?)?(actualiz|modific|cambi|reescrib|program|sobreescrib|sobrescrib)(ate|arte)|auto ?mejor\w*|auto ?(actualiz|modific)\w*|(mejor|modific|cambi|actualiz|reescrib|program|sobreescrib|sobrescrib)\w* (tu|su) (propi[oa] )?(codigo|programacion|app|aplicacion)|(mejor|modific|cambi|actualiz|reescrib|program|sobreescrib|sobrescrib)\w* (a )?ti misma|que te (mejores|actualices|modifiques|cambies|programes)|agregate|anadete|(agrega|anade) a lara)\b/;
+const SELF_RE=/\b((auto ?)?mejor(ate|arte)|(auto ?)?(actualiz|modific|cambi|reescrib|program|sobreescrib|sobrescrib)(ate|arte)|auto ?mejor\w*|auto ?(actualiz|modific)\w*|(mejor|modific|cambi|actualiz|reescrib|program|sobreescrib|sobrescrib)\w* (tu|su) (propi[oa] )?(codigo|programacion|app|aplicacion)|(mejor|modific|cambi|actualiz|reescrib|program|sobreescrib|sobrescrib)\w* (a )?ti misma|que te (mejores|actualices|modifiques|cambies|programes)|agregate|anadete|(agrega|anade) a lara|automemora|(propuestas?|ideas) de (auto ?)?mejora|mejoras? para ti)\b/;
 function selfRefusal(t){
   const n=norm(t||"");
-  return /(no puedo|no me es posible|todavia no puedo|aun no puedo|no tengo (la )?(capacidad|permiso|acceso)|no estoy (autorizad|capacitad)).{0,90}(sobreescrib|sobrescrib|modific|cambi|reescrib|actualiz|mejor|alter).{0,50}(codigo|programacion|mi propi|mis propi|a mi misma|mi app|mi aplicacion)|siempre (debe|tiene que|debe de) ser con tu autorizacion/.test(n);
+  const neg=/(no puedo|no me es posible|todavia no|aun no|no me permite|no me permiten|no forma parte|no esta dentro|no cuento con|no tengo (la )?(capacidad|permiso|acceso|funcion)|fuera de mis (funciones|capacidades)|no soy capaz)/;
+  const topic=/(codigo|modificarme|modificar mi|mejorarme|mejorar mi|automejor|autonom|mi propio|mi propia|mi sistema|mis funciones actuales|mi programacion|reescribirme|sobreescrib|sobrescrib)/;
+  return (neg.test(n)&&topic.test(n))||/siempre (debe|tiene que|debe de) ser con tu autorizacion/.test(n);
 }
-function selfImproveIntent(t){const n=norm(t||"");return /^\/?(mejora|automejora)\b/.test(n)||SELF_RE.test(n)}
+function selfTopic(u){return /(mejor|auto|funcion|codigo|propuesta|evolu|actualiz|modific|agreg|anad|ti misma|tu app)/.test(norm(u||""))}
+const FEAT_RE=/\b(agreg|anad|incorpor|instal|pong|suma)\w* ?(te |a ti |a lara |tu )?(nuevas? |mas |otras |algunas |unas |una |un |ciertas )?(funcion|herramienta|capacidad|modulo)\w*/;
+const MORE_RE=/\b(otras|mas|nuevas|mejores|distintas) ?(propuestas|ideas|mejoras|opciones)\b/;
+function selfImproveIntent(t){
+  const n=norm(t||"");
+  if(/^\/?(mejora|automejora)\b/.test(n)||SELF_RE.test(n)) return true;
+  if(FEAT_RE.test(n)&&/\b(tu|ti|te|lara|misma|propia)\b/.test(n)) return true;
+  if(window._selfCtxT&&Date.now()-window._selfCtxT<1800000&&MORE_RE.test(n)) return true;
+  return false;
+}
+const BUILTIN_IDEAS=[
+ {title:"Buscar dentro de notas y tareas",why:"función nueva",request:"Agregar un cuadro de búsqueda en la pantalla de Notas que filtre notas y tareas por texto mientras se escribe."},
+ {title:"Resumen de tu semana",why:"función nueva",request:"Agregar en Ajustes un botón «Resumen de la semana» que muestre cuántas tareas completaste, hábitos cumplidos y notas nuevas de los últimos 7 días, calculado localmente sin llamar a Gemini."},
+ {title:"Modo concentración",why:"función nueva",request:"Agregar un interruptor en Ajustes que silencie los avisos de recordatorios y el saludo inicial durante 2 horas y se desactive solo."},
+ {title:"Frases rápidas con nombre",why:"función nueva",request:"Permitir ponerle un nombre corto a cada atajo de frases rápidas y mostrar ese nombre en el botón en vez de la frase completa."},
+ {title:"Etiquetas en las notas",why:"función nueva",request:"Permitir escribir #etiquetas en las notas y filtrar las notas tocando una etiqueta."}
+];
 function chatBubbleActions(b,list){
   const a=document.createElement("div");a.className="acts";
   list.forEach(x=>a.appendChild(btn(x[0],x[1])));
   b.appendChild(a);$("chat").scrollTop=$("chat").scrollHeight;return a;
 }
 function chatSelfFlow(text){
-  const n=norm(text);
+  const n=norm(text);window._selfCtxT=Date.now();
+  if(MORE_RE.test(n)&&!SELF_RE.test(n)){const m2="Claro, te propongo más ideas. Nada se cambia sin tu autorización.";history.push({role:"model",parts:[{text:m2}]});saveChats();add("lara",m2);chatSuggest();return}
   const rest=n.replace(SELF_RE,"").replace(/^\/?(mejora|automejora)\b/,"").replace(/\b(lara|por favor|porfa|puedes|podrias|quiero|que|te|tu|me|gustaria|si|no)\b/g,"").replace(/[^a-z0-9]+/g," ").trim();
   if(rest.length<10){
     const msg="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";
@@ -1949,20 +1968,25 @@ function chatSelfFlow(text){
 }
 async function chatSuggest(){
   if(window._selfBusy) return;
-  window._selfBusy=true;
+  window._selfBusy=true;window._selfCtxT=Date.now();
   const b=add("lara","⏳ Revisando cómo me usas…");
   window._autoMirror=t=>setText(b,"⏳ "+t);
   try{await $("autosuggest").onclick()}catch(e){}
   window._autoMirror=null;
-  const ideas=getIdeas();
-  if(!ideas.length){setText(b,"No encontré ideas útiles ahora. "+($("autostatus").textContent||""));window._selfBusy=false;return}
-  setText(b,"Estas son mis ideas, según tu uso real. Toca «Preparar» en la que quieras y te muestro la propuesta; nada se publica sin tu autorización:\n\n"+ideas.map((i,k)=>(k+1)+". "+i.title+(i.why?" ("+i.why+")":"")).join("\n"));
+  let ideas=getIdeas(),built=false;
+  if(!ideas.length){built=true;
+    const dm=getDismissed().map(x=>norm(x));
+    ideas=BUILTIN_IDEAS.filter(i=>!dm.includes(norm(i.title))).sort(()=>Math.random()-0.5).slice(0,3);
+    if(!ideas.length){setText(b,"No encontré ideas nuevas ahora. "+($("autostatus").textContent||""));window._selfBusy=false;return}
+    saveIdeas(ideas);
+  }
+  setText(b,(built?"Estas son funciones nuevas que podría agregarme. ":"Estas son mis ideas, según tu uso real. ")+"Toca «Preparar» en la que quieras y te muestro la propuesta; nada se publica sin tu autorización:\n\n"+ideas.map((i,k)=>(k+1)+". "+i.title+(i.why?" ("+i.why+")":"")).join("\n"));
   window._selfBusy=false;
   chatBubbleActions(b,ideas.map((i,k)=>["Preparar "+(k+1),()=>{const a=getIdeas();a.splice(a.findIndex(x=>x.title===i.title),1);saveIdeas(a);chatSelfImprove(i.request)}]));
 }
 async function chatSelfImprove(request){
   if(window._selfBusy) return;
-  window._selfBusy=true;
+  window._selfBusy=true;window._selfCtxT=Date.now();
   try{
     while(ctrl) await sleep(300);
     if(!store.get("lara_key","")){add("err","Falta la clave de Gemini en Ajustes.");return}
