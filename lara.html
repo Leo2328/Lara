@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v31</title>
+<title>Lara v32</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -166,7 +166,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 31. Incluye publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 32. Incluye publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <label>Lecciones que Lara ha aprendido</label>
   <div id="lessons"></div>
@@ -186,12 +186,14 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
     <div id="autohist" class="hint"></div>
     <div class="row"><button class="main" id="autopublish" type="button" disabled>2. Publicar en GitHub (automático)</button></div>
     <div id="pubstatus" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
+    <div class="row" style="margin-top:8px"><button id="ghtest" type="button">Probar conexión con GitHub</button></div>
+    <div id="ghtestmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
     <div class="row"><button id="autoapply" type="button" disabled>Solo descargar nueva versión</button><button id="autocancel" type="button" disabled>Cancelar propuesta</button></div>
     <div class="row"><button id="autoundo" type="button">↩ Deshacer última publicación</button></div>
     <details id="ghbox"><summary>Conexión con GitHub (una sola vez)</summary>
       <label for="ghowner">Usuario de GitHub</label><input id="ghowner" autocapitalize="off" autocomplete="off">
       <label for="ghrepo">Repositorio</label><input id="ghrepo" autocapitalize="off" autocomplete="off">
-      <label for="ghbranch">Rama</label><input id="ghbranch" placeholder="main" autocapitalize="off" autocomplete="off">
+      <label for="ghbranch">Rama (opcional)</label><input id="ghbranch" placeholder="Déjalo vacío para detectarla sola" autocapitalize="off" autocomplete="off">
       <label for="ghpath">Archivo de la app</label><input id="ghpath" placeholder="lara.html" autocapitalize="off" autocomplete="off">
       <label for="ghtoken">Token de GitHub</label><input id="ghtoken" type="password" autocomplete="off">
       <p class="hint">Crea un token en GitHub: Settings → Developer settings → Fine-grained tokens. Elige solo este repositorio y el permiso «Contents: Read and write», con vencimiento. Se guarda solo en este teléfono, igual que tu clave de Gemini. Lara guarda un respaldo de cada versión en la carpeta «respaldos» antes de publicar.</p>
@@ -487,7 +489,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=31;
+const APP_V=32;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1425,8 +1427,8 @@ function ghCfg(){
   const isPages=/\.github\.io$/.test(host),dOwner=isPages?host.split(".")[0]:"";
   const project=isPages&&parts.length>1;
   const dRepo=isPages?(project?parts[0]:host):"";
-  let dPath=(project?parts.slice(1):parts).join("/");if(!/\.html?$/i.test(dPath)) dPath="lara.html";
-  return{owner:c.owner||dOwner,repo:c.repo||dRepo,branch:c.branch||"main",path:c.path||dPath,token:c.token||""};
+  let dPath=(project?parts.slice(1):parts).join("/");if(!isPages||!/\.html?$/i.test(dPath)) dPath="lara.html";
+  return{owner:c.owner||dOwner,repo:c.repo||dRepo,branch:c.branch||"",path:c.path||dPath,token:c.token||""};
 }
 function ghSaveField(k,v){let c={};try{c=JSON.parse(store.get("lara_gh","{}"))||{}}catch(e){}c[k]=String(v).trim();store.set("lara_gh",JSON.stringify(c))}
 function ghFill(){const c=ghCfg();$("ghowner").value=c.owner;$("ghrepo").value=c.repo;$("ghbranch").value=c.branch;$("ghpath").value=c.path;$("ghtoken").value=c.token}
@@ -1453,6 +1455,30 @@ async function ghPut(c,path,text,msg,sha){
   const d=await r.json().catch(()=>({}));if(!r.ok) throw ghErr(r.status,d);return d;
 }
 function pubStatus(t){autoStatus(t);const e=$("pubstatus");e.textContent=t;toast(t);try{e.scrollIntoView({block:"center",behavior:"smooth"})}catch(x){}}
+async function ghResolve(c){
+  if(c.branch) return c;
+  const r=await fetch(GH+"/repos/"+encodeURIComponent(c.owner)+"/"+encodeURIComponent(c.repo),{headers:ghHeaders(c.token),cache:"no-store"});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw ghErr(r.status,d);
+  c.branch=d.default_branch||"main";return c;
+}
+$("ghtest").onclick=async()=>{
+  const out=m=>{$("ghtestmsg").textContent=m;toast(m);try{$("ghtestmsg").scrollIntoView({block:"center",behavior:"smooth"})}catch(x){}};
+  if(!ghReady()){out("Faltan datos: usuario, repositorio o token. Ábrelos en «Conexión con GitHub».");$("ghbox").open=true;ghFill();return}
+  const c=ghCfg();
+  try{
+    out("⏳ Probando la conexión…");
+    const r=await fetch(GH+"/repos/"+encodeURIComponent(c.owner)+"/"+encodeURIComponent(c.repo),{headers:ghHeaders(c.token),cache:"no-store"});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw ghErr(r.status,d);
+    if(!c.branch) c.branch=d.default_branch||"main";
+    const f=await ghGet(c,c.path);
+    let msg="✅ Conectado a "+d.full_name+" · rama «"+c.branch+"» · ";
+    msg+=f?("archivo "+c.path+" encontrado (versión "+((b64dec(f.content).match(/const\s+APP_V\s*=\s*(\d+)/)||[])[1]||"?")+")"):("⚠️ no encontré «"+c.path+"» en esa rama");
+    if(d.permissions&&d.permissions.push===false) msg+=" · ⚠️ este token no puede escribir";
+    out(msg);
+  }catch(e){out("❌ "+(e.message||e))}
+};
 function watchUpdate(){let n=0;const iv=setInterval(()=>{n++;checkUpdate(false);if(n>=10)clearInterval(iv)},20000)}
 function recordChange(v){const C=getChanges();C.push({t:Date.now(),v:v,s:String(autoSummary||"Mejora").slice(0,140)});store.set("lara_changes",JSON.stringify(C.slice(-30)));renderChanges()}
 $("autopublish").onclick=async()=>{
@@ -1463,6 +1489,7 @@ $("autopublish").onclick=async()=>{
   $("autopublish").disabled=true;
   try{
     pubStatus("⏳ Conectando con GitHub…");
+    await ghResolve(c);
     const cur=await ghGet(c,c.path);
     if(!cur) throw new Error("No encontré «"+c.path+"» en el repositorio. Revisa el nombre del archivo.");
     const curText=b64dec(cur.content),pv=(curText.match(/const\s+APP_V\s*=\s*(\d+)/)||[])[1]||"0";
@@ -1489,6 +1516,7 @@ $("autoundo").onclick=async()=>{
   const c=ghCfg();
   try{
     pubStatus("Restaurando…");
+    await ghResolve(c);
     const b=await ghGet(c,L.bpath);if(!b) throw new Error("No encontré el respaldo "+L.bpath+".");
     const cur=await ghGet(c,c.path);if(!cur) throw new Error("No encontré «"+c.path+"».");
     const nv=+L.v+1;
