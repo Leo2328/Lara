@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v40</title>
+<title>Lara v41</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -176,7 +176,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 40. Incluye automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 41. Incluye automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <pre id="diagout" style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--surface)"></pre>
@@ -549,7 +549,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=40;
+const APP_V=41;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -709,6 +709,8 @@ $("f").onsubmit=async ev=>{
       .replace(/\[\[NOTA:\s*([^\]]+?)\]\]/g,(m,t)=>{addNote(t);extra.push("📝 Nota guardada");return ""})
       .replace(/\[\[TAREA:\s*([^\]]+?)\]\]/g,(m,t)=>{addTask(t);extra.push("✅ Tarea añadida");return ""})
       .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{let rp="";const mm=t.match(/\|\s*(diario|laborales|semanal)\s*$/i);if(mm){rp=mm[1].toLowerCase();t=t.replace(/\|\s*(diario|laborales|semanal)\s*$/i,"")}extra.push(addRem(at,t,rp));return ""}).trim();
+    let selfBtns=false;
+    if(!mejoraReq&&selfRefusal(clean)){clean="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";selfBtns=true}
     if(!clean) clean="Listo.";
     if(extra.length) clean+="\n\n"+extra.join(" · ");
     clean+=sourcesText(data);
@@ -717,7 +719,7 @@ $("f").onsubmit=async ev=>{
     history.push({role:"model",parts:[{text:clean}]});
     clearImg();
     history.forEach(m=>{if(m.short){m.parts=[{text:m.short}];delete m.short}else if(m.parts.some(p=>p.inlineData)) m.parts=[{text:m.parts[0].text+" [adjunto]"}]});
-    saveChats();showStatus();addActions();compact().then(ok=>{if(ok) render()});
+    saveChats();showStatus();addActions();if(selfBtns) chatBubbleActions(bubble,[["💡 Proponer ideas",()=>chatSuggest()]]);compact().then(ok=>{if(ok) render()});
     if(mejoraReq) setTimeout(()=>chatSelfImprove(mejoraReq),400);
     const qAsked=text,replyAsked=clean;
     autoReview(qAsked,replyAsked).then(r=>{
@@ -1920,7 +1922,11 @@ setTimeout(()=>{if(store.get("lara_dbkauto","0")==="1"&&ghReady()&&Date.now()-(+
 
 
 /* ===== Automejora desde el chat (siempre con autorización) ===== */
-const SELF_RE=/\b(automejorate|mejorate|actualizate|modificate|cambiate|mejorarte|modificarte|actualizarte|cambiarte|mejora tu (propio )?codigo|modifica tu (propio )?codigo|cambia tu (propio )?codigo|reescribe tu codigo|que te (mejores|actualices|modifiques|cambies)|agregate|anadete|agrega a lara|anade a lara)\b/;
+const SELF_RE=/\b((auto ?)?mejor(ate|arte)|(auto ?)?(actualiz|modific|cambi|reescrib|program|sobreescrib|sobrescrib)(ate|arte)|auto ?mejor\w*|auto ?(actualiz|modific)\w*|(mejor|modific|cambi|actualiz|reescrib|program|sobreescrib|sobrescrib)\w* (tu|su) (propi[oa] )?(codigo|programacion|app|aplicacion)|(mejor|modific|cambi|actualiz|reescrib|program|sobreescrib|sobrescrib)\w* (a )?ti misma|que te (mejores|actualices|modifiques|cambies|programes)|agregate|anadete|(agrega|anade) a lara)\b/;
+function selfRefusal(t){
+  const n=norm(t||"");
+  return /(no puedo|no me es posible|todavia no puedo|aun no puedo|no tengo (la )?(capacidad|permiso|acceso)|no estoy (autorizad|capacitad)).{0,90}(sobreescrib|sobrescrib|modific|cambi|reescrib|actualiz|mejor|alter).{0,50}(codigo|programacion|mi propi|mis propi|a mi misma|mi app|mi aplicacion)|siempre (debe|tiene que|debe de) ser con tu autorizacion/.test(n);
+}
 function selfImproveIntent(t){const n=norm(t||"");return /^\/?(mejora|automejora)\b/.test(n)||SELF_RE.test(n)}
 function chatBubbleActions(b,list){
   const a=document.createElement("div");a.className="acts";
