@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v39</title>
+<title>Lara v40</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -176,7 +176,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 39. Incluye control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 40. Incluye automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <pre id="diagout" style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--surface)"></pre>
@@ -501,16 +501,16 @@ function personaText(){
   "\nHONESTIDAD: eres una IA y, si te lo preguntan, lo dices con naturalidad. No inventes vida humana, recuerdos propios ni sentimientos que no tienes; sí puedes decir que algo te parece interesante o que disfrutas la conversación."+
   "\nEn temas bíblicos, análisis, salud, dinero o decisiones importantes, deja el humor a un lado y prioriza la precisión."+
   (nick?"\nLlama al usuario «"+nick+"» de vez en cuando, no en cada mensaje.":"")+
-  "\nMEMORIA CERCANA: si el usuario cuenta cómo se siente o algo emocionalmente importante, guárdalo al final con [[MEMORIA: Ánimo ("+hoy+"): resumen breve]] y retómalo con naturalidad más adelante, preguntando cómo sigue, sin forzarlo. Si surge un apodo o una broma recurrente entre ustedes, guárdala con [[MEMORIA: Broma: …]] y úsala con moderación.\nAPRENDER DE CORRECCIONES: si el usuario te corrige o te dice cómo prefiere que actúes («así no», «más corto», «no hagas eso», «mejor así»), guarda la lección en una sola frase con [[LECCION: …]] para no repetir el error. Solo si de verdad es una preferencia duradera.\nPROYECTOS: si el usuario habla de un proyecto con nombre, registra lo importante con [[PROYECTO: nombre | objetivo breve]], [[DECISION: nombre | decisión tomada]] y [[PROXIMO: nombre | siguiente paso]] (no uses MEMORIA para eso). Si pregunta qué decidieron, responde solo con los datos guardados de ese proyecto; si no hay, dilo.";
+  "\nMEMORIA CERCANA: si el usuario cuenta cómo se siente o algo emocionalmente importante, guárdalo al final con [[MEMORIA: Ánimo ("+hoy+"): resumen breve]] y retómalo con naturalidad más adelante, preguntando cómo sigue, sin forzarlo. Si surge un apodo o una broma recurrente entre ustedes, guárdala con [[MEMORIA: Broma: …]] y úsala con moderación.\nAPRENDER DE CORRECCIONES: si el usuario te corrige o te dice cómo prefiere que actúes («así no», «más corto», «no hagas eso», «mejor así»), guarda la lección en una sola frase con [[LECCION: …]] para no repetir el error. Solo si de verdad es una preferencia duradera.\nPROYECTOS: si el usuario habla de un proyecto con nombre, registra lo importante con [[PROYECTO: nombre | objetivo breve]], [[DECISION: nombre | decisión tomada]] y [[PROXIMO: nombre | siguiente paso]] (no uses MEMORIA para eso). Si pregunta qué decidieron, responde solo con los datos guardados de ese proyecto; si no hay, dilo.\nAUTOMEJORA: sí puedes mejorar tu propia app, siempre con autorización del usuario: tu taller prepara una propuesta, la prueba en un espacio aislado y solo se publica si él la aprueba con un botón. Si te pide cambiar o mejorar algo de Lara (tu app), NO digas que no puedes: confirma en una frase y añade al final [[MEJORA: petición técnica clara y pequeña]]. Si solo pregunta si puedes mejorarte, explícalo sin la etiqueta.";
   const m=moodHint(lastUserText());if(m) t+="\nAHORA: "+m;
   const o=openingsHint();if(o) t+="\n"+o;
   return t;
 }
 function nameFromMem(){const m=mems.find(x=>/nombre del usuario es/i.test(x));return m?m.replace(/.*nombre del usuario es\s*/i,"").trim().split(/\s+/)[0]:""}
 function greetText(){
-  const h=new Date().getHours(),nick=store.get("lara_nick","" ).trim()||nameFromMem()||"LEO";
+  const h=new Date().getHours(),nick=store.get("lara_nick","").trim()||nameFromMem();
   const sal=h<6?"Uf, qué madrugada":h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches";
-  const out=[sal+", "+nick+"."];
+  const out=[sal+(nick?", "+nick:"")+"."];
   const end=new Date();end.setHours(23,59,59,999);
   const hoy=rems.filter(r=>!r.done&&new Date(r.at)<=end).length,pend=tasks.filter(t=>!t.done).length;
   if(hoy) out.push("Hoy tienes "+hoy+" recordatorio"+(hoy>1?"s":"")+".");
@@ -549,7 +549,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=39;
+const APP_V=40;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -692,6 +692,7 @@ $("f").onsubmit=async ev=>{
   history.push(entry);
   add("user",(pendingImg||pendingTxt)?text+" 📎":text);
   document.querySelectorAll(".acts").forEach(x=>x.remove());
+  if(selfImproveIntent(text)){chatSelfFlow(text);return}
   const bubble=add("lara","…");
   ctrl=new AbortController();$("send").type="button";$("send").textContent="Detener";$("send").onclick=()=>{if(ctrl) ctrl.abort()};
   try{
@@ -699,8 +700,8 @@ $("f").onsubmit=async ev=>{
     const parts=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts;
     const reply=parts?parts.map(p=>p.text||"").join(""):"";
     if(!reply) throw new Error("Lara no devolvió respuesta. Intenta de nuevo.");
-    let extra=[];
-    let clean=reply.replace(/\[\[PROYECTO:\s*([^|\]]+?)\s*(?:\|\s*([^\]]+?))?\]\]/g,(m,n,g)=>{projUpsert(n,p=>{if(g) p.goal=g.slice(0,200)});store.set("lara_activeproj",n.trim());extra.push("📁 Proyecto «"+n.trim()+"» actualizado");return ""})
+    let extra=[];let mejoraReq="";
+    let clean=reply.replace(/\[\[MEJORA:\s*([^\]]+?)\]\]/g,(m,t)=>{mejoraReq=t.trim().slice(0,600);return ""}).replace(/\[\[PROYECTO:\s*([^|\]]+?)\s*(?:\|\s*([^\]]+?))?\]\]/g,(m,n,g)=>{projUpsert(n,p=>{if(g) p.goal=g.slice(0,200)});store.set("lara_activeproj",n.trim());extra.push("📁 Proyecto «"+n.trim()+"» actualizado");return ""})
       .replace(/\[\[DECISION:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\]\]/g,(m,n,t)=>{projUpsert(n,p=>{if(!p.decisions.some(d=>norm(d.t)===norm(t))) p.decisions.push({t:t.slice(0,200),d:Date.now()})});extra.push("📁 Decisión guardada en «"+n.trim()+"»");return ""})
       .replace(/\[\[PROXIMO:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\]\]/g,(m,n,t)=>{projUpsert(n,p=>{p.next=t.slice(0,200)});extra.push("📁 Próximo paso guardado en «"+n.trim()+"»");return ""})
       .replace(/\[\[LECCION:\s*([^\]]+?)\]\]/g,(m,t)=>{addLesson(t);extra.push("🧩 Lo tendré en cuenta");return ""}).replace(/\[\[OLVIDAR:\s*([^\]]+?)\]\]/g,(m,t)=>{const k=norm(t).trim();if(k.length>=3){const n0=mems.length;mems=mems.filter(x=>!norm(x).includes(k));if(mems.length<n0){saveMems();extra.push("🧠 Actualicé un recuerdo")}}return ""})
@@ -717,6 +718,7 @@ $("f").onsubmit=async ev=>{
     clearImg();
     history.forEach(m=>{if(m.short){m.parts=[{text:m.short}];delete m.short}else if(m.parts.some(p=>p.inlineData)) m.parts=[{text:m.parts[0].text+" [adjunto]"}]});
     saveChats();showStatus();addActions();compact().then(ok=>{if(ok) render()});
+    if(mejoraReq) setTimeout(()=>chatSelfImprove(mejoraReq),400);
     const qAsked=text,replyAsked=clean;
     autoReview(qAsked,replyAsked).then(r=>{
       if(!r) return;
@@ -792,9 +794,9 @@ function speak(t){
   if(hf&&store.get("lara_barge","0")==="1"&&recStart) recStart();
   speakAuto(t,()=>{speakingText="";if(hfActive&&recStart) setTimeout(recStart,400)});
 }
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition; let isListening=false;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SR){$("mic").style.display="none";$("conv").style.display="none"}else{
-  const rec=new SR();rec.lang="es-ES";rec.interimResults=false; rec.continuous=true; rec.maxAlternatives=1;
+  const rec=new SR();rec.lang="es-ES";rec.interimResults=false;
   let on=false,got=false,wl=null;
   const startRec=()=>{if(on) return;got=false;try{rec.start();on=true;$("mic").textContent="⏹"}catch(e){}};
   recStart=startRec;
@@ -820,7 +822,7 @@ if(!SR){$("mic").style.display="none";$("conv").style.display="none"}else{
     if(speakingText) stopSpeech();
     $("t").value=($("t").value+" "+tr).trim();if(hfActive) $("f").requestSubmit();
   };
-  rec.onend=()=>{on=false;convUI();if(hfActive&&!got&&!ctrl&&!speechSynthesis.speaking) setTimeout(startRec,700)};
+  rec.onend=()=>{on=false;convUI();if(hfActive&&!got&&!ctrl&&(!(window.speechSynthesis&&speechSynthesis.speaking)||store.get("lara_barge","0")==="1")) setTimeout(startRec,700)};
   rec.onerror=ev=>{on=false;if(hfActive&&ev.error==="no-speech") setTimeout(startRec,500); else if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){hfActive=false;convUI();toast("Necesito permiso del micrófono para escucharte. Actívalo en los permisos del navegador.",true)}};
   $("mic").onclick=()=>{
     if(store.get("lara_hf","0")==="1"){
@@ -1365,7 +1367,7 @@ setTimeout(()=>{
 (function(){
   if(store.get("lara_seed16","")==="1") return;
   const nuevos=[
-    "El nombre del usuario es LEO",
+    "El nombre del usuario es Leo",
     "Leo considera a Lara su amiga",
     "Leo prefiere opciones sencillas y pasos pequeños",
     "Proyecto Aurora: Leo lo está preparando; aún no hay decisiones definidas. Cuando se definan, guardar: objetivo, para qué sirve y decisiones tomadas"
@@ -1378,11 +1380,11 @@ setTimeout(()=>{
   store.set("lara_seed16","1");
   try{renderMems();if(typeof applyMode==="function")showStatus()}catch(e){}
 })();
-if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+try{if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
 
 // Taller de automejora: Gemini propone parches exactos; la persona revisa y aprueba.
 let autoNote={}, autoSummary="", autoSourceFile=null, autoSourceText="", autoPatches=null, autoPatchedText="", autoBackupDownloaded=false;
-function autoStatus(t){$("autostatus").textContent=t}
+function autoStatus(t){$("autostatus").textContent=t;if(window._autoMirror){try{window._autoMirror(t)}catch(e){}}}
 function autoClearProposal(){autoPatches=null;autoPatchedText="";$("autopreview").style.display="none";$("autopreview").textContent="";$("autoapply").disabled=true;$("autocancel").disabled=true;autoBackupDownloaded=false;$("autobackup").disabled=!autoSourceText}
 function autoDownload(text,name,type="text/html;charset=utf-8"){
   const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)
@@ -1915,6 +1917,71 @@ $("dbk").onclick=()=>dataBackup(false);
 $("drs").onclick=dataRestore;
 $("dbkauto").checked=store.get("lara_dbkauto","0")==="1";$("dbkauto").onchange=e=>store.set("lara_dbkauto",e.target.checked?"1":"0");
 setTimeout(()=>{if(store.get("lara_dbkauto","0")==="1"&&ghReady()&&Date.now()-(+store.get("lara_dbk_t","0"))>7*864e5) dataBackup(true)},7000);
+
+
+/* ===== Automejora desde el chat (siempre con autorización) ===== */
+const SELF_RE=/\b(automejorate|mejorate|actualizate|modificate|cambiate|mejorarte|modificarte|actualizarte|cambiarte|mejora tu (propio )?codigo|modifica tu (propio )?codigo|cambia tu (propio )?codigo|reescribe tu codigo|que te (mejores|actualices|modifiques|cambies)|agregate|anadete|agrega a lara|anade a lara)\b/;
+function selfImproveIntent(t){const n=norm(t||"");return /^\/?(mejora|automejora)\b/.test(n)||SELF_RE.test(n)}
+function chatBubbleActions(b,list){
+  const a=document.createElement("div");a.className="acts";
+  list.forEach(x=>a.appendChild(btn(x[0],x[1])));
+  b.appendChild(a);$("chat").scrollTop=$("chat").scrollHeight;return a;
+}
+function chatSelfFlow(text){
+  const n=norm(text);
+  const rest=n.replace(SELF_RE,"").replace(/^\/?(mejora|automejora)\b/,"").replace(/\b(lara|por favor|porfa|puedes|podrias|quiero|que|te|tu|me|gustaria|si|no)\b/g,"").replace(/[^a-z0-9]+/g," ").trim();
+  if(rest.length<10){
+    const msg="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";
+    history.push({role:"model",parts:[{text:msg}]});saveChats();
+    const b=add("lara",msg);
+    chatBubbleActions(b,[["💡 Proponer ideas",()=>chatSuggest()]]);
+    return;
+  }
+  const msg="Entendido. Preparo una propuesta y no cambiaré nada sin tu autorización.";
+  history.push({role:"model",parts:[{text:msg}]});saveChats();add("lara",msg);
+  chatSelfImprove(text);
+}
+async function chatSuggest(){
+  if(window._selfBusy) return;
+  window._selfBusy=true;
+  const b=add("lara","⏳ Revisando cómo me usas…");
+  window._autoMirror=t=>setText(b,"⏳ "+t);
+  try{await $("autosuggest").onclick()}catch(e){}
+  window._autoMirror=null;
+  const ideas=getIdeas();
+  if(!ideas.length){setText(b,"No encontré ideas útiles ahora. "+($("autostatus").textContent||""));window._selfBusy=false;return}
+  setText(b,"Estas son mis ideas, según tu uso real. Toca «Preparar» en la que quieras y te muestro la propuesta; nada se publica sin tu autorización:\n\n"+ideas.map((i,k)=>(k+1)+". "+i.title+(i.why?" ("+i.why+")":"")).join("\n"));
+  window._selfBusy=false;
+  chatBubbleActions(b,ideas.map((i,k)=>["Preparar "+(k+1),()=>{const a=getIdeas();a.splice(a.findIndex(x=>x.title===i.title),1);saveIdeas(a);chatSelfImprove(i.request)}]));
+}
+async function chatSelfImprove(request){
+  if(window._selfBusy) return;
+  window._selfBusy=true;
+  try{
+    while(ctrl) await sleep(300);
+    if(!store.get("lara_key","")){add("err","Falta la clave de Gemini en Ajustes.");return}
+    const b=add("lara","⏳ Preparando la propuesta…");
+    window._autoMirror=t=>{setText(b,"⏳ "+t);$("chat").scrollTop=$("chat").scrollHeight};
+    $("autorequest").value=String(request).slice(0,600);
+    try{await $("autogenerate").onclick()}catch(e){}
+    window._autoMirror=null;
+    if(!(autoPatches&&autoPatchedText)){setText(b,"No pude preparar una mejora segura. "+($("autostatus").textContent||"")+"\n\nTu Lara sigue exactamente igual.");return}
+    const m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)/),v=m?m[1]:"?";
+    const cuota={menos:"menor",igual:"igual",mas:"mayor"}[autoNote.cuota]||"no indicado";
+    setText(b,"✅ Preparé una propuesta (versión "+v+"):\n\n• Qué cambia: "+(autoSummary||"ver detalles")+"\n• Qué notarás: "+(autoNote.usuario||"no lo indicó")+"\n• Consumo de cuota: "+cuota+"\n• Pruebas simuladas: "+(autoNote.tests||"?")+" correctas"+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+"\n\nNo cambiaré nada sin tu autorización. ¿Qué hago?");
+    chatBubbleActions(b,[
+      ["✅ Autorizar y publicar",async()=>{
+        const sb=add("lara","⏳ Publicando…");
+        window._autoMirror=t=>setText(sb,t);
+        try{await $("autopublish").onclick()}catch(e){}
+        window._autoMirror=null;
+        if(/Falta configurar GitHub/.test($("autostatus").textContent)) setText(sb,$("autostatus").textContent+" Ve a Ajustes → Automejora → Conexión con GitHub.");
+      }],
+      ["Ver cambios técnicos",()=>{const t=add("lara",$("autopreview").textContent||"(sin detalles)")}],
+      ["Descartar",()=>{autoClearProposal();add("lara","Descartada. No cambié nada.")}]
+    ]);
+  }finally{window._autoMirror=null;window._selfBusy=false}
+}
 
 render();
 </script>
