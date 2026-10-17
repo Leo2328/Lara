@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v29</title>
+<title>Lara v30</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -34,6 +34,7 @@ header button:hover,header button:active{background:var(--bubble);color:var(--in
 button{font:600 14px var(--ui);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 15px;cursor:pointer}
 button:active{transform:scale(.97)}
 button:disabled{opacity:.4;cursor:not-allowed}
+summary{font:600 14px var(--ui);cursor:pointer;margin-top:16px}
 button:disabled:active{transform:none}
 button.main{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -165,7 +166,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 29. Incluye automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 30. Incluye publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <label>Lecciones que Lara ha aprendido</label>
   <div id="lessons"></div>
@@ -183,7 +184,17 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
     <div id="autostatus" aria-live="polite">Los cambios se preparan para revisión; no se ejecutan automáticamente.</div>
     <pre id="autopreview"></pre>
     <div id="autohist" class="hint"></div>
-    <div class="row"><button class="main" id="autoapply" type="button" disabled>2. Aprobar y descargar nueva versión</button><button id="autocancel" type="button" disabled>Cancelar propuesta</button></div>
+    <div class="row"><button class="main" id="autopublish" type="button" disabled>2. Publicar en GitHub (automático)</button></div>
+    <div class="row"><button id="autoapply" type="button" disabled>Solo descargar nueva versión</button><button id="autocancel" type="button" disabled>Cancelar propuesta</button></div>
+    <div class="row"><button id="autoundo" type="button">↩ Deshacer última publicación</button></div>
+    <details id="ghbox"><summary>Conexión con GitHub (una sola vez)</summary>
+      <label for="ghowner">Usuario de GitHub</label><input id="ghowner" autocapitalize="off" autocomplete="off">
+      <label for="ghrepo">Repositorio</label><input id="ghrepo" autocapitalize="off" autocomplete="off">
+      <label for="ghbranch">Rama</label><input id="ghbranch" placeholder="main" autocapitalize="off" autocomplete="off">
+      <label for="ghpath">Archivo de la app</label><input id="ghpath" placeholder="lara.html" autocapitalize="off" autocomplete="off">
+      <label for="ghtoken">Token de GitHub</label><input id="ghtoken" type="password" autocomplete="off">
+      <p class="hint">Crea un token en GitHub: Settings → Developer settings → Fine-grained tokens. Elige solo este repositorio y el permiso «Contents: Read and write», con vencimiento. Se guarda solo en este teléfono, igual que tu clave de Gemini. Lara guarda un respaldo de cada versión en la carpeta «respaldos» antes de publicar.</p>
+    </details>
   </div>
   <label style="display:flex;gap:8px;align-items:center"><input id="hf" type="checkbox" style="width:auto"> Conversación por voz manos libres (toca 🎤 para empezar y parar)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="search" type="checkbox" style="width:auto"> Buscar en internet (datos actuales)</label>
@@ -475,7 +486,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=29;
+const APP_V=30;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -579,7 +590,7 @@ function render(){
   showStatus();
 }
 function openCfg(){
-  renderLessons();renderChanges();renderIdeas();
+  renderLessons();renderChanges();renderIdeas();ghFill();
   $("key").value=store.get("lara_key","");
   $("model").value=store.get("lara_model","");
   fillProf();
@@ -1404,6 +1415,87 @@ $("autogenerate").onclick=async()=>{
     }
   }catch(err){autoClearProposal();autoStatus("No logré una mejora segura después de varios intentos. Último problema: "+(err.message||"error desconocido")+". Tu Lara actual sigue intacta; prueba con una petición más pequeña.")}
   finally{$("autogenerate").disabled=false;$("autobackup").disabled=!autoSourceText}
+};
+
+const GH="https://api.github.com";
+function ghCfg(){
+  let c={};try{c=JSON.parse(store.get("lara_gh","{}"))||{}}catch(e){}
+  const host=location.hostname,parts=location.pathname.split("/").filter(Boolean);
+  const isPages=/\.github\.io$/.test(host),dOwner=isPages?host.split(".")[0]:"";
+  const project=isPages&&parts.length>1;
+  const dRepo=isPages?(project?parts[0]:host):"";
+  let dPath=(project?parts.slice(1):parts).join("/");if(!/\.html?$/i.test(dPath)) dPath="lara.html";
+  return{owner:c.owner||dOwner,repo:c.repo||dRepo,branch:c.branch||"main",path:c.path||dPath,token:c.token||""};
+}
+function ghSaveField(k,v){let c={};try{c=JSON.parse(store.get("lara_gh","{}"))||{}}catch(e){}c[k]=String(v).trim();store.set("lara_gh",JSON.stringify(c))}
+function ghFill(){const c=ghCfg();$("ghowner").value=c.owner;$("ghrepo").value=c.repo;$("ghbranch").value=c.branch;$("ghpath").value=c.path;$("ghtoken").value=c.token}
+["owner","repo","branch","path","token"].forEach(k=>{$("gh"+k).oninput=e=>ghSaveField(k,e.target.value)});
+function ghReady(){const c=ghCfg();return !!(c.owner&&c.repo&&c.token)}
+function syncPub(){$("autopublish").disabled=!(autoPatches&&autoPatchedText)}
+setInterval(syncPub,600);
+function ghHeaders(t){return{"Authorization":"Bearer "+t,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"}}
+function b64enc(txt){const b=new TextEncoder().encode(txt);let x="";for(let i=0;i<b.length;i+=0x8000)x+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(x)}
+function b64dec(b){const x=atob(String(b).replace(/\s/g,""));return new TextDecoder().decode(Uint8Array.from(x,c=>c.charCodeAt(0)))}
+function ghUrl(c,path){return GH+"/repos/"+encodeURIComponent(c.owner)+"/"+encodeURIComponent(c.repo)+"/contents/"+path.split("/").map(encodeURIComponent).join("/")}
+function ghErr(st,d){
+  const m=(d&&d.message)||"";
+  return new Error(st===401?"El token de GitHub no es válido o venció.":st===403?"GitHub rechazó el permiso. Revisa que el token tenga «Contents: Read and write» en este repositorio.":st===404?"No encontré el repositorio, la rama o el archivo. Revisa usuario, repositorio y rama.":(st===409||st===422)?"GitHub detectó un conflicto porque el archivo cambió. Genera la propuesta otra vez.":"Error de GitHub "+st+(m?": "+m:""));
+}
+async function ghGet(c,path){
+  const r=await fetch(ghUrl(c,path)+"?ref="+encodeURIComponent(c.branch)+"&t="+Date.now(),{headers:ghHeaders(c.token),cache:"no-store"});
+  if(r.status===404) return null;
+  const d=await r.json().catch(()=>({}));if(!r.ok) throw ghErr(r.status,d);return d;
+}
+async function ghPut(c,path,text,msg,sha){
+  const body={message:msg,content:b64enc(text),branch:c.branch};if(sha) body.sha=sha;
+  const r=await fetch(ghUrl(c,path),{method:"PUT",headers:{...ghHeaders(c.token),"Content-Type":"application/json"},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));if(!r.ok) throw ghErr(r.status,d);return d;
+}
+function watchUpdate(){let n=0;const iv=setInterval(()=>{n++;checkUpdate(false);if(n>=10)clearInterval(iv)},20000)}
+function recordChange(v){const C=getChanges();C.push({t:Date.now(),v:v,s:String(autoSummary||"Mejora").slice(0,140)});store.set("lara_changes",JSON.stringify(C.slice(-30)));renderChanges()}
+$("autopublish").onclick=async()=>{
+  if(!autoPatches||!autoPatchedText) return;
+  if(!ghReady()){autoStatus("Falta configurar GitHub: usuario, repositorio y token.");$("ghbox").open=true;ghFill();return}
+  const c=ghCfg(),m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)\s*;/),v=m?m[1]:"?";
+  if(!confirm("¿Publicar la versión "+v+" en GitHub? Antes se guardará un respaldo de la versión actual.")) return;
+  $("autopublish").disabled=true;
+  try{
+    autoStatus("Conectando con GitHub…");
+    const cur=await ghGet(c,c.path);
+    if(!cur) throw new Error("No encontré «"+c.path+"» en el repositorio. Revisa el nombre del archivo.");
+    const curText=b64dec(cur.content),pv=(curText.match(/const\s+APP_V\s*=\s*(\d+)/)||[])[1]||"0";
+    if(curText!==autoSourceText) throw new Error("El archivo en GitHub no es el mismo que usé para la propuesta (versión "+pv+"). Genera la propuesta otra vez.");
+    if(+v<=+pv) throw new Error("La versión del repositorio ("+pv+") ya es igual o mayor que la nueva ("+v+"). Genera la propuesta otra vez.");
+    autoStatus("Guardando respaldo de la versión "+pv+"…");
+    const bpath="respaldos/lara_v"+pv+".html",ex=await ghGet(c,bpath);
+    await ghPut(c,bpath,curText,"Respaldo automático de la versión "+pv,ex&&ex.sha);
+    autoStatus("Publicando la versión "+v+"…");
+    await ghPut(c,c.path,autoPatchedText,"Mejora automática v"+v+": "+String(autoSummary||"mejora").slice(0,100),cur.sha);
+    store.set("lara_lastpub",JSON.stringify({prev:pv,bpath:bpath,v:v}));
+    recordChange(v);
+    autoStatus("✅ Versión "+v+" publicada. GitHub tarda de 1 a 2 minutos en mostrarla; te aviso aquí cuando esté lista para actualizar.");
+    toast("✅ Versión "+v+" publicada. En 1 a 2 minutos podrás actualizar.");
+    autoClearProposal();watchUpdate();
+  }catch(e){autoStatus("No pude publicar: "+(e.message||e)+" Tu versión actual sigue intacta.")}
+  finally{syncPub()}
+};
+$("autoundo").onclick=async()=>{
+  let L={};try{L=JSON.parse(store.get("lara_lastpub","{}"))||{}}catch(e){}
+  if(!L.bpath){autoStatus("No hay una publicación reciente para deshacer.");return}
+  if(!ghReady()){autoStatus("Falta configurar GitHub.");$("ghbox").open=true;ghFill();return}
+  if(!confirm("¿Volver al contenido de la versión "+L.prev+"? Se publicará como versión "+(+L.v+1)+" para mantener la secuencia.")) return;
+  const c=ghCfg();
+  try{
+    autoStatus("Restaurando…");
+    const b=await ghGet(c,L.bpath);if(!b) throw new Error("No encontré el respaldo "+L.bpath+".");
+    const cur=await ghGet(c,c.path);if(!cur) throw new Error("No encontré «"+c.path+"».");
+    const nv=+L.v+1;
+    let txt=b64dec(b.content).replace(/const\s+APP_V\s*=\s*\d+\s*;/,"const APP_V="+nv+";").replace(/Versión\s+\d+\./g,"Versión "+nv+".").replace(/<title>Lara(?:\s+v\d+)?<\/title>/i,"<title>Lara v"+nv+"</title>");
+    await ghPut(c,c.path,txt,"Deshacer: contenido de la versión "+L.prev+" publicado como v"+nv,cur.sha);
+    store.set("lara_lastpub","{}");
+    autoStatus("↩ Restaurado el contenido de la versión "+L.prev+" como versión "+nv+". En 1 a 2 minutos podrás actualizar.");
+    watchUpdate();
+  }catch(e){autoStatus("No pude deshacer: "+(e.message||e))}
 };
 $("autoapply").onclick=()=>{
   if(!autoPatches||!autoPatchedText)return;
