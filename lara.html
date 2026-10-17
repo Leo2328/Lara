@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v35</title>
+<title>Lara v36</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -176,7 +176,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 35. Incluye control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 36. Incluye control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <pre id="diagout" style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--surface)"></pre>
@@ -508,9 +508,9 @@ function personaText(){
 }
 function nameFromMem(){const m=mems.find(x=>/nombre del usuario es/i.test(x));return m?m.replace(/.*nombre del usuario es\s*/i,"").trim().split(/\s+/)[0]:""}
 function greetText(){
-  const h=new Date().getHours(),nick=store.get("lara_nick","").trim()||nameFromMem();
+  const h=new Date().getHours(),nick=store.get("lara_nick","" ).trim()||nameFromMem()||"LEO";
   const sal=h<6?"Uf, qué madrugada":h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches";
-  const out=[sal+(nick?", "+nick:"")+"."];
+  const out=[sal+", "+nick+"."];
   const end=new Date();end.setHours(23,59,59,999);
   const hoy=rems.filter(r=>!r.done&&new Date(r.at)<=end).length,pend=tasks.filter(t=>!t.done).length;
   if(hoy) out.push("Hoy tienes "+hoy+" recordatorio"+(hoy>1?"s":"")+".");
@@ -549,7 +549,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=35;
+const APP_V=36;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1365,7 +1365,7 @@ setTimeout(()=>{
 (function(){
   if(store.get("lara_seed16","")==="1") return;
   const nuevos=[
-    "El nombre del usuario es Leo",
+    "El nombre del usuario es LEO",
     "Leo considera a Lara su amiga",
     "Leo prefiere opciones sencillas y pasos pequeños",
     "Proyecto Aurora: Leo lo está preparando; aún no hay decisiones definidas. Cuando se definan, guardar: objetivo, para qué sirve y decisiones tomadas"
