@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v32</title>
+<title>Lara v33</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -78,6 +78,10 @@ input[type=checkbox]{width:auto}
 #lock.on{display:flex}
 #lock .box{width:100%;max-width:320px;text-align:center}
 #chat .msg{font-size:var(--fs,16px)}
+body.clean-view #chat{max-width:720px;margin:0 auto;padding:24px 20px;font-family:var(--serif);line-height:1.8}
+body.clean-view #chat .msg{background:transparent !important;border:0 !important;padding:0 0 24px 0 !important;max-width:100% !important;border-radius:0 !important;box-shadow:none !important}
+body.clean-view #chat .msg.me{display:none}
+body.clean-view .acts, body.clean-view .cp{display:none}
 #t{font-size:var(--fs,16px)}
 #autolab{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;background:var(--surface)}
 #autolab textarea{width:100%;min-height:100px;margin-top:6px;font:14px/1.45 var(--ui)}
@@ -105,6 +109,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <button type="button" id="attach" aria-label="Adjuntar imagen">📎</button>
   <button type="button" id="mic" aria-label="Hablar">🎤</button>
   <button type="button" id="conv" aria-label="Conversar por voz">🎧</button>
+  <button type="button" id="cleanViewToggle" aria-label="Vista limpia">📄</button>
   <button class="main" id="send" type="submit">Enviar</button>
 </form>
 
@@ -166,7 +171,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 32. Incluye publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 33. Incluye publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <label>Lecciones que Lara ha aprendido</label>
   <div id="lessons"></div>
@@ -489,7 +494,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=32;
+const APP_V=33;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -912,6 +917,7 @@ function delChat(id){
   if(cur.id===id){cur=chats[chats.length-1];history=cur.msgs}
   saveChats();renderChats();render();
 }
+$("cleanViewToggle").onclick=()=>document.body.classList.toggle("clean-view");
 $("openChats").onclick=()=>{$("chatq").value="";renderChats();$("chats").classList.add("open")};
 $("closeChats").onclick=()=>$("chats").classList.remove("open");
 $("chatq").oninput=renderChats;
