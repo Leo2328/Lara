@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v44</title>
+<title>Lara v45</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -56,8 +56,9 @@ form textarea:focus-visible{outline:none}
 #attach,#mic,#conv{width:40px;height:40px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:var(--bg);border-color:transparent}
 #conv{outline-offset:2px}
 #send{justify-self:end;padding:10px 22px}
-#cfg,#notes,#chats,#projects{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
-#cfg.open,#notes.open,#chats.open,#projects.open{display:block}
+#cfg,#notes,#chats,#projects,#news{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
+#cfg.open,#notes.open,#chats.open,#projects.open,#news.open{display:block}
+#news{z-index:60}
 label{display:block;margin:18px 0 6px;font:600 14px var(--ui);color:var(--ink)}
 input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:var(--surface);color:var(--ink);font:15px var(--ui)}
 input[type=checkbox]{width:auto}
@@ -144,6 +145,12 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <input id="remat" type="datetime-local" style="margin-top:8px">
   <div class="row"><button class="main" id="addrem" type="button">Añadir recordatorio</button><button id="testrem" type="button">Probar aviso</button><button id="closeNotes" type="button">Cerrar</button></div>
 </section>
+<section id="news" aria-label="Novedades">
+  <h1>📰 Novedades</h1>
+  <p class="hint">Lo que cambió en Lara desde la última vez que la abriste.</p>
+  <div id="newslist"></div>
+  <div class="row"><button class="main" id="closeNews" type="button">Entendido</button></div>
+</section>
 <section id="projects" aria-label="Proyectos">
   <h1>Proyectos</h1>
   <p class="hint">Aquí Lara guarda el objetivo, las decisiones y el próximo paso de cada proyecto, para responder «¿qué habíamos decidido?» con datos reales.</p>
@@ -178,8 +185,8 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 44. Incluye confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
-  <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
+  <p class="hint">Versión 45. Incluye novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <pre id="diagout" style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--surface)"></pre>
   <label>Lecciones que Lara ha aprendido</label>
@@ -237,6 +244,10 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
       <label for="ghdata">Repositorio privado de datos</label><input id="ghdata" placeholder="lara-datos" autocapitalize="off" autocomplete="off">
       <div class="row"><button id="dbk" type="button">☁️ Respaldar mis datos</button><button id="drs" type="button">Restaurar mis datos</button></div>
       <label style="display:flex;gap:8px;align-items:center"><input id="dbkauto" type="checkbox" style="width:auto"> Respaldo semanal automático</label>
+      <label style="display:flex;gap:8px;align-items:center"><input id="syncauto" type="checkbox" style="width:auto"> Sincronizar automáticamente entre mis teléfonos</label>
+      <div class="row"><button id="syncnow" type="button">🔄 Sincronizar ahora</button></div>
+      <div id="syncmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
+      <p class="hint">Une chats, memoria, notas, tareas, hábitos, recordatorios, lecciones y proyectos de todos tus teléfonos. Usa el mismo repositorio privado y el mismo token en cada uno. Lo que borres en un teléfono puede reaparecer desde otro. Tus claves nunca se sincronizan.</p>
       <div id="dbkmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
     </details>
   </div>
@@ -580,7 +591,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=44;
+const APP_V=45;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1824,6 +1835,7 @@ $("autopublish").onclick=async()=>{
     const bpath="respaldos/lara_v"+pv+".html",ex=await ghGet(c,bpath);
     await ghPut(c,bpath,curText,"Respaldo automático de la versión "+pv,ex&&ex.sha);
     pubStatus("Publicando la versión "+v+"…");
+    autoPatchedText=addChangelog(autoPatchedText,v,autoSummary,autoNote&&autoNote.usuario);
     await ghPut(c,c.path,autoPatchedText,"Mejora automática v"+v+": "+String(autoSummary||"mejora").slice(0,100),cur.sha);
     {const nowS=statGet();let prevS={sent:0,bad:0};try{prevS=JSON.parse(store.get("lara_snap_prev","null"))||prevS}catch(e){}
      store.set("lara_lastpub",JSON.stringify({prev:pv,bpath:bpath,v:v,snap:nowS,prevSnap:prevS,t:Date.now()}));store.set("lara_snap_prev",JSON.stringify(nowS));renderEval()}
@@ -1858,6 +1870,7 @@ $("autoapply").onclick=()=>{
   if(!autoBackupDownloaded){autoStatus("Primero descarga el respaldo original.");return}
   const base=(autoSourceFile&&autoSourceFile.name||"lara.html").replace(/\.(html?)$/i,"");
   const m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)\s*;/);const v=m?m[1]:"actualizada";
+  {const mv=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)/);autoPatchedText=addChangelog(autoPatchedText,mv?mv[1]:"?",autoSummary,autoNote&&autoNote.usuario)}
   autoDownload(autoPatchedText,"lara.html");{const C=getChanges();C.push({t:Date.now(),v:v,s:String(autoSummary||"Mejora").slice(0,140)});store.set("lara_changes",JSON.stringify(C.slice(-30)));renderChanges()}autoStatus("Versión "+v+" descargada con el nombre lara.html. Ábrela primero desde tus descargas para probarla. Para publicarla, súbela a GitHub con ESE mismo nombre (lara.html) y reemplaza la anterior; si la subes con otro nombre, la app no se actualiza. Si tu teléfono la guardó como «lara (1).html», renómbrala antes de subirla.");$("autoapply").disabled=true;
 };
 
@@ -1948,6 +1961,7 @@ async function runDiag(){
   L.push("Memoria: "+mems.length+" · Chats: "+chats.length+" · Notas: "+notes.length+" · Proyectos: "+getProjects().length+" · Lecciones: "+getLessons().length);
   const e=evalLast();if(e) L.push("Última mejora publicada: v"+e.v+" · estado: "+({wait:"evaluando",ok:"bien","ok-nodata":"bien","worse":"con más problemas"}[e.state]||e.state));
   const dk=+store.get("lara_dbk_t","0");L.push("Último respaldo de datos: "+(dk?new Date(dk).toLocaleString("es"):"nunca"));
+  const sy=+store.get("lara_sync_t","0");L.push("Sincronización: "+(store.get("lara_sync","0")==="1"?"activa":"apagada")+" · última: "+(sy?new Date(sy).toLocaleString("es"):"nunca"));
   return L.join("\n");
 }
 $("diag").onclick=async()=>{const o=$("diagout");o.style.display="block";o.textContent="⏳ Revisando…";try{o.textContent=await runDiag()}catch(e){o.textContent="No pude completar el diagnóstico: "+(e.message||e)}};
@@ -1963,18 +1977,7 @@ async function dataRepoCheck(c){
   if(d.private!==true) throw new Error("El repositorio «"+c.repo+"» es PÚBLICO. Por seguridad no guardo tus chats ahí. Hazlo privado o usa otro.");
   c.branch=d.default_branch||"main";return c;
 }
-async function dataBackup(silent){
-  const msg=m=>{$("dbkmsg").textContent=m;if(!silent) toast(m)};
-  if(!ghReady()){msg("Falta configurar GitHub (usuario y token).");return}
-  const c=dataCfg();
-  try{
-    msg("⏳ Respaldando tus datos…");await dataRepoCheck(c);
-    const cur=await ghGet(c,c.path);
-    await ghPut(c,c.path,exportJson(),"Respaldo de datos "+isoLocal(new Date()).replace("T"," "),cur&&cur.sha);
-    store.set("lara_dbk_t",String(Date.now()));
-    msg("✅ Datos respaldados en "+c.owner+"/"+c.repo+" (privado) el "+new Date().toLocaleString("es")+".");
-  }catch(e){msg("❌ "+(e.message||e))}
-}
+async function dataBackup(silent){return syncNow(silent)}
 async function dataRestore(){
   const msg=m=>{$("dbkmsg").textContent=m;toast(m)};
   if(!ghReady()){msg("Falta configurar GitHub (usuario y token).");return}
@@ -2220,6 +2223,137 @@ $("panicgo").onclick=()=>{
   alert("Listo. Ahora revoca el token en GitHub: Settings → Developer settings → Fine-grained tokens → Lara → Delete. Si crees que tu clave de Gemini se filtró, crea otra en Google AI Studio y bórrala allí.");
   location.reload();
 };
+
+
+/* ===== Novedades al actualizar ===== */
+const CHANGELOG=[
+ {v:45,items:["Novedades al actualizar: Lara te cuenta qué cambió después de cada versión.","Sincronización entre teléfonos (opcional) usando tu repositorio privado."]},
+ {v:44,items:["El botón de emergencia ahora pide escribir BORRAR para confirmar."]},
+ {v:43,items:["Sistema de protección: Lara solo se comunica con Google y GitHub, ignora órdenes escondidas en páginas o archivos, revisa cada mejora contra código peligroso y vigila que su archivo no sea alterado.","Opción de cifrar tus claves con contraseña, y PIN más fuerte con espera tras intentos fallidos."]},
+ {v:42,items:["Lara entiende más formas de pedirle que se mejore y ya no dice «no puedo». Si no hay cuota, te ofrece ideas de funciones nuevas."]},
+ {v:40,items:["Mejor reinicio del micrófono en manos libres."]},
+ {v:36,items:["Puedes decirle «Lara, mejórate…» en el chat: prepara la propuesta, la prueba y solo publica si tú la autorizas con un botón."]}
+];
+function addChangelog(txt,v,summary,usuario){
+  if(!/const CHANGELOG=\[/.test(txt)) return txt;
+  const j=x=>JSON.stringify(String(x).replace(/\s+/g," ").slice(0,160)).replace(/</g,"\\u003c");
+  const item=usuario||summary||"Mejora automática",sum=summary&&summary!==item?summary:"";
+  const entry="{v:"+(+v||0)+",items:["+j(item)+(sum?","+j(sum):"")+"]},";
+  return txt.replace(/const CHANGELOG=\[/,m=>m+"\n "+entry);
+}
+function showNews(list){
+  const box=$("newslist");box.innerHTML="";
+  list.forEach(e=>{
+    const h=document.createElement("div");h.className="mem";h.style.cssText="flex-direction:column;align-items:stretch;gap:6px";
+    const t=document.createElement("b");t.textContent="Versión "+e.v;h.appendChild(t);
+    e.items.forEach(i=>{const p=document.createElement("div");p.style.fontSize="14px";p.textContent="• "+i;h.appendChild(p)});
+    box.appendChild(h);
+  });
+  $("news").classList.add("open");
+}
+$("closeNews").onclick=()=>$("news").classList.remove("open");
+$("allnews").onclick=()=>showNews(CHANGELOG.slice());
+setTimeout(function tryNews(){
+  const seen=+store.get("lara_seenv","0");
+  if(seen>=APP_V) return;
+  if($("lock").classList.contains("on")){setTimeout(tryNews,3000);return}
+  const list=(seen===0?CHANGELOG.filter(e=>e.v===APP_V):CHANGELOG.filter(e=>e.v>seen&&e.v<=APP_V));
+  store.set("lara_seenv",String(APP_V));
+  if(list.length) showNews(list);
+},2500);
+
+/* ===== Sincronización entre teléfonos ===== */
+function cleanObj(x){const o={};Object.keys(x).slice(0,20).forEach(k=>{const v=x[k];if(typeof v==="string") o[k]=v.slice(0,500);else if(typeof v==="number"||typeof v==="boolean") o[k]=v;else if(Array.isArray(v)) o[k]=v.filter(i=>typeof i==="string").slice(0,400).map(i=>i.slice(0,40))});return o}
+function cleanChat(c){
+  if(!c||typeof c.id!=="string"||!Array.isArray(c.msgs)) return null;
+  const msgs=[];
+  c.msgs.slice(-100).forEach(m=>{
+    if(m&&(m.role==="user"||m.role==="model")&&Array.isArray(m.parts)){
+      const ps=m.parts.filter(p=>p&&typeof p.text==="string").map(p=>({text:p.text.slice(0,20000)}));
+      if(ps.length){const o={role:m.role,parts:ps};if(typeof m.short==="string") o.short=m.short.slice(0,500);msgs.push(o)}
+    }
+  });
+  return {id:c.id.slice(0,40),title:String(c.title||"Chat").slice(0,80),ts:+c.ts||0,msgs:msgs,summary:typeof c.summary==="string"?c.summary.slice(0,4000):undefined};
+}
+function saveChatsRaw(){store.set("lara_chats",JSON.stringify(chats.slice(-60).map(c=>({id:c.id,title:c.title,ts:c.ts,msgs:c.msgs.slice(-100),summary:c.summary}))))}
+function mergeSync(d){
+  let n=0,curChanged=false;
+  if(!d||typeof d!=="object") return {count:0};
+  if(Array.isArray(d.memoria)) d.memoria.forEach(m=>{if(typeof m==="string"&&m.trim()&&!mems.some(x=>norm(x)===norm(m))){addMem(m);n++}});
+  if(Array.isArray(d.notas)) d.notas.forEach(x=>{if(typeof x==="string"&&x.trim()&&!notes.includes(x)){notes.push(x.slice(0,4000));n++}});
+  if(Array.isArray(d.tareas)) d.tareas.forEach(x=>{if(!x||typeof x.id!=="string") return;const l=tasks.find(y=>y.id===x.id);if(!l){tasks.push(cleanObj(x));n++}else if(x.done&&!l.done){l.done=true;n++}});
+  if(Array.isArray(d.habitos)) d.habitos.forEach(x=>{if(!x||typeof x.id!=="string") return;const l=habits.find(y=>y.id===x.id);if(!l){habits.push(cleanObj(x));n++}else if(Array.isArray(x.days)){l.days=l.days||[];x.days.forEach(day=>{if(typeof day==="string"&&!l.days.includes(day)){l.days.push(day.slice(0,40));n++}})}});
+  if(Array.isArray(d.recordatorios)) d.recordatorios.forEach(x=>{if(!x||typeof x.id!=="string") return;const l=rems.find(y=>y.id===x.id);if(!l){rems.push(cleanObj(x));n++}else if(x.done&&!l.done){l.done=true;n++}});
+  if(Array.isArray(d.chats)) d.chats.forEach(rc0=>{
+    const rc=cleanChat(rc0);if(!rc||!rc.msgs.length) return;
+    const lc=chats.find(k=>k.id===rc.id);
+    if(!lc){chats.push(rc);n++;return}
+    if(rc.msgs.length>lc.msgs.length||(rc.msgs.length===lc.msgs.length&&rc.ts>lc.ts+1000)){
+      lc.msgs.splice(0,lc.msgs.length,...rc.msgs);lc.title=rc.title;lc.ts=rc.ts;if(rc.summary!==undefined) lc.summary=rc.summary;n++;if(lc===cur) curChanged=true;
+    }
+  });
+  if(Array.isArray(d.lecciones)) d.lecciones.forEach(x=>{if(typeof x==="string"&&!getLessons().some(y=>norm(y)===norm(x))){addLesson(x);n++}});
+  if(Array.isArray(d.proyectos)) d.proyectos.forEach(rp=>{
+    if(!rp||typeof rp.name!=="string"||!rp.name.trim()) return;
+    const a=getProjects(),lp=findProj(rp.name,a);
+    const rdec=Array.isArray(rp.decisions)?rp.decisions.filter(x=>x&&typeof x.t==="string").slice(0,40).map(x=>({t:x.t.slice(0,200),d:+x.d||0})):[];
+    if(!lp){a.push({id:String(rp.id||Date.now().toString(36)).slice(0,40),name:rp.name.slice(0,60),goal:String(rp.goal||"").slice(0,200),decisions:rdec,next:String(rp.next||"").slice(0,200),ts:+rp.ts||Date.now()});saveProjects(a);n++}
+    else{
+      let ch=false;rdec.forEach(x=>{if(!lp.decisions.some(y=>norm(y.t)===norm(x.t))){lp.decisions.push(x);ch=true}});
+      if((+rp.ts||0)>(lp.ts||0)){lp.goal=String(rp.goal||lp.goal).slice(0,200);lp.next=String(rp.next||lp.next).slice(0,200);ch=true}
+      if(ch){saveProjects(a);n++}
+    }
+  });
+  saveNotes();saveRems();saveTasks();saveHabits();saveChatsRaw();saveMems();
+  try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderMore()}catch(e){}try{renderChats()}catch(e){}
+  try{if($("projects").classList.contains("open")) renderProjects()}catch(e){}
+  try{if(curChanged) render()}catch(e){}
+  return {count:n};
+}
+function syncSubset(o){
+  const idSort=(a,b)=>String(a.id||a.name||"").localeCompare(String(b.id||b.name||""));
+  const strs=a=>(Array.isArray(a)?a.filter(x=>typeof x==="string"):[]).slice().sort();
+  const objs=a=>(Array.isArray(a)?a.filter(x=>x&&typeof x==="object"):[]).slice().sort(idSort);
+  const lastOf=c=>{const m=(c.msgs||[]);return m.length?JSON.stringify(m[m.length-1].parts||""):""};
+  return JSON.stringify({m:strs(o.memoria),n:strs(o.notas),t:objs(o.tareas),h:objs(o.habitos),r:objs(o.recordatorios),c:objs(o.chats).map(c=>({id:c.id,t:c.title,k:(c.msgs||[]).length,l:lastOf(c)})),l:strs(o.lecciones),p:objs(o.proyectos)});
+}
+async function syncNow(silent){
+  const msg=m=>{["syncmsg","dbkmsg"].forEach(id=>{const e=$(id);if(e) e.textContent=m});if(!silent) toast(m)};
+  if(window._syncBusy||ctrl){if(!silent) msg("Espera un momento: hay otra operación en curso.");return}
+  if(!ghReady()){if(!silent) msg("Falta configurar GitHub (usuario y token).");return}
+  window._syncBusy=true;
+  try{
+    if(!silent) msg("⏳ Sincronizando…");
+    const c=dataCfg();await dataRepoCheck(c);
+    let pushed=false,pulled=0;
+    for(let at=0;at<3;at++){
+      const rem=await ghGet(c,c.path);
+      let remote=null;
+      if(rem){try{remote=JSON.parse(b64dec(rem.content))}catch(e){remote=null}}
+      if(remote) pulled+=mergeSync(remote).count;
+      const local=JSON.parse(exportJson());
+      if(remote&&syncSubset(remote)===syncSubset(local)) break;
+      try{
+        await ghPut(c,c.path,JSON.stringify(local,null,2),"Sincronización "+isoLocal(new Date()).replace("T"," "),rem&&rem.sha);
+        pushed=true;break;
+      }catch(e){if(at<2&&/conflicto/i.test(e.message||"")) continue;throw e}
+    }
+    store.set("lara_sync_t",String(Date.now()));store.set("lara_dbk_t",String(Date.now()));
+    msg("✅ Sincronizado a las "+new Date().toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"})+(pulled?" · traje "+pulled+" cambio"+(pulled>1?"s":""):"")+(pushed?" · subí tus cambios":" · sin cambios nuevos"));
+  }catch(e){msg("❌ "+(e.message||e))}
+  finally{window._syncBusy=false}
+}
+$("syncnow").onclick=()=>syncNow(false);
+$("syncauto").checked=store.get("lara_sync","0")==="1";
+$("syncauto").onchange=e=>{store.set("lara_sync",e.target.checked?"1":"0");if(e.target.checked) syncNow(false)};
+function syncAutoMaybe(){
+  if(store.get("lara_sync","0")!=="1"||!ghReady()||document.hidden) return;
+  if(Date.now()-(+store.get("lara_sync_t","0"))<120000) return;
+  syncNow(true);
+}
+setTimeout(syncAutoMaybe,9000);
+setInterval(syncAutoMaybe,300000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden) setTimeout(syncAutoMaybe,1500)});
 
 render();
 </script>
