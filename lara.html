@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v45</title>
+<title>Lara v46</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -185,13 +185,20 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 45. Incluye novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 46. Incluye autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
+  <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
+  <p class="hint">La autoprueba usa 1 consulta de Gemini y crea y borra un archivo temporal en tu repositorio privado de datos.</p>
+  <pre id="selftestout" style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:12px;padding:10px;font:13px/1.5 var(--ui);background:var(--surface)"></pre>
   <pre id="diagout" style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--surface)"></pre>
   <label>Lecciones que Lara ha aprendido</label>
   <div id="lessons"></div>
   <p class="hint">Lara las guarda cuando la corriges y las sigue en cada respuesta. Puedes borrar las que no quieras.</p>
+  <label>🛟 Copias locales de seguridad</label>
+  <p class="hint">Lara guarda copias de tus datos en este teléfono antes de sincronizar, importar o aplicar borrados. Conserva las últimas 6. No incluyen tus claves.</p>
+  <div class="row"><button id="snapnow" type="button">Crear copia ahora</button></div>
+  <div id="snaplist"></div>
   <label>🛡️ Seguridad</label>
   <p class="hint">Defensas de Lara contra virus, intentos de hackeo y archivos alterados. No sustituyen un antivirus en tu teléfono.</p>
   <div id="secsum" class="hint" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
@@ -247,7 +254,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
       <label style="display:flex;gap:8px;align-items:center"><input id="syncauto" type="checkbox" style="width:auto"> Sincronizar automáticamente entre mis teléfonos</label>
       <div class="row"><button id="syncnow" type="button">🔄 Sincronizar ahora</button></div>
       <div id="syncmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
-      <p class="hint">Une chats, memoria, notas, tareas, hábitos, recordatorios, lecciones y proyectos de todos tus teléfonos. Usa el mismo repositorio privado y el mismo token en cada uno. Lo que borres en un teléfono puede reaparecer desde otro. Tus claves nunca se sincronizan.</p>
+      <p class="hint">Une chats, memoria, notas, tareas, hábitos, recordatorios, lecciones y proyectos de todos tus teléfonos. Usa el mismo repositorio privado y el mismo token en cada uno. Los borrados también se sincronizan (con una protección: si de pronto desaparecen muchos datos de un teléfono, no los propaga). Antes de aplicar cambios se guarda una copia local. Tus claves nunca se sincronizan.</p>
       <div id="dbkmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
     </details>
   </div>
@@ -591,7 +598,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=45;
+const APP_V=46;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -695,6 +702,7 @@ function render(){
   showStatus();
 }
 function openCfg(){
+  try{renderSnaps()}catch(e){}
   renderLessons();renderChanges();renderIdeas();ghFill();renderEval();renderSec();try{panicClose()}catch(e){}
   $("key").value=store.get("lara_key","");
   $("model").value=store.get("lara_model","");
@@ -796,7 +804,7 @@ $("f").onsubmit=async ev=>{
   $("chat").scrollTop=$("chat").scrollHeight;
 };
 
-function exportJson(){return JSON.stringify({lara:2,memoria:mems,notas:notes,tareas:tasks,habitos:habits,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")},lecciones:getLessons(),proyectos:getProjects()},null,2)}
+function exportJson(){return JSON.stringify({lara:2,memoria:mems,notas:notes,tareas:tasks,habitos:habits,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")},lecciones:getLessons(),proyectos:getProjects(),tomb:getTomb()},null,2)}
 function exportAll(){
   const data=exportJson();
   const a=document.createElement("a");
@@ -2227,6 +2235,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:46,items:["Autoprueba completa: un botón que revisa si todo funciona en tu teléfono (conexión, Gemini, GitHub, respaldo, voz, avisos…).","Los borrados ahora también se sincronizan entre teléfonos, con protección contra borrados masivos por error.","Copias locales de seguridad: Lara guarda una copia de tus datos antes de sincronizar o importar, y puedes restaurarla desde Ajustes."]},
  {v:45,items:["Novedades al actualizar: Lara te cuenta qué cambió después de cada versión.","Sincronización entre teléfonos (opcional) usando tu repositorio privado."]},
  {v:44,items:["El botón de emergencia ahora pide escribir BORRAR para confirmar."]},
  {v:43,items:["Sistema de protección: Lara solo se comunica con Google y GitHub, ignora órdenes escondidas en páginas o archivos, revisa cada mejora contra código peligroso y vigila que su archivo no sea alterado.","Opción de cifrar tus claves con contraseña, y PIN más fuerte con espera tras intentos fallidos."]},
@@ -2279,25 +2288,26 @@ function saveChatsRaw(){store.set("lara_chats",JSON.stringify(chats.slice(-60).m
 function mergeSync(d){
   let n=0,curChanged=false;
   if(!d||typeof d!=="object") return {count:0};
-  if(Array.isArray(d.memoria)) d.memoria.forEach(m=>{if(typeof m==="string"&&m.trim()&&!mems.some(x=>norm(x)===norm(m))){addMem(m);n++}});
-  if(Array.isArray(d.notas)) d.notas.forEach(x=>{if(typeof x==="string"&&x.trim()&&!notes.includes(x)){notes.push(x.slice(0,4000));n++}});
-  if(Array.isArray(d.tareas)) d.tareas.forEach(x=>{if(!x||typeof x.id!=="string") return;const l=tasks.find(y=>y.id===x.id);if(!l){tasks.push(cleanObj(x));n++}else if(x.done&&!l.done){l.done=true;n++}});
-  if(Array.isArray(d.habitos)) d.habitos.forEach(x=>{if(!x||typeof x.id!=="string") return;const l=habits.find(y=>y.id===x.id);if(!l){habits.push(cleanObj(x));n++}else if(Array.isArray(x.days)){l.days=l.days||[];x.days.forEach(day=>{if(typeof day==="string"&&!l.days.includes(day)){l.days.push(day.slice(0,40));n++}})}});
-  if(Array.isArray(d.recordatorios)) d.recordatorios.forEach(x=>{if(!x||typeof x.id!=="string") return;const l=rems.find(y=>y.id===x.id);if(!l){rems.push(cleanObj(x));n++}else if(x.done&&!l.done){l.done=true;n++}});
+  const TB=getTomb();
+  if(Array.isArray(d.memoria)) d.memoria.forEach(m=>{if(typeof m==="string"&&m.trim()&&!(TB.m[norm(m)]>0)&&!mems.some(x=>norm(x)===norm(m))){addMem(m);n++}});
+  if(Array.isArray(d.notas)) d.notas.forEach(x=>{if(typeof x==="string"&&x.trim()&&!(TB.n[norm(x).slice(0,200)]>0)&&!notes.includes(x)){notes.push(x.slice(0,4000));n++}});
+  if(Array.isArray(d.tareas)) d.tareas.forEach(x=>{if(!x||typeof x.id!=="string") return;const l=tasks.find(y=>y.id===x.id);if(!l){if(TB.t[x.id]>0) return;tasks.push(cleanObj(x));n++}else if(x.done&&!l.done){l.done=true;n++}});
+  if(Array.isArray(d.habitos)) d.habitos.forEach(x=>{if(!x||typeof x.id!=="string") return;const l=habits.find(y=>y.id===x.id);if(!l){if(TB.h[x.id]>0) return;habits.push(cleanObj(x));n++}else if(Array.isArray(x.days)){l.days=l.days||[];x.days.forEach(day=>{if(typeof day==="string"&&!l.days.includes(day)){l.days.push(day.slice(0,40));n++}})}});
+  if(Array.isArray(d.recordatorios)) d.recordatorios.forEach(x=>{if(!x||typeof x.id!=="string") return;const l=rems.find(y=>y.id===x.id);if(!l){if(TB.r[x.id]>0) return;rems.push(cleanObj(x));n++}else if(x.done&&!l.done){l.done=true;n++}});
   if(Array.isArray(d.chats)) d.chats.forEach(rc0=>{
     const rc=cleanChat(rc0);if(!rc||!rc.msgs.length) return;
     const lc=chats.find(k=>k.id===rc.id);
-    if(!lc){chats.push(rc);n++;return}
+    if(!lc){if(TB.c[rc.id]>0) return;chats.push(rc);n++;return}
     if(rc.msgs.length>lc.msgs.length||(rc.msgs.length===lc.msgs.length&&rc.ts>lc.ts+1000)){
       lc.msgs.splice(0,lc.msgs.length,...rc.msgs);lc.title=rc.title;lc.ts=rc.ts;if(rc.summary!==undefined) lc.summary=rc.summary;n++;if(lc===cur) curChanged=true;
     }
   });
-  if(Array.isArray(d.lecciones)) d.lecciones.forEach(x=>{if(typeof x==="string"&&!getLessons().some(y=>norm(y)===norm(x))){addLesson(x);n++}});
+  if(Array.isArray(d.lecciones)) d.lecciones.forEach(x=>{if(typeof x==="string"&&!(TB.l[norm(x)]>0)&&!getLessons().some(y=>norm(y)===norm(x))){addLesson(x);n++}});
   if(Array.isArray(d.proyectos)) d.proyectos.forEach(rp=>{
     if(!rp||typeof rp.name!=="string"||!rp.name.trim()) return;
     const a=getProjects(),lp=findProj(rp.name,a);
     const rdec=Array.isArray(rp.decisions)?rp.decisions.filter(x=>x&&typeof x.t==="string").slice(0,40).map(x=>({t:x.t.slice(0,200),d:+x.d||0})):[];
-    if(!lp){a.push({id:String(rp.id||Date.now().toString(36)).slice(0,40),name:rp.name.slice(0,60),goal:String(rp.goal||"").slice(0,200),decisions:rdec,next:String(rp.next||"").slice(0,200),ts:+rp.ts||Date.now()});saveProjects(a);n++}
+    if(!lp){if(TB.p[norm(rp.name)]>0) return;a.push({id:String(rp.id||Date.now().toString(36)).slice(0,40),name:rp.name.slice(0,60),goal:String(rp.goal||"").slice(0,200),decisions:rdec,next:String(rp.next||"").slice(0,200),ts:+rp.ts||Date.now()});saveProjects(a);n++}
     else{
       let ch=false;rdec.forEach(x=>{if(!lp.decisions.some(y=>norm(y.t)===norm(x.t))){lp.decisions.push(x);ch=true}});
       if((+rp.ts||0)>(lp.ts||0)){lp.goal=String(rp.goal||lp.goal).slice(0,200);lp.next=String(rp.next||lp.next).slice(0,200);ch=true}
@@ -2315,7 +2325,54 @@ function syncSubset(o){
   const strs=a=>(Array.isArray(a)?a.filter(x=>typeof x==="string"):[]).slice().sort();
   const objs=a=>(Array.isArray(a)?a.filter(x=>x&&typeof x==="object"):[]).slice().sort(idSort);
   const lastOf=c=>{const m=(c.msgs||[]);return m.length?JSON.stringify(m[m.length-1].parts||""):""};
-  return JSON.stringify({m:strs(o.memoria),n:strs(o.notas),t:objs(o.tareas),h:objs(o.habitos),r:objs(o.recordatorios),c:objs(o.chats).map(c=>({id:c.id,t:c.title,k:(c.msgs||[]).length,l:lastOf(c)})),l:strs(o.lecciones),p:objs(o.proyectos)});
+  return JSON.stringify({m:strs(o.memoria),n:strs(o.notas),t:objs(o.tareas),h:objs(o.habitos),r:objs(o.recordatorios),c:objs(o.chats).map(c=>({id:c.id,t:c.title,k:(c.msgs||[]).length,l:lastOf(c)})),l:strs(o.lecciones),p:objs(o.proyectos),z:Object.entries(o.tomb||{}).map(([k,v])=>k+":"+Object.keys(v||{}).sort().map(kk=>kk+((+v[kk]||0)>0?"+":"-")).join(",")).sort()});
+}
+const SYNC_TYPES=["m","n","t","h","r","c","l","p"];
+function getTomb(){let t={};try{t=JSON.parse(store.get("lara_tomb","{}"))||{}}catch(e){}SYNC_TYPES.forEach(k=>{t[k]=(t[k]&&typeof t[k]==="object")?t[k]:{}});return t}
+function saveTomb(t){store.set("lara_tomb",JSON.stringify(t))}
+function getBase(){try{return JSON.parse(store.get("lara_syncbase","null"))}catch(e){return null}}
+function syncKeys(){return {m:mems.map(x=>norm(x)),n:notes.map(x=>norm(x).slice(0,200)),t:tasks.map(x=>x.id),h:habits.map(x=>x.id),r:rems.map(x=>x.id),c:chats.map(x=>x.id),l:getLessons().map(x=>norm(x)),p:getProjects().map(x=>norm(x.name))}}
+function saveBase(){store.set("lara_syncbase",JSON.stringify(syncKeys()))}
+function detectDeletes(){
+  const base=getBase(),cur=syncKeys(),tomb=getTomb(),now=Date.now(),newSets={};let suspicious=[];
+  SYNC_TYPES.forEach(k=>{
+    const b=new Set((base&&base[k])||[]),c=new Set(cur[k]);
+    newSets[k]=new Set(base?cur[k].filter(x=>!b.has(x)):[]);
+    newSets[k].forEach(x=>{if(tomb[k][x]>0) tomb[k][x]=-now});
+    if(base){
+      const removed=[...b].filter(x=>!c.has(x));
+      if(k==="c"&&cur.c.length>=58) return;
+      if(removed.length>=5&&removed.length>b.size*0.5){suspicious.push(k);return}
+      removed.forEach(x=>{tomb[k][x]=now});
+    }
+  });
+  saveTomb(tomb);
+  if(suspicious.length) secLog("sincronización","desaparecieron muchos datos locales ("+suspicious.join(",")+"); no propagué esos borrados");
+  return {newSets,suspicious};
+}
+function absorbTombs(remoteTomb,newSets){
+  const tomb=getTomb(),limit=60*864e5,now=Date.now();
+  SYNC_TYPES.forEach(k=>{
+    const rt=(remoteTomb&&remoteTomb[k]&&typeof remoteTomb[k]==="object")?remoteTomb[k]:{};
+    Object.keys(rt).slice(0,2000).forEach(key=>{const ts=+rt[key]||0;if(!(key in tomb[k])||Math.abs(tomb[k][key])<Math.abs(ts)) tomb[k][key]=ts});
+    newSets[k].forEach(x=>{if(tomb[k][x]>0) tomb[k][x]=-now});
+    Object.keys(tomb[k]).forEach(key=>{if(now-Math.abs(tomb[k][key])>limit) delete tomb[k][key]});
+  });
+  saveTomb(tomb);return tomb;
+}
+function countTombed(tomb){
+  return mems.filter(x=>tomb.m[norm(x)]>0).length+notes.filter(x=>tomb.n[norm(x).slice(0,200)]>0).length+tasks.filter(x=>tomb.t[x.id]>0).length+habits.filter(x=>tomb.h[x.id]>0).length+rems.filter(x=>tomb.r[x.id]>0).length+chats.filter(c=>c!==cur&&tomb.c[c.id]>0).length+getLessons().filter(x=>tomb.l[norm(x)]>0).length+getProjects().filter(x=>tomb.p[norm(x.name)]>0).length;
+}
+function purgeTombed(tomb){
+  const n=countTombed(tomb);if(!n) return 0;
+  mems=mems.filter(x=>!(tomb.m[norm(x)]>0));notes=notes.filter(x=>!(tomb.n[norm(x).slice(0,200)]>0));
+  tasks=tasks.filter(x=>!(tomb.t[x.id]>0));habits=habits.filter(x=>!(tomb.h[x.id]>0));rems=rems.filter(x=>!(tomb.r[x.id]>0));
+  chats=chats.filter(c=>c===cur||!(tomb.c[c.id]>0));
+  store.set("lara_lessons",JSON.stringify(getLessons().filter(x=>!(tomb.l[norm(x)]>0))));
+  saveProjects(getProjects().filter(p=>!(tomb.p[norm(p.name)]>0)));
+  saveNotes();saveRems();saveTasks();saveHabits();saveChatsRaw();saveMems();
+  try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderMore()}catch(e){}try{renderChats()}catch(e){}
+  return n;
 }
 async function syncNow(silent){
   const msg=m=>{["syncmsg","dbkmsg"].forEach(id=>{const e=$(id);if(e) e.textContent=m});if(!silent) toast(m)};
@@ -2325,12 +2382,17 @@ async function syncNow(silent){
   try{
     if(!silent) msg("⏳ Sincronizando…");
     const c=dataCfg();await dataRepoCheck(c);
-    let pushed=false,pulled=0;
+    let pushed=false,pulled=0,removed=0,warn="";
     for(let at=0;at<3;at++){
       const rem=await ghGet(c,c.path);
       let remote=null;
       if(rem){try{remote=JSON.parse(b64dec(rem.content))}catch(e){remote=null}}
+      if(at===0) await snapMaybe("antes de sincronizar");
+      const det=detectDeletes();
+      if(det.suspicious.length) warn=" · ⚠️ no propagué borrados masivos";
+      const tomb=absorbTombs(remote&&remote.tomb,det.newSets);
       if(remote) pulled+=mergeSync(remote).count;
+      if(countTombed(tomb)>0){try{snapSave("antes de aplicar borrados",exportJson())}catch(e){}removed+=purgeTombed(tomb)}
       const local=JSON.parse(exportJson());
       if(remote&&syncSubset(remote)===syncSubset(local)) break;
       try{
@@ -2338,8 +2400,9 @@ async function syncNow(silent){
         pushed=true;break;
       }catch(e){if(at<2&&/conflicto/i.test(e.message||"")) continue;throw e}
     }
+    saveBase();
     store.set("lara_sync_t",String(Date.now()));store.set("lara_dbk_t",String(Date.now()));
-    msg("✅ Sincronizado a las "+new Date().toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"})+(pulled?" · traje "+pulled+" cambio"+(pulled>1?"s":""):"")+(pushed?" · subí tus cambios":" · sin cambios nuevos"));
+    msg("✅ Sincronizado a las "+new Date().toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"})+(pulled?" · traje "+pulled+" cambio"+(pulled>1?"s":""):"")+(removed?" · quité "+removed+" borrado"+(removed>1?"s":"")+" de otro teléfono":"")+(pushed?" · subí tus cambios":" · sin cambios nuevos")+warn);
   }catch(e){msg("❌ "+(e.message||e))}
   finally{window._syncBusy=false}
 }
@@ -2354,6 +2417,157 @@ function syncAutoMaybe(){
 setTimeout(syncAutoMaybe,9000);
 setInterval(syncAutoMaybe,300000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden) setTimeout(syncAutoMaybe,1500)});
+
+
+/* ===== Copias locales (IndexedDB) ===== */
+function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open("lara_snaps",1);r.onupgradeneeded=()=>r.result.createObjectStore("s",{keyPath:"t"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function snapList(){
+  const db=await idbOpen();
+  const all=await new Promise((res,rej)=>{const q=db.transaction("s","readonly").objectStore("s").getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)});
+  db.close();return all.sort((a,b)=>b.t-a.t);
+}
+async function snapSave(why,json){
+  json=json||exportJson();
+  const db=await idbOpen();
+  await new Promise((res,rej)=>{const tx=db.transaction("s","readwrite");tx.objectStore("s").put({t:Date.now(),why:why,json:json,size:json.length});tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});
+  const all=await new Promise((res,rej)=>{const q=db.transaction("s","readonly").objectStore("s").getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)});
+  const old=all.sort((a,b)=>b.t-a.t).slice(6);
+  if(old.length) await new Promise((res,rej)=>{const tx=db.transaction("s","readwrite");old.forEach(x=>tx.objectStore("s").delete(x.t));tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});
+  db.close();
+}
+async function snapMaybe(why){
+  try{const json=exportJson();const L=await snapList();if(L.length&&Date.now()-L[0].t<1800000) return;await snapSave(why,json)}catch(e){}
+}
+async function snapDelete(t){const db=await idbOpen();await new Promise((res,rej)=>{const tx=db.transaction("s","readwrite");tx.objectStore("s").delete(t);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}
+async function snapRestore(t){
+  const L=await snapList(),sn=L.find(x=>x.t===t);if(!sn) throw new Error("No encontré esa copia.");
+  await snapSave("antes de restaurar",exportJson());
+  const d=JSON.parse(sn.json);
+  mems=(Array.isArray(d.memoria)?d.memoria:[]).filter(x=>typeof x==="string").map(x=>x.slice(0,200)).slice(0,50);
+  notes=(Array.isArray(d.notas)?d.notas:[]).filter(x=>typeof x==="string").map(x=>x.slice(0,4000));
+  tasks=(Array.isArray(d.tareas)?d.tareas:[]).filter(x=>x&&typeof x.id==="string").map(cleanObj);
+  habits=(Array.isArray(d.habitos)?d.habitos:[]).filter(x=>x&&typeof x.id==="string").map(cleanObj);
+  rems=(Array.isArray(d.recordatorios)?d.recordatorios:[]).filter(x=>x&&typeof x.id==="string").map(cleanObj);
+  const cs=(Array.isArray(d.chats)?d.chats:[]).map(cleanChat).filter(Boolean);
+  chats=cs.length?cs:[{id:uid(),title:"Conversación",ts:Date.now(),msgs:[]}];
+  cur=chats.find(c=>c.id===store.get("lara_cur",""))||chats[chats.length-1];history=cur.msgs;
+  store.set("lara_lessons",JSON.stringify((Array.isArray(d.lecciones)?d.lecciones:[]).filter(x=>typeof x==="string").slice(-15)));
+  saveProjects(Array.isArray(d.proyectos)?d.proyectos.filter(p=>p&&typeof p.name==="string").map(p=>({id:String(p.id||uid()).slice(0,40),name:p.name.slice(0,60),goal:String(p.goal||"").slice(0,200),decisions:Array.isArray(p.decisions)?p.decisions.slice(0,40):[],next:String(p.next||"").slice(0,200),ts:+p.ts||Date.now()})):[]);
+  store.set("lara_tomb",JSON.stringify(d.tomb||{}));
+  store.set("lara_syncbase","");
+  saveNotes();saveRems();saveTasks();saveHabits();saveChatsRaw();saveMems();store.set("lara_cur",cur.id);
+  try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderMore()}catch(e){}try{renderChats()}catch(e){}try{render()}catch(e){}
+}
+async function renderSnaps(){
+  const box=$("snaplist");if(!box) return;box.innerHTML="";
+  let L=[];try{L=await snapList()}catch(e){box.innerHTML='<p class="hint">Este navegador no permite guardar copias locales.</p>';return}
+  if(!L.length){box.innerHTML='<p class="hint">Todavía no hay copias.</p>';return}
+  L.forEach(sn=>{
+    const d=document.createElement("div");d.className="mem";
+    const sp=document.createElement("span");sp.textContent=new Date(sn.t).toLocaleString("es")+" · "+sn.why+" · "+Math.max(1,Math.round((sn.size||0)/1024))+" KB";
+    const w=document.createElement("div");w.style.cssText="display:flex;gap:6px;flex:none";
+    const r=document.createElement("button");r.type="button";r.textContent="Restaurar";
+    r.onclick=async()=>{
+      if(!confirm("¿Restaurar los datos de esta copia? Antes se guardará una copia de lo que tienes ahora.")) return;
+      try{await snapRestore(sn.t);toast("✅ Copia restaurada.");renderSnaps()}catch(e){toast("❌ "+(e.message||e))}
+    };
+    const x=document.createElement("button");x.type="button";x.textContent="Borrar";
+    x.onclick=async()=>{try{await snapDelete(sn.t);renderSnaps()}catch(e){}};
+    w.append(r,x);d.append(sp,w);box.appendChild(d);
+  });
+}
+$("snapnow").onclick=async()=>{try{await snapSave("copia manual",exportJson());toast("✅ Copia guardada.");renderSnaps()}catch(e){toast("❌ No pude guardar la copia: "+(e.message||e))}};
+{const _imp=$("impf").onchange;$("impf").onchange=e=>{try{snapSave("antes de importar",exportJson())}catch(x){}return _imp(e)}}
+
+/* ===== Autoprueba completa ===== */
+async function selfTest(){
+  const out=$("selftestout");out.style.display="block";
+  const rows=[],ic={ok:"✅",bad:"❌",warn:"⚠️",info:"ℹ️"};
+  const show=extra=>{out.textContent=rows.map(r=>ic[r.s]+" "+r.t+(r.d?" — "+r.d:"")).join("\n")+(extra?"\n\n"+extra:"")};
+  const add=(s,t,d)=>{rows.push({s:s,t:t,d:d||""});show("⏳ Probando…")};
+  const T=async(name,fn)=>{try{await fn()}catch(e){add("bad",name,String(e.message||e).slice(0,160))}};
+  show("⏳ Probando…");
+  await T("Conexión a internet",async()=>{
+    if(!navigator.onLine) throw new Error("el teléfono dice que no hay conexión");
+    const r=await fetch(selfFile()+"?c="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error("no pude leer "+selfFile()+" (HTTP "+r.status+")");
+    const m=(await r.text()).match(/const APP_V=(\d+)/);
+    add("ok","Conexión a internet","publicada: versión "+(m?m[1]:"?")+(m&&+m[1]>APP_V?" (hay una actualización)":" (la tuya: "+APP_V+")"));
+  });
+  await T("Clave de Gemini",async()=>{
+    const key=store.get("lara_key","");if(!key) throw new Error("falta la clave en Ajustes");
+    const model=store.get("lara_model_ok","")||store.get("lara_model","")||FALLBACK[0];
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{role:"user",parts:[{text:"Responde solo: OK"}]}],generationConfig:{maxOutputTokens:20}})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(r.status===429?"cuota agotada por hoy":((d.error&&d.error.message)||("error "+r.status)));
+    bump(model);add("ok","Gemini responde","modelo "+model);
+  });
+  const c=ghCfg();
+  await T("GitHub (app)",async()=>{
+    if(!c.owner||!c.repo||!c.token) throw new Error("falta usuario, repositorio o token en Conexión con GitHub");
+    const cc=Object.assign({},c);await ghResolve(cc);
+    const f=await ghGet(cc,cc.path);
+    if(!f) throw new Error("no encontré «"+cc.path+"» en la rama «"+cc.branch+"»");
+    const v=(b64dec(f.content).match(/const\s+APP_V\s*=\s*(\d+)/)||[])[1]||"?";
+    add("ok","GitHub: repositorio de la app","rama «"+cc.branch+"», archivo "+cc.path+" (versión "+v+"). El permiso de escribir se comprueba al publicar.");
+    let L={};try{L=JSON.parse(store.get("lara_lastpub","{}"))||{}}catch(e){}
+    if(L.bpath){const b=await ghGet(cc,L.bpath);add(b?"ok":"warn","Deshacer última publicación",b?"respaldo "+L.bpath+" disponible":"no encontré el respaldo "+L.bpath)}
+    else add("info","Deshacer última publicación","no hay una publicación reciente que deshacer");
+  });
+  await T("Repositorio privado de datos",async()=>{
+    if(!c.owner||!c.token) throw new Error("falta configurar GitHub");
+    const dc=dataCfg();await dataRepoCheck(dc);
+    add("ok","Repositorio de datos privado","«"+dc.repo+"» existe y es privado");
+    const tp="datos/autoprueba.txt",ex=await ghGet(dc,tp);
+    const put=await ghPut(dc,tp,"autoprueba "+new Date().toISOString(),"Autoprueba de Lara",ex&&ex.sha);
+    const sha=(put&&put.content&&put.content.sha)||null;
+    if(sha) await ghDelete(dc,tp,sha,"Autoprueba: borrar archivo temporal");
+    add("ok","Escribir y borrar en el repositorio de datos","el token tiene permiso de escritura");
+  });
+  await T("Sincronización",async()=>{
+    if(!ghReady()) throw new Error("falta configurar GitHub");
+    await syncNow(true);
+    const m=($("syncmsg")||{}).textContent||"";
+    if(!m.startsWith("✅")) throw new Error(m||"no se completó");
+    add("ok","Sincronización",m.replace("✅ ",""));
+  });
+  await T("Claves cifradas",async()=>{
+    if(_sget("lara_vault_on","")==="1"){
+      if(!VAULT||!VAULT._key) throw new Error("la bóveda está activa pero bloqueada");
+      const iv=crypto.getRandomValues(new Uint8Array(12)),ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},VAULT._key,new TextEncoder().encode("prueba"));
+      const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:iv},VAULT._key,ct);
+      if(new TextDecoder().decode(pt)!=="prueba") throw new Error("el cifrado no coincide");
+      add("ok","Claves cifradas con contraseña","cifrado y descifrado correctos");
+    }else add("warn","Claves cifradas con contraseña","apagado (opcional, recomendado)");
+  });
+  await T("Bloqueo",async()=>{add(_sget("lara_pin","")||_sget("lara_vault_on","")==="1"?"ok":"warn","Bloqueo al abrir",_sget("lara_pin","")||_sget("lara_vault_on","")==="1"?"activo":"sin PIN ni contraseña")});
+  await T("Voz",async()=>{
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    add(SR?"ok":"warn","Reconocimiento de voz (micrófono)",SR?"disponible":"este navegador no lo soporta");
+    add(window.speechSynthesis?"ok":"warn","Lectura en voz alta",window.speechSynthesis?(speechSynthesis.getVoices().length+" voces"):"no disponible");
+    try{const pm=await navigator.permissions.query({name:"microphone"});add(pm.state==="granted"?"ok":pm.state==="denied"?"bad":"info","Permiso del micrófono",pm.state)}catch(e){add("info","Permiso del micrófono","no se puede consultar aquí")}
+  });
+  await T("Avisos",async()=>{
+    if(!("Notification" in window)) add("warn","Notificaciones","no disponibles");
+    else add(Notification.permission==="granted"?"ok":Notification.permission==="denied"?"bad":"info","Notificaciones",Notification.permission);
+  });
+  await T("Almacenamiento",async()=>{
+    let bytes=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);bytes+=k.length+(localStorage.getItem(k)||"").length}}catch(e){}
+    const pct=Math.round(bytes/50000);add(pct>80?"warn":"ok","Almacenamiento",Math.round(bytes/1024)+" KB de ~5000 KB ("+pct+"%)");
+    const L=await snapList();add("ok","Copias locales","IndexedDB funciona, "+L.length+" copia"+(L.length===1?"":"s"));
+  });
+  await T("Service worker",async()=>{
+    if(!navigator.serviceWorker) throw new Error("no disponible");
+    const rg=await navigator.serviceWorker.getRegistration();
+    add(rg&&rg.active?"ok":"warn","Service worker (instalación y caché)",rg?(rg.active?"activo":"instalándose"):"no registrado");
+  });
+  await T("Integridad",async()=>{const r=await integrityCheck(false);add(r.state==="ok"?"ok":r.state==="alert"?"bad":"info","Integridad del archivo",r.msg)});
+  const bad=rows.filter(r=>r.s==="bad").length,ok=rows.filter(r=>r.s==="ok").length,warn=rows.filter(r=>r.s==="warn").length;
+  show("Resultado: "+ok+" correctas · "+bad+" con problemas · "+warn+" avisos."+(bad?" Revisa las líneas con ❌.":" Todo lo esencial funciona."));
+  secLog("autoprueba",ok+" ok, "+bad+" fallos, "+warn+" avisos");
+}
+$("selftest").onclick=()=>{if(window._selfTesting) return;window._selfTesting=true;selfTest().catch(e=>{$("selftestout").textContent="❌ "+(e.message||e)}).finally(()=>{window._selfTesting=false})};
+$("selftestcopy").onclick=()=>{const t=$("selftestout").textContent;if(!t||t.startsWith("⏳")){toast("Primero toca Autoprueba completa.");return}try{navigator.clipboard.writeText(t).then(()=>toast("Resultado copiado."))}catch(e){toast("No pude copiar.")}};
 
 render();
 </script>
