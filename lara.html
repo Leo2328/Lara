@@ -2,12 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://generativelanguage.googleapis.com https://api.github.com; manifest-src 'self'; worker-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<script>(function(){try{if(window.top!==window.self&&location.href.indexOf("about:")!==0){document.documentElement.style.display="none";try{window.top.location=window.self.location}catch(e){}}}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f766e">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v42</title>
+<title>Lara v43</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -112,7 +114,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
 </form>
 
 <div id="toast" role="status"></div>
-<div id="lock"><div class="box"><h1>Lara</h1><p class="hint">Escribe tu PIN</p><input id="pin" type="password" inputmode="numeric" autocomplete="off"><p id="lockerr" class="hint"></p><div class="row" style="justify-content:center"><button class="main" id="unlock" type="button">Entrar</button></div></div></div>
+<div id="lock"><div class="box"><h1>Lara</h1><p class="hint">Escribe tu PIN</p><input id="pin" type="password" inputmode="numeric" autocomplete="off"><p id="lockerr" class="hint"></p><div class="row" style="justify-content:center"><button class="main" id="unlock" type="button">Entrar</button></div><div class="row" style="justify-content:center"><button id="vforget" type="button" style="display:none">Olvidé mi contraseña</button></div></div></div>
 <section id="chats" aria-label="Conversaciones">
   <h1>Conversaciones</h1>
   <input id="chatq" type="search" placeholder="Buscar en las conversaciones">
@@ -176,13 +178,24 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 42. Incluye automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 43. Incluye sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <pre id="diagout" style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--surface)"></pre>
   <label>Lecciones que Lara ha aprendido</label>
   <div id="lessons"></div>
   <p class="hint">Lara las guarda cuando la corriges y las sigue en cada respuesta. Puedes borrar las que no quieras.</p>
+  <label>🛡️ Seguridad</label>
+  <p class="hint">Defensas de Lara contra virus, intentos de hackeo y archivos alterados. No sustituyen un antivirus en tu teléfono.</p>
+  <div id="secsum" class="hint" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
+  <div class="row"><button id="secaudit" type="button">🛡️ Auditar ahora</button><button id="seclogclear" type="button">Borrar registro</button></div>
+  <details id="vaultbox"><summary>🔐 Proteger mis claves con contraseña</summary>
+    <p class="hint">Cifra tu clave de Gemini y tu token de GitHub dentro del teléfono. Al abrir Lara te pedirá la contraseña (reemplaza al PIN). Si la olvidas no se puede recuperar: tendrás que escribir las claves otra vez.</p>
+    <input id="vpass" type="password" autocomplete="new-password" placeholder="Contraseña (6 o más caracteres)">
+    <div class="row"><button id="von" type="button">Activar protección</button><button id="voff" type="button">Desactivar</button></div>
+    <div id="vmsg" class="hint" style="font-size:14px;color:var(--ink)"></div>
+  </details>
+  <div class="row"><button id="panic" type="button" style="color:var(--danger)">🚨 Emergencia: borrar mis claves de este teléfono</button></div>
   <label>Automejora de Lara (experimental)</label>
   <p class="hint">Describe la mejora y Gemini propone cambios pequeños. Lara los prueba, tú revisas y apruebas, y ella publica la versión nueva en GitHub guardando antes un respaldo. Nada cambia sin tu aprobación. La clave y el token no se incluyen en el archivo exportado.</p>
   <div id="autolab">
@@ -283,6 +296,18 @@ const $=id=>document.getElementById(id);
 const store={
   get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},
   set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+};
+let VAULT=null;
+const _sget=store.get,_sset=store.set;
+store.get=function(k,d){
+  if(VAULT&&k==="lara_key") return VAULT.k||d;
+  if(VAULT&&k==="lara_gh"){let o={};try{o=JSON.parse(_sget("lara_gh","{}"))||{}}catch(e){}if(VAULT.t) o.token=VAULT.t;return JSON.stringify(o)}
+  return _sget(k,d);
+};
+store.set=function(k,v){
+  if(VAULT&&k==="lara_key"){VAULT.k=String(v||"");vaultSave();return}
+  if(VAULT&&k==="lara_gh"){let o={};try{o=JSON.parse(v)||{}}catch(e){}if("token" in o){VAULT.t=String(o.token||"");delete o.token}_sset("lara_gh",JSON.stringify(o));vaultSave();return}
+  return _sset(k,v);
 };
 const STUDY_TXT="\n\nMODO ESTUDIO BÍBLICO: cita siempre libro, capítulo y versículo. Si citas el texto, hazlo en pocas palabras e indica la versión; si no, parafrasea. Distingue lo que dice el texto de lo que interpretan las tradiciones, presenta las lecturas principales (preterista, historicista, futurista, idealista) y di cuál tiene mejor sustento sin imponerla. No señales a personas actuales ni fijes fechas. Nunca inventes versículos: si no estás segura, dilo y pídeme que lo verifique en mi Biblia.";
 let profiles=null;
@@ -549,7 +574,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=42;
+const APP_V=43;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -620,8 +645,8 @@ async function askGemini(key,onChunk){
   throw new Error("Ningún modelo respondió. Revisa el modelo en Ajustes.");
 }
 $("addmem").onclick=()=>{addMem($("newmem").value);$("newmem").value="";renderMems()};
-function esc(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
-function md(t){return esc(t).replace(/^#{1,6}\s*(.+)$/gm,"<b>$1</b>").replace(/^[*-]\s+/gm,"• ").replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[\s(])\*([^*\n]+)\*/g,"$1<i>$2</i>").replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/https?:\/\/[^\s<]+/g,u=>{let url=u,tail="";while(/[.,!?;:)]$/.test(url)){tail=url.slice(-1)+tail;url=url.slice(0,-1)}return '<a href="'+url+'" target="_blank" rel="noopener noreferrer">'+url+'</a>'+tail})}
+function esc(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
+function md(t){return esc(t).replace(/^#{1,6}\s*(.+)$/gm,"<b>$1</b>").replace(/^[*-]\s+/gm,"• ").replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[\s(])\*([^*\n]+)\*/g,"$1<i>$2</i>").replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/https?:\/\/[^\s<]+/g,u=>{let url=u,tail="";const cut=url.search(/&(quot|#39);/);if(cut>=0){tail=url.slice(cut);url=url.slice(0,cut)}while(/[.,!?;:)]$/.test(url)){tail=url.slice(-1)+tail;url=url.slice(0,-1)}return '<a href="'+url+'" target="_blank" rel="noopener noreferrer">'+url+'</a>'+tail})}
 function setText(d,t){d.dataset.raw=t;d.querySelector(".t").innerHTML=md(t)}
 function add(role,text){
   const chat=$("chat");
@@ -653,7 +678,7 @@ function render(){
   showStatus();
 }
 function openCfg(){
-  renderLessons();renderChanges();renderIdeas();ghFill();renderEval();
+  renderLessons();renderChanges();renderIdeas();ghFill();renderEval();renderSec();
   $("key").value=store.get("lara_key","");
   $("model").value=store.get("lara_model","");
   fillProf();
@@ -677,6 +702,7 @@ $("f").onsubmit=async ev=>{
   ev.preventDefault();
   if(ctrl) return;
   let text=$("t").value.trim();
+  const hadAttach=!!(pendingImg||pendingTxt);
   if(!text&&!pendingImg&&!pendingTxt) return;
   if(!text) text=pendingTxt?"Resume este archivo.":"Describe esta imagen.";
   window._retry=null;statInc("sent");
@@ -699,9 +725,12 @@ $("f").onsubmit=async ev=>{
     const data=await askGemini(key,t=>{setText(bubble,t.replace(/\[\[[\s\S]*$/,"")||"…");$("chat").scrollTop=$("chat").scrollHeight});
     const parts=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts;
     const reply=parts?parts.map(p=>p.text||"").join(""):"";
+    const gm0=data.candidates&&data.candidates[0]&&data.candidates[0].groundingMetadata;
+    const usedWeb=!!(gm0&&((gm0.webSearchQueries&&gm0.webSearchQueries.length)||(gm0.groundingChunks&&gm0.groundingChunks.length)));
+    const untrusted=usedWeb||hadAttach||text.length>1500||/https?:\/\//i.test(text);
     if(!reply) throw new Error("Lara no devolvió respuesta. Intenta de nuevo.");
     let extra=[];let mejoraReq="";
-    let clean=reply.replace(/\[\[MEJORA:\s*([^\]]+?)\]\]/g,(m,t)=>{mejoraReq=t.trim().slice(0,600);return ""}).replace(/\[\[PROYECTO:\s*([^|\]]+?)\s*(?:\|\s*([^\]]+?))?\]\]/g,(m,n,g)=>{projUpsert(n,p=>{if(g) p.goal=g.slice(0,200)});store.set("lara_activeproj",n.trim());extra.push("📁 Proyecto «"+n.trim()+"» actualizado");return ""})
+    let clean=guardTags(reply,untrusted).replace(/\[\[MEJORA:\s*([^\]]+?)\]\]/g,(m,t)=>{mejoraReq=t.trim().slice(0,600);return ""}).replace(/\[\[PROYECTO:\s*([^|\]]+?)\s*(?:\|\s*([^\]]+?))?\]\]/g,(m,n,g)=>{projUpsert(n,p=>{if(g) p.goal=g.slice(0,200)});store.set("lara_activeproj",n.trim());extra.push("📁 Proyecto «"+n.trim()+"» actualizado");return ""})
       .replace(/\[\[DECISION:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\]\]/g,(m,n,t)=>{projUpsert(n,p=>{if(!p.decisions.some(d=>norm(d.t)===norm(t))) p.decisions.push({t:t.slice(0,200),d:Date.now()})});extra.push("📁 Decisión guardada en «"+n.trim()+"»");return ""})
       .replace(/\[\[PROXIMO:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\]\]/g,(m,n,t)=>{projUpsert(n,p=>{p.next=t.slice(0,200)});extra.push("📁 Próximo paso guardado en «"+n.trim()+"»");return ""})
       .replace(/\[\[LECCION:\s*([^\]]+?)\]\]/g,(m,t)=>{addLesson(t);extra.push("🧩 Lo tendré en cuenta");return ""}).replace(/\[\[OLVIDAR:\s*([^\]]+?)\]\]/g,(m,t)=>{const k=norm(t).trim();if(k.length>=3){const n0=mems.length;mems=mems.filter(x=>!norm(x).includes(k));if(mems.length<n0){saveMems();extra.push("🧠 Actualicé un recuerdo")}}return ""})
@@ -710,6 +739,7 @@ $("f").onsubmit=async ev=>{
       .replace(/\[\[TAREA:\s*([^\]]+?)\]\]/g,(m,t)=>{addTask(t);extra.push("✅ Tarea añadida");return ""})
       .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{let rp="";const mm=t.match(/\|\s*(diario|laborales|semanal)\s*$/i);if(mm){rp=mm[1].toLowerCase();t=t.replace(/\|\s*(diario|laborales|semanal)\s*$/i,"")}extra.push(addRem(at,t,rp));return ""}).trim();
     let selfBtns=false;
+    if(window._tagsBlocked){window._tagsBlocked=false;extra.push("🛡️ No guardé datos de esta respuesta porque usó contenido externo.")}
     if(!mejoraReq&&selfRefusal(clean)&&selfTopic(text)){window._selfCtxT=Date.now();clean="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";selfBtns=true}
     if(!clean) clean="Listo.";
     if(extra.length) clean+="\n\n"+extra.join(" · ");
@@ -1038,20 +1068,59 @@ function showStatus(){$("status").textContent=(store.get("lara_key","")?"Lista":
 function usageText(){const u=useData();return "Uso de hoy: "+u.n+" de ~"+dailyLimit()+" ("+Math.round(usagePct()*100)+"%)"+(saverOn()?" · modo ahorro ACTIVO":"")+" · "+"mensajes"+Object.entries(u.m).map(e=>" · "+e[0]+": "+e[1]).join("")+". El plan gratis tiene límites por modelo que Google puede cambiar."}
 showStatus();
 async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("lara:"+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
-function lockOn(){if(store.get("lara_pin","")){$("lock").classList.add("on");$("pin").value="";$("lockerr").textContent="";setTimeout(()=>$("pin").focus(),50)}}
+const b2s=b=>{let x="";new Uint8Array(b).forEach(c=>x+=String.fromCharCode(c));return btoa(x)};
+const s2b=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+async function pinHash(pin,saltB64){
+  const km=await crypto.subtle.importKey("raw",new TextEncoder().encode(pin),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt:s2b(saltB64),iterations:150000,hash:"SHA-256"},km,256);
+  return b2s(bits);
+}
+async function pinCheck(val){
+  const st=store.get("lara_pin","");
+  if(!st) return true;
+  if(st.startsWith("p2:")){const [,salt,h]=st.split(":");return (await pinHash(val,salt))===h}
+  if((await sha(val))===st){const salt=b2s(crypto.getRandomValues(new Uint8Array(16)));store.set("lara_pin","p2:"+salt+":"+await pinHash(val,salt));return true}
+  return false;
+}
+function lockFail(){try{return JSON.parse(store.get("lara_lf","{}"))||{}}catch(e){return{}}}
+function lockWait(){const f=lockFail();if(!f.n||f.n<3) return 0;const d=Math.min(900,30*Math.pow(2,f.n-3));return Math.max(0,Math.ceil((f.t+d*1000-Date.now())/1000))}
+function lockFailAdd(){const f=lockFail();store.set("lara_lf",JSON.stringify({n:(f.n||0)+1,t:Date.now()}))}
+function lockOn(){
+  const vOn=_sget("lara_vault_on","")==="1";
+  if(store.get("lara_pin","")||vOn){
+    if(vOn) VAULT=null;
+    $("lock").classList.add("on");$("pin").value="";$("lockerr").textContent="";
+    $("pin").inputMode=vOn?"text":"numeric";
+    $("lock").querySelector("p.hint").textContent=vOn?"Escribe tu contraseña":"Escribe tu PIN";
+    $("vforget").style.display=vOn?"inline-block":"none";
+    setTimeout(()=>$("pin").focus(),50);
+  }
+}
 $("unlock").onclick=async()=>{
-  if(await sha($("pin").value)===store.get("lara_pin","")){$("lock").classList.remove("on");$("pin").value="";$("lockerr").textContent=""}
-  else{$("lockerr").textContent="PIN incorrecto";$("pin").value=""}
+  const w=lockWait();
+  if(w>0){$("lockerr").textContent="Demasiados intentos. Espera "+w+" s.";return}
+  const val=$("pin").value;let ok=false;
+  try{
+    if(_sget("lara_vault_on","")==="1") {await vaultUnlock(val);ok=true}
+    else ok=await pinCheck(val);
+  }catch(e){ok=false}
+  if(ok){store.set("lara_lf","{}");$("lock").classList.remove("on");$("pin").value="";$("lockerr").textContent="";showStatus()}
+  else{lockFailAdd();secLog("lock","intento fallido de entrada");const w2=lockWait();$("lockerr").textContent=w2>0?"Incorrecto. Espera "+w2+" s.":"Incorrecto";$("pin").value=""}
 };
 $("pin").addEventListener("keydown",e=>{if(e.key==="Enter") $("unlock").click()});
+$("vforget").onclick=()=>{
+  if(!confirm("Se borrarán la clave de Gemini y el token de GitHub de este teléfono (tendrás que escribirlos otra vez). ¿Continuar?")) return;
+  panicWipe();$("lock").classList.remove("on");toast("Claves borradas. Escríbelas de nuevo en Ajustes.");
+};
 $("setpin").onclick=async()=>{
   const v=$("newpin").value.trim();
   if(!/^\d{4,8}$/.test(v)){toast("El PIN debe tener de 4 a 8 números.");return}
-  store.set("lara_pin",await sha(v));$("newpin").value="";toast("PIN guardado.");
+  const salt=b2s(crypto.getRandomValues(new Uint8Array(16)));
+  store.set("lara_pin","p2:"+salt+":"+await pinHash(v,salt));$("newpin").value="";toast("PIN guardado.");
 };
 $("rmpin").onclick=()=>{store.set("lara_pin","");toast("PIN quitado.")};
 let hiddenAt=0;
-document.addEventListener("visibilitychange",()=>{if(document.hidden) hiddenAt=Date.now(); else if(hiddenAt&&Date.now()-hiddenAt>60000) lockOn()});
+document.addEventListener("visibilitychange",()=>{if(document.hidden) hiddenAt=Date.now(); else if(hiddenAt&&Date.now()-hiddenAt>(_sget("lara_vault_on","")==="1"?300000:60000)) lockOn()});
 lockOn();
 $("upd").onclick=async()=>{
   try{
@@ -1569,10 +1638,10 @@ $("autogenerate").onclick=async()=>{
     // Incrementa el número de versión del archivo resultante sin alterar la fuente cargada.
     const vm=out.match(/const\s+APP_V\s*=\s*(\d+)\s*;/);
     if(vm){const next=+vm[1]+1;out=out.replace(vm[0],"const APP_V="+next+";");out=out.replace(/Versión\s+\d+\./g,"Versión "+next+".");out=out.replace(/<title>Lara(?:\s+v\d+)?<\/title>/i,"<title>Lara v"+next+"</title>")}
-    // Comprueba sintaxis de los scripts inline sin ejecutarlos.
-    const scripts=[...out.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
-    for(const m of scripts){if(/\bsrc\s*=/.test(m[1]))continue;const code=m[2].trim();if(code)new Function(code)}
+    // La sintaxis se comprueba abriendo la versión nueva en un espacio aislado (la política de seguridad no permite eval).
     if(out.length<autoSourceText.length*0.9) throw new Error("La propuesta recortaría demasiado la app. Pídela más pequeña o más precisa.");
+    const sec=autoSecScan(autoSourceText,out,request);
+    if(sec.issues.length) throw new Error("Bloqueé la propuesta por seguridad: "+sec.issues.join("; ")+".");
     const quita=/elimina|quita|borra|remueve/i.test(request);
     const idsOld=autoIds(autoSourceText),idsNew=autoIds(out),falt=[...idsOld].filter(x=>!idsNew.has(x));
     if(falt.length&&!quita) throw new Error("La propuesta eliminaría partes de la app ("+falt.slice(0,4).join(", ")+"). Pídela de otra forma para que solo añada o ajuste.");
@@ -1586,9 +1655,9 @@ $("autogenerate").onclick=async()=>{
     const fallos=s1.tests.filter(t=>!t.ok&&(s0.tests.find(x=>x.n===t.n)||{}).ok);
     if(fallos.length) throw new Error("La prueba de uso simulada falló en: "+fallos.map(t=>t.n+(t.d?" ("+t.d+")":"")).join(", "));
     const okT=s1.tests.filter(t=>t.ok).length;
-    autoNote={usuario:String(parsed.usuario||"").slice(0,200),cuota:String(parsed.cuota||"").slice(0,10),cosm:cosm,tests:okT+" de "+s1.tests.length};
+    autoNote={warns:sec.warns,usuario:String(parsed.usuario||"").slice(0,200),cuota:String(parsed.cuota||"").slice(0,10),cosm:cosm,tests:okT+" de "+s1.tests.length};
     autoSummary=parsed.summary||applied[0]||"Mejora";
-    autoPatches=parsed.changes;autoPatchedText=out;$("autopreview").textContent="Propuesta de Gemini:\n"+(parsed.summary||"Cambios preparados")+"\n\n"+applied.map((x,i)=>(i+1)+". "+x).join("\n")+"\n\nEn palabras simples:\n• Qué notarás: "+(autoNote.usuario||"no lo indicó; revisa el resumen")+"\n• Consumo de cuota: "+({menos:"menor",igual:"igual",mas:"mayor"}[autoNote.cuota]||"no indicado")+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+"\n\nValidaciones: 1) los fragmentos coinciden una sola vez, 2) la sintaxis pasó, 3) no se perdió ninguna parte de la pantalla, 4) la versión nueva abrió sin errores nuevos, 5) pruebas simuladas de uso (chat, notas, ajustes): "+autoNote.tests+" correctas. Aun así, no garantiza que todo funcione: prueba la versión publicada.";$("autopreview").style.display="block";$("autocancel").disabled=false;$("autobackup").disabled=false;$("autoapply").disabled=true;autoBackupDownloaded=false;autoStatus("Propuesta lista. Revisa el resumen y descarga el respaldo original antes de aprobarla.");
+    autoPatches=parsed.changes;autoPatchedText=out;$("autopreview").textContent="Propuesta de Gemini:\n"+(parsed.summary||"Cambios preparados")+"\n\n"+applied.map((x,i)=>(i+1)+". "+x).join("\n")+"\n\nEn palabras simples:\n• Qué notarás: "+(autoNote.usuario||"no lo indicó; revisa el resumen")+"\n• Consumo de cuota: "+({menos:"menor",igual:"igual",mas:"mayor"}[autoNote.cuota]||"no indicado")+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+(autoNote.warns&&autoNote.warns.length?"\n• ⚠️ Seguridad: "+autoNote.warns.join("; "):"\n• 🛡️ Revisión de seguridad: sin hallazgos")+"\n\nValidaciones: 1) los fragmentos coinciden una sola vez, 2) la sintaxis pasó, 3) no se perdió ninguna parte de la pantalla, 4) la versión nueva abrió sin errores nuevos, 5) pruebas simuladas de uso (chat, notas, ajustes): "+autoNote.tests+" correctas. Aun así, no garantiza que todo funcione: prueba la versión publicada.";$("autopreview").style.display="block";$("autocancel").disabled=false;$("autobackup").disabled=false;$("autoapply").disabled=true;autoBackupDownloaded=false;autoStatus("Propuesta lista. Revisa el resumen y descarga el respaldo original antes de aprobarla.");
     done=true;
     }catch(e){
       if(e.api||at>=2) throw e;
@@ -1751,7 +1820,7 @@ $("autopublish").onclick=async()=>{
     await ghPut(c,c.path,autoPatchedText,"Mejora automática v"+v+": "+String(autoSummary||"mejora").slice(0,100),cur.sha);
     {const nowS=statGet();let prevS={sent:0,bad:0};try{prevS=JSON.parse(store.get("lara_snap_prev","null"))||prevS}catch(e){}
      store.set("lara_lastpub",JSON.stringify({prev:pv,bpath:bpath,v:v,snap:nowS,prevSnap:prevS,t:Date.now()}));store.set("lara_snap_prev",JSON.stringify(nowS));renderEval()}
-    recordChange(v);ghPrune(c);
+    recordChange(v);ghPrune(c);try{setHash(v,await sha256hex(autoPatchedText))}catch(e){}
     pubStatus("✅ Versión "+v+" publicada. GitHub tarda de 1 a 2 minutos en mostrarla; te aviso aquí cuando esté lista para actualizar.");
     toast("✅ Versión "+v+" publicada. En 1 a 2 minutos podrás actualizar.");
     autoClearProposal();watchUpdate();
@@ -2012,6 +2081,127 @@ async function chatSelfImprove(request){
     ]);
   }finally{window._autoMirror=null;window._selfBusy=false}
 }
+
+
+/* ===== Seguridad: registro, integridad, bóveda, escáner ===== */
+function getSecLog(){try{return JSON.parse(store.get("lara_seclog","[]"))||[]}catch(e){return[]}}
+function secLog(k,d){const L=getSecLog();L.push({t:Date.now(),k:k,d:String(d||"").slice(0,140)});store.set("lara_seclog",JSON.stringify(L.slice(-50)))}
+document.addEventListener("securitypolicyviolation",e=>{secLog("csp","bloqueado: "+(e.violatedDirective||"")+" → "+String(e.blockedURI||"").slice(0,70))});
+function guardTags(r,untrusted){
+  if(!untrusted) return r;
+  if(/\[\[(MEMORIA|OLVIDAR|LECCION|PROYECTO|DECISION|PROXIMO|MEJORA):/.test(r)){secLog("etiquetas","bloqueé acciones de una respuesta con contenido externo");window._tagsBlocked=true}
+  return r.replace(/\[\[(MEMORIA|OLVIDAR|LECCION|PROYECTO|DECISION|PROXIMO|MEJORA):[^\]]*\]\]/g,"");
+}
+async function sha256hex(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function getHashes(){try{return JSON.parse(store.get("lara_hashes","{}"))||{}}catch(e){return{}}}
+function setHash(v,h){const m=getHashes();m[String(v)]=h;const ks=Object.keys(m).sort((a,b)=>+a-+b);while(ks.length>12) delete m[ks.shift()];store.set("lara_hashes",JSON.stringify(m))}
+async function integrityCheck(manual){
+  const res={state:"unknown",msg:""};
+  try{
+    const r=await fetch(selfFile()+"?c="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const txt=await r.text(),m=txt.match(/const APP_V=(\d+)/);
+    if(!m) throw new Error("no encontré la versión en el archivo");
+    const v=+m[1],h=await sha256hex(txt),exp=getHashes()[String(v)];
+    if(v===APP_V){
+      if(!exp){setHash(v,h);res.state="ok";res.msg="Archivo verificado por primera vez (huella "+h.slice(0,10)+")."}
+      else if(exp!==h){res.state="alert";res.msg="El archivo publicado de la versión "+v+" NO coincide con el que se vio o publicó antes. Alguien pudo haberlo cambiado."}
+      else{res.state="ok";res.msg="El archivo coincide con lo publicado (huella "+h.slice(0,10)+")."}
+    }else if(v>APP_V){
+      if(exp&&exp!==h){res.state="alert";res.msg="La versión "+v+" publicada NO coincide con lo que Lara publicó desde este teléfono."}
+      else if(exp){res.state="ok";res.msg="La versión "+v+" coincide con lo que Lara publicó."}
+      else{res.state="note";res.msg="Hay una versión "+v+" que no se publicó desde este teléfono. Asegúrate de haberla subido tú."}
+    }else{res.state="note";res.msg="El servidor tiene la versión "+v+", más vieja que la tuya ("+APP_V+"). Puede ser un retroceso."}
+  }catch(e){res.state="unknown";res.msg="No pude comprobar la integridad: "+(e.message||e)}
+  store.set("lara_integrity",JSON.stringify({t:Date.now(),state:res.state,msg:res.msg}));
+  if(res.state==="alert"){secLog("ALERTA",res.msg);toast("🚨 "+res.msg,true)}
+  else if(manual) toast((res.state==="ok"?"✅ ":"ℹ️ ")+res.msg);
+  return res;
+}
+setTimeout(()=>{let I={};try{I=JSON.parse(store.get("lara_integrity","{}"))||{}}catch(e){}if(!I.t||Date.now()-I.t>3600000) integrityCheck(false)},6000);
+
+/* --- bóveda de claves --- */
+async function vDerive(pass,salt){const km=await crypto.subtle.importKey("raw",new TextEncoder().encode(pass),"PBKDF2",false,["deriveKey"]);return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:200000,hash:"SHA-256"},km,{name:"AES-GCM",length:256},false,["encrypt","decrypt"])}
+async function vaultSave(){
+  if(!VAULT||!VAULT._key) return;
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},VAULT._key,new TextEncoder().encode(JSON.stringify({k:VAULT.k,t:VAULT.t})));
+  _sset("lara_vault",JSON.stringify({s:VAULT._salt,i:b2s(iv),c:b2s(ct)}));
+}
+async function vaultEnable(pass){
+  if(String(pass).length<6) throw new Error("Usa al menos 6 caracteres.");
+  const salt=crypto.getRandomValues(new Uint8Array(16)),key=await vDerive(pass,salt);
+  const k0=_sget("lara_key","");let o={};try{o=JSON.parse(_sget("lara_gh","{}"))||{}}catch(e){}
+  VAULT={k:k0,t:o.token||"",_key:key,_salt:b2s(salt)};
+  delete o.token;_sset("lara_gh",JSON.stringify(o));_sset("lara_key","");_sset("lara_vault_on","1");
+  await vaultSave();
+}
+async function vaultUnlock(pass){
+  const raw=_sget("lara_vault","");if(!raw) throw new Error("no hay bóveda");
+  const o=JSON.parse(raw),key=await vDerive(pass,s2b(o.s));
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:s2b(o.i)},key,s2b(o.c));
+  const d=JSON.parse(new TextDecoder().decode(pt));
+  VAULT={k:d.k||"",t:d.t||"",_key:key,_salt:o.s};
+}
+function vaultDisable(){
+  if(!VAULT) throw new Error("Primero desbloquea Lara con tu contraseña.");
+  _sset("lara_key",VAULT.k);let o={};try{o=JSON.parse(_sget("lara_gh","{}"))||{}}catch(e){}if(VAULT.t) o.token=VAULT.t;_sset("lara_gh",JSON.stringify(o));
+  _sset("lara_vault","");_sset("lara_vault_on","");VAULT=null;
+}
+function panicWipe(){
+  VAULT=null;_sset("lara_key","");let o={};try{o=JSON.parse(_sget("lara_gh","{}"))||{}}catch(e){}delete o.token;_sset("lara_gh",JSON.stringify(o));
+  _sset("lara_vault","");_sset("lara_vault_on","");secLog("emergencia","claves borradas de este teléfono");
+}
+
+/* --- escáner de propuestas del taller --- */
+const SEC_HOSTS=/^(generativelanguage\.googleapis\.com|api\.github\.com|github\.com|[a-z0-9-]+\.github\.io|www\.w3\.org)$/i;
+function autoSecScan(oldT,newT,request){
+  const issues=[],warns=[];
+  const oldLines=new Set(oldT.split("\n").map(x=>x.trim()));
+  const added=newT.split("\n").map(x=>x.trim()).filter(x=>x&&!oldLines.has(x));
+  const A=added.join("\n");
+  [[/\beval\s*\(/,"usa eval()"],[/\bnew\s+Function\s*\(/,"crea código dinámico con new Function"],[/document\.write\s*\(/,"usa document.write"],[/importScripts\s*\(/,"importa scripts"],[/\bsendBeacon\s*\(/,"envía datos con sendBeacon"],[/\bnew\s+WebSocket\s*\(/,"abre un WebSocket"],[/\bXMLHttpRequest\b/,"usa XMLHttpRequest"],[/\bnew\s+EventSource\s*\(/,"abre EventSource"],[/<script[^>]+src\s*=/i,"carga un script externo"],[/<(iframe|object|embed)\b/i,"inserta iframe, object o embed"],[/\bimport\s*\(/,"importa módulos dinámicos"],[/\bset(Timeout|Interval)\s*\(\s*["'`]/,"ejecuta texto como código"]].forEach(([re,msg])=>{if(re.test(A)) issues.push(msg)});
+  (A.match(/https?:\/\/[^\s"'`)<>\\]+/g)||[]).forEach(u=>{try{const h=new URL(u.replace(/[.,;]+$/,"")).hostname;if(!SEC_HOSTS.test(h)) issues.push("contacta un sitio no permitido ("+h+")")}catch(e){}});
+  added.forEach(l=>{if(/(lara_key|lara_gh|\.token|VAULT)/.test(l)&&/(\+|\$\{)/.test(l)&&/(\?|&|fetch|Image|\.src|location|open\()/.test(l)&&!/Authorization|ghHeaders|x-goog-api-key/.test(l)) issues.push("podría enviar tus claves fuera de la app")});
+  if(/localStorage\.key\s*\(|Object\.(keys|entries|values)\(\s*localStorage/.test(A)) issues.push("lee todo tu almacenamiento");
+  const seg=/seguridad|csp|proteg|defensa|virus|hacker/i.test(request||"");
+  [[/Content-Security-Policy/i,"la política de contenido (CSP)"],[/&quot;/,"la protección contra inyección de HTML"],[/function\s+autoSecScan/,"el revisor de seguridad"],[/function\s+guardTags/,"el filtro de contenido externo"]].forEach(([re,n])=>{if(re.test(oldT)&&!re.test(newT)&&!seg) issues.push("elimina "+n)});
+  if(/\.innerHTML\s*[+]?=/.test(A)&&!/esc\(|md\(|=\s*["'`]["'`]/.test(A)) warns.push("escribe HTML directo; revisa que no use texto externo sin esc()");
+  return {issues:[...new Set(issues)],warns:[...new Set(warns)]};
+}
+
+/* --- panel de seguridad --- */
+function secSummary(){
+  const ok=b=>b?"✅":"⚠️",vOn=_sget("lara_vault_on","")==="1",L=[];
+  L.push(ok(location.protocol==="https:"||location.hostname==="localhost")+" Conexión segura (HTTPS)");
+  L.push(ok(!!document.querySelector('meta[http-equiv="Content-Security-Policy"]'))+" Política de contenido: solo puede hablar con Google (Gemini) y GitHub");
+  L.push(ok(vOn)+" Claves cifradas con contraseña"+(vOn?"":" (opcional, recomendado)"));
+  L.push(ok(!!_sget("lara_pin","")||vOn)+" Bloqueo al abrir (PIN o contraseña), con espera tras intentos fallidos");
+  let I={};try{I=JSON.parse(store.get("lara_integrity","{}"))||{}}catch(e){}
+  L.push((I.state==="ok"?"✅":I.state==="alert"?"🚨":"ℹ️")+" Integridad del archivo: "+(I.msg||"aún no comprobada")+(I.t?" ("+new Date(I.t).toLocaleString("es")+")":""));
+  L.push("✅ Texto de páginas y archivos externos no puede darle órdenes a Lara (memoria, proyectos, automejora)");
+  L.push("✅ Cada mejora se revisa contra código peligroso antes de publicarse");
+  const sl=getSecLog().slice(-6).reverse();
+  if(sl.length) L.push("\nEventos recientes:\n"+sl.map(e=>"• "+new Date(e.t).toLocaleString("es")+" · "+e.k+" · "+e.d).join("\n"));
+  return L.join("\n");
+}
+function renderSec(){const e=$("secsum");if(e) e.textContent=secSummary()}
+$("secaudit").onclick=async()=>{$("secsum").textContent="⏳ Auditando…";await integrityCheck(true);renderSec()};
+$("seclogclear").onclick=()=>{store.set("lara_seclog","[]");renderSec()};
+$("von").onclick=async()=>{
+  const m=t=>{$("vmsg").textContent=t};
+  try{m("⏳ Cifrando…");await vaultEnable($("vpass").value);$("vpass").value="";m("✅ Claves cifradas. Desde ahora Lara pedirá tu contraseña al abrir.");renderSec()}catch(e){m("❌ "+(e.message||e))}
+};
+$("voff").onclick=()=>{
+  const m=t=>{$("vmsg").textContent=t};
+  try{vaultDisable();m("Protección desactivada. Tus claves volvieron a guardarse sin cifrar.");renderSec()}catch(e){m("❌ "+(e.message||e))}
+};
+$("panic").onclick=()=>{
+  if(!confirm("Esto borra tu clave de Gemini y tu token de GitHub de ESTE teléfono y bloquea el acceso. Después debes revocar el token en GitHub. ¿Continuar?")) return;
+  panicWipe();
+  alert("Listo. Ahora revoca el token en GitHub: Settings → Developer settings → Fine-grained tokens → Lara → Delete. Si crees que tu clave de Gemini se filtró, crea otra en Google AI Studio y bórrala allí.");
+  location.reload();
+};
 
 render();
 </script>
