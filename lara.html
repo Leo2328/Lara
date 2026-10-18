@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v43</title>
+<title>Lara v44</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -178,7 +178,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 43. Incluye sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 44. Incluye confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <pre id="diagout" style="display:none;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--surface)"></pre>
@@ -196,6 +196,12 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
     <div id="vmsg" class="hint" style="font-size:14px;color:var(--ink)"></div>
   </details>
   <div class="row"><button id="panic" type="button" style="color:var(--danger)">🚨 Emergencia: borrar mis claves de este teléfono</button></div>
+  <div id="panicbox" style="display:none;border:1px solid var(--danger);border-radius:14px;padding:12px;margin-top:8px">
+    <p class="hint" style="color:var(--ink);margin-top:0"><b>¿Estás seguro?</b> Se borrarán tu clave de Gemini y tu token de GitHub de este teléfono y Lara se bloqueará. Para confirmar, escribe <b>BORRAR</b>.</p>
+    <input id="panictext" autocapitalize="characters" autocomplete="off" placeholder="Escribe BORRAR">
+    <div class="row"><button id="panicno" type="button" class="main">Cancelar</button><button id="panicgo" type="button" disabled style="color:var(--danger)">Sí, borrar mis claves</button></div>
+    <p id="paniccount" class="hint"></p>
+  </div>
   <label>Automejora de Lara (experimental)</label>
   <p class="hint">Describe la mejora y Gemini propone cambios pequeños. Lara los prueba, tú revisas y apruebas, y ella publica la versión nueva en GitHub guardando antes un respaldo. Nada cambia sin tu aprobación. La clave y el token no se incluyen en el archivo exportado.</p>
   <div id="autolab">
@@ -574,7 +580,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=43;
+const APP_V=44;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -678,7 +684,7 @@ function render(){
   showStatus();
 }
 function openCfg(){
-  renderLessons();renderChanges();renderIdeas();ghFill();renderEval();renderSec();
+  renderLessons();renderChanges();renderIdeas();ghFill();renderEval();renderSec();try{panicClose()}catch(e){}
   $("key").value=store.get("lara_key","");
   $("model").value=store.get("lara_model","");
   fillProf();
@@ -1109,7 +1115,8 @@ $("unlock").onclick=async()=>{
 };
 $("pin").addEventListener("keydown",e=>{if(e.key==="Enter") $("unlock").click()});
 $("vforget").onclick=()=>{
-  if(!confirm("Se borrarán la clave de Gemini y el token de GitHub de este teléfono (tendrás que escribirlos otra vez). ¿Continuar?")) return;
+  const t=prompt("Se borrarán la clave de Gemini y el token de GitHub de este teléfono (tendrás que escribirlos otra vez).\n\nPara confirmar escribe BORRAR:");
+  if(!t||t.trim().toUpperCase()!=="BORRAR"){toast("No se borró nada.");return}
   panicWipe();$("lock").classList.remove("on");toast("Claves borradas. Escríbelas de nuevo en Ajustes.");
 };
 $("setpin").onclick=async()=>{
@@ -2196,9 +2203,20 @@ $("voff").onclick=()=>{
   const m=t=>{$("vmsg").textContent=t};
   try{vaultDisable();m("Protección desactivada. Tus claves volvieron a guardarse sin cifrar.");renderSec()}catch(e){m("❌ "+(e.message||e))}
 };
+let _panicT=null;
+function panicClose(){clearInterval(_panicT);_panicT=null;$("panicbox").style.display="none";$("panictext").value="";$("panicgo").disabled=true;$("paniccount").textContent=""}
 $("panic").onclick=()=>{
-  if(!confirm("Esto borra tu clave de Gemini y tu token de GitHub de ESTE teléfono y bloquea el acceso. Después debes revocar el token en GitHub. ¿Continuar?")) return;
-  panicWipe();
+  if($("panicbox").style.display==="block"){panicClose();return}
+  $("panicbox").style.display="block";$("panictext").value="";$("panicgo").disabled=true;
+  let left=20;$("paniccount").textContent="Se cancelará solo en "+left+" s.";
+  clearInterval(_panicT);_panicT=setInterval(()=>{left--;if(left<=0){panicClose();return}$("paniccount").textContent="Se cancelará solo en "+left+" s."},1000);
+  setTimeout(()=>{try{$("panictext").focus();$("panicbox").scrollIntoView({block:"center",behavior:"smooth"})}catch(e){}},50);
+};
+$("panictext").oninput=e=>{$("panicgo").disabled=e.target.value.trim().toUpperCase()!=="BORRAR"};
+$("panicno").onclick=panicClose;
+$("panicgo").onclick=()=>{
+  if($("panictext").value.trim().toUpperCase()!=="BORRAR") return;
+  panicClose();panicWipe();
   alert("Listo. Ahora revoca el token en GitHub: Settings → Developer settings → Fine-grained tokens → Lara → Delete. Si crees que tu clave de Gemini se filtró, crea otra en Google AI Studio y bórrala allí.");
   location.reload();
 };
