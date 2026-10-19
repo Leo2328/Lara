@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lara v46</title>
+<title>Lara v47</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -31,6 +31,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px;pa
 .orb{flex:none;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff 0,color-mix(in srgb,var(--accent) 45%,#fff) 22%,var(--accent) 62%,color-mix(in srgb,var(--accent) 60%,#000) 100%);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
 .sub{font:12px/1.3 var(--ui);color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .nav{display:flex;gap:2px;flex:none}
+.nav button{font-size:19px;padding:6px 8px}
 header button{background:transparent;border-color:transparent;color:var(--muted);padding:7px 6px;border-radius:999px;font-size:13px}
 header button:hover,header button:active{background:var(--bubble);color:var(--ink)}
 button{font:600 14px var(--ui);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 15px;cursor:pointer}
@@ -56,8 +57,12 @@ form textarea:focus-visible{outline:none}
 #attach,#mic,#conv{width:40px;height:40px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:var(--bg);border-color:transparent}
 #conv{outline-offset:2px}
 #send{justify-self:end;padding:10px 22px}
-#cfg,#notes,#chats,#projects,#news{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
-#cfg.open,#notes.open,#chats.open,#projects.open,#news.open{display:block}
+#cfg,#notes,#chats,#projects,#news,#search{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
+#cfg.open,#notes.open,#chats.open,#projects.open,#news.open,#search.open{display:block}
+#search{z-index:55}
+.sact{gap:6px;flex-wrap:wrap}
+.sact button{font-size:13px;padding:6px 12px}
+mark{background:color-mix(in srgb,var(--accent) 28%,transparent);color:inherit;border-radius:3px;padding:0 1px}
 #news{z-index:60}
 label{display:block;margin:18px 0 6px;font:600 14px var(--ui);color:var(--ink)}
 input,select,#cfg textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:var(--surface);color:var(--ink);font:15px var(--ui)}
@@ -100,12 +105,13 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
 <body>
 <header>
   <div class="brand"><span class="orb" aria-hidden="true"></span><div style="min-width:0"><h1>Lara</h1><div class="sub" id="status"></div></div></div>
-  <div class="nav"><button id="openChats" type="button">Chats</button><button id="openNotes" type="button">Notas</button><button id="openProj" type="button" aria-label="Proyectos" title="Proyectos">📁</button><button id="openCfg" type="button">Ajustes</button></div>
+  <div class="nav"><button id="openChats" type="button" aria-label="Chats" title="Chats">💬</button><button id="openNotes" type="button" aria-label="Notas" title="Notas">📝</button><button id="openProj" type="button" aria-label="Proyectos" title="Proyectos">📁</button><button id="openSearch" type="button" aria-label="Buscar en todo" title="Buscar en todo">🔍</button><button id="openCfg" type="button" aria-label="Ajustes" title="Ajustes">⚙️</button></div>
 </header>
 <div id="chat" aria-live="polite"></div>
 <div id="shorts"></div>
 <div id="study"><button type="button" data-t="Explícame este pasaje: ">Explicar pasaje</button><button type="button" data-t="Dame el contexto histórico de: ">Contexto</button><button type="button" data-t="Compara las lecturas preterista, historicista, futurista e idealista de: ">Comparar enfoques</button></div>
 <div id="chip"><span id="chiptxt">🖼️ Imagen adjunta</span><button id="rmimg" type="button">Quitar</button></div>
+<div id="shareacts" class="sact" style="display:none;margin:0 14px 6px"></div>
 <form id="f">
   <textarea id="t" rows="1" placeholder="Escribe a Lara" aria-label="Mensaje"></textarea>
   <button type="button" id="attach" aria-label="Adjuntar imagen">📎</button>
@@ -144,6 +150,12 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <input id="remtext" placeholder="¿Qué quieres recordar?">
   <input id="remat" type="datetime-local" style="margin-top:8px">
   <div class="row"><button class="main" id="addrem" type="button">Añadir recordatorio</button><button id="testrem" type="button">Probar aviso</button><button id="closeNotes" type="button">Cerrar</button></div>
+</section>
+<section id="search" aria-label="Buscar en todo">
+  <h1>🔍 Buscar en todo</h1>
+  <div class="row" style="margin-top:0"><input id="sq" placeholder="Chats, notas, tareas, proyectos, memoria…" autocomplete="off"></div>
+  <div id="sres"></div>
+  <div class="row"><button id="closeSearch" type="button">Cerrar</button></div>
 </section>
 <section id="news" aria-label="Novedades">
   <h1>📰 Novedades</h1>
@@ -185,7 +197,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 46. Incluye autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 47. Incluye búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -195,6 +207,10 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <label>Lecciones que Lara ha aprendido</label>
   <div id="lessons"></div>
   <p class="hint">Lara las guarda cuando la corriges y las sigue en cada respuesta. Puedes borrar las que no quieras.</p>
+  <label>📲 Accesos directos y compartir</label>
+  <p class="hint">Agrega al ícono de Lara los accesos directos (mantén presionado el ícono) y la opción «Compartir → Lara» desde cualquier app. Modifica tu manifest.json en GitHub, guardando antes un respaldo.</p>
+  <div class="row"><button id="manup" type="button">📲 Activar accesos directos y compartir</button></div>
+  <div id="manmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
   <label>🛟 Copias locales de seguridad</label>
   <p class="hint">Lara guarda copias de tus datos en este teléfono antes de sincronizar, importar o aplicar borrados. Conserva las últimas 6. No incluyen tus claves.</p>
   <div class="row"><button id="snapnow" type="button">Crear copia ahora</button></div>
@@ -317,6 +333,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
 <script>
 const DEFAULT_SYS="Eres Lara, una asistente personal que habla español de forma clara, cálida y honesta. Responde con precisión y brevedad. Si no sabes algo, dilo. Nunca inventes datos.";
 const $=id=>document.getElementById(id);
+window._Q0=new URLSearchParams(location.search);
 const store={
   get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},
   set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
@@ -598,7 +615,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=46;
+const APP_V=47;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -752,7 +769,7 @@ $("f").onsubmit=async ev=>{
     const reply=parts?parts.map(p=>p.text||"").join(""):"";
     const gm0=data.candidates&&data.candidates[0]&&data.candidates[0].groundingMetadata;
     const usedWeb=!!(gm0&&((gm0.webSearchQueries&&gm0.webSearchQueries.length)||(gm0.groundingChunks&&gm0.groundingChunks.length)));
-    const untrusted=usedWeb||hadAttach||text.length>1500||/https?:\/\//i.test(text);
+    const untrusted=usedWeb||hadAttach||text.length>1500||/https?:\/\//i.test(text)||!!window._sharedExt;window._sharedExt=false;
     if(!reply) throw new Error("Lara no devolvió respuesta. Intenta de nuevo.");
     let extra=[];let mejoraReq="";
     let clean=guardTags(reply,untrusted).replace(/\[\[MEJORA:\s*([^\]]+?)\]\]/g,(m,t)=>{mejoraReq=t.trim().slice(0,600);return ""}).replace(/\[\[PROYECTO:\s*([^|\]]+?)\s*(?:\|\s*([^\]]+?))?\]\]/g,(m,n,g)=>{projUpsert(n,p=>{if(g) p.goal=g.slice(0,200)});store.set("lara_activeproj",n.trim());extra.push("📁 Proyecto «"+n.trim()+"» actualizado");return ""})
@@ -923,7 +940,7 @@ $("rmimg").onclick=clearImg;
 (function(){
   const q=new URLSearchParams(location.search);
   const parts=[q.get("title"),q.get("text"),q.get("url")].filter(Boolean);
-  if(parts.length){$("t").value=parts.join("\n");window.history.replaceState(null,"",location.pathname)}
+  if(parts.length){$("t").value=parts.join("\n");window._sharedExt=true;window.history.replaceState(null,"",location.pathname);setTimeout(()=>showShareActs(parts.join("\n")),400)}
 })();
 function isoLocal(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)}
 const ACC={teal:["#0f766e","#2dd4bf"],indigo:["#4338ca","#a5b4fc"],rose:["#be185d","#f9a8d4"]};
@@ -1230,8 +1247,11 @@ $("hf").onchange=e=>store.set("lara_hf",e.target.checked?"1":"0");
   if(!a) return;
   window.history.replaceState(null,"",location.pathname);
   if(a==="nueva") $("newchat").click();
-  else if(a==="notas") $("openNotes").click();
+  else if(a==="notas") setTimeout(()=>$("openNotes").click(),500);
   else if(a==="voz") setTimeout(()=>$("mic").click(),600);
+  else if(a==="buscar") setTimeout(()=>$("openSearch").click(),300);
+  else if(a==="nota") setTimeout(()=>{$("openNotes").click();setTimeout(()=>{const i=$("newnote");if(i) i.focus()},300)},500);
+  else if(a==="midia") setTimeout(()=>myDay(),600);
 })();
 applyMode();
 function clockAlarm(r){
@@ -1452,7 +1472,7 @@ setTimeout(()=>{
   if(store.get("lara_autonews","0")==="1"&&store.get("lara_topics","").trim()&&store.get("lara_key","")&&store.get("lara_newsday","")!==new Date().toDateString()&&!$("lock").classList.contains("on")&&!ctrl) newsBrief(true);
 },4000);
 (async function(){
-  const q=new URLSearchParams(location.search);
+  const q=window._Q0||new URLSearchParams(location.search);
   if(q.get("share")!=="1") return;
   window.history.replaceState(null,"",location.pathname);
   try{
@@ -2235,6 +2255,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:47,items:["Búsqueda en todo (🔍): un solo cuadro para buscar en chats, notas, tareas, hábitos, recordatorios, proyectos, memoria y lecciones.","Compartir hacia Lara: desde otra app toca Compartir → Lara; te ofrece resumir, traducir o guardar como nota.","Accesos directos en el ícono de Lara: nueva conversación, nota rápida, hablar y buscar. Actívalos en Ajustes → 📲."]},
  {v:46,items:["Autoprueba completa: un botón que revisa si todo funciona en tu teléfono (conexión, Gemini, GitHub, respaldo, voz, avisos…).","Los borrados ahora también se sincronizan entre teléfonos, con protección contra borrados masivos por error.","Copias locales de seguridad: Lara guarda una copia de tus datos antes de sincronizar o importar, y puedes restaurarla desde Ajustes."]},
  {v:45,items:["Novedades al actualizar: Lara te cuenta qué cambió después de cada versión.","Sincronización entre teléfonos (opcional) usando tu repositorio privado."]},
  {v:44,items:["El botón de emergencia ahora pide escribir BORRAR para confirmar."]},
@@ -2568,6 +2589,113 @@ async function selfTest(){
 }
 $("selftest").onclick=()=>{if(window._selfTesting) return;window._selfTesting=true;selfTest().catch(e=>{$("selftestout").textContent="❌ "+(e.message||e)}).finally(()=>{window._selfTesting=false})};
 $("selftestcopy").onclick=()=>{const t=$("selftestout").textContent;if(!t||t.startsWith("⏳")){toast("Primero toca Autoprueba completa.");return}try{navigator.clipboard.writeText(t).then(()=>toast("Resultado copiado."))}catch(e){toast("No pude copiar.")}};
+
+
+/* ===== Compartir hacia Lara ===== */
+function showShareActs(txt){
+  const box=$("shareacts");if(!box) return;box.innerHTML="";box.style.display="flex";
+  toast("📥 Contenido compartido con Lara. Revísalo y elige qué hacer.");
+  const run=pre=>{$("t").value=pre+txt;box.style.display="none";$("f").requestSubmit()};
+  box.append(
+    btn("Resumir",()=>run("Resume esto en pocas líneas:\n\n")),
+    btn("Traducir",()=>run("Traduce esto al español (o al inglés si ya está en español):\n\n")),
+    btn("📝 Guardar como nota",()=>{addNote(txt);try{renderNotes()}catch(e){}$("t").value="";box.style.display="none";window._sharedExt=false;toast("Nota guardada.")}),
+    btn("Descartar",()=>{$("t").value="";box.style.display="none";window._sharedExt=false})
+  );
+}
+$("t").addEventListener("input",()=>{if(!$("t").value&&$("shareacts")) $("shareacts").style.display="none"});
+
+/* ===== Búsqueda en todo ===== */
+function normMap(t){let n="";const map=[];for(let i=0;i<t.length;i++){const ch=t[i].normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();for(let j=0;j<ch.length;j++){n+=ch[j];map.push(i)}}return{n:n,map:map}}
+function searchAll(q){
+  const words=norm(q).split(/\s+/).filter(w=>w.length>=2);
+  if(!words.length) return null;
+  const hit=t=>{
+    if(typeof t!=="string"||!t) return null;
+    const nm=normMap(t);if(!words.every(w=>nm.n.includes(w))) return null;
+    const i=nm.n.indexOf(words[0]);return {t:t,o:nm.map[i]||0,w:words[0].length};
+  };
+  const G=[],add=(name,items)=>{if(items.length) G.push({name:name,items:items.slice(0,8),total:items.length})};
+  const go=fn=>()=>{$("search").classList.remove("open");fn()};
+  const ci=[];
+  chats.slice().sort((a,b)=>b.ts-a.ts).forEach(c=>{
+    let h=hit(c.title),src="título";
+    if(!h){for(const m of c.msgs){const tx=m.parts&&m.parts[0]&&m.parts[0].text;h=hit(tx);if(h){src=m.role==="user"?"tú":"Lara";break}}}
+    if(h) ci.push({title:c.title+" · "+new Date(c.ts).toLocaleDateString("es")+" ("+src+")",h:h,act:go(()=>openChat(c.id))});
+  });
+  add("💬 Chats",ci);
+  add("📝 Notas",notes.map(n=>({h:hit(n),title:"Nota",act:go(()=>$("openNotes").click())})).filter(x=>x.h));
+  add("✅ Tareas",tasks.map(t=>({h:hit(t.text),title:t.done?"Tarea (hecha)":"Tarea",act:go(()=>$("openNotes").click())})).filter(x=>x.h));
+  add("🔁 Hábitos",habits.map(x=>({h:hit(x.name),title:"Hábito",act:go(()=>$("openNotes").click())})).filter(x=>x.h));
+  add("⏰ Recordatorios",rems.map(r=>({h:hit(r.text),title:"Recordatorio"+(r.at?" · "+new Date(r.at).toLocaleString("es",{dateStyle:"short",timeStyle:"short"}):""),act:go(()=>$("openNotes").click())})).filter(x=>x.h));
+  add("📁 Proyectos",getProjects().map(p=>({h:hit([p.name,p.goal,p.next].concat((p.decisions||[]).map(d=>d.t)).filter(Boolean).join(" · ")),title:"Proyecto "+p.name,act:go(()=>$("openProj").click())})).filter(x=>x.h));
+  add("🧠 Memoria",mems.map(m=>({h:hit(m),title:"Recuerdo",act:go(()=>$("openCfg").click())})).filter(x=>x.h));
+  add("🧩 Lecciones",getLessons().map(m=>({h:hit(m),title:"Lección",act:go(()=>$("openCfg").click())})).filter(x=>x.h));
+  return G;
+}
+function renderSearch(){
+  const box=$("sres");box.innerHTML="";
+  const G=searchAll($("sq").value);
+  if(G===null) return;
+  if(!G.length){empty(box,"Sin resultados.");return}
+  G.forEach(g=>{
+    const h=document.createElement("div");h.className="hint";h.style.cssText="margin-top:14px;font-weight:600;color:var(--ink)";h.textContent=g.name+" ("+g.total+")";box.appendChild(h);
+    g.items.forEach(it=>{
+      const d=document.createElement("div");d.className="mem";
+      const sp=document.createElement("span");
+      const tt=document.createElement("b");tt.textContent=it.title;sp.appendChild(tt);
+      const sn=document.createElement("small");sn.style.cssText="display:block;margin-top:2px";
+      const t=it.h.t,st=Math.max(0,it.h.o-35),en=Math.min(t.length,it.h.o+it.h.w+90);
+      sn.appendChild(document.createTextNode((st>0?"…":"")+t.slice(st,it.h.o)));
+      const mk=document.createElement("mark");mk.textContent=t.slice(it.h.o,it.h.o+it.h.w);sn.appendChild(mk);
+      sn.appendChild(document.createTextNode(t.slice(it.h.o+it.h.w,en)+(en<t.length?"…":"")));
+      sp.appendChild(sn);
+      const b=btn("Abrir",it.act);b.style.flex="none";
+      d.append(sp,b);box.appendChild(d);
+    });
+  });
+}
+let _sqT=null;
+$("sq").addEventListener("input",()=>{clearTimeout(_sqT);_sqT=setTimeout(renderSearch,150)});
+$("openSearch").onclick=()=>{$("search").classList.add("open");$("sq").value="";$("sres").innerHTML="";setTimeout(()=>$("sq").focus(),80)};
+$("closeSearch").onclick=()=>$("search").classList.remove("open");
+
+/* ===== Activar accesos directos y compartir (manifest) ===== */
+async function manifestUpgrade(){
+  const msg=m=>{$("manmsg").textContent=m;toast(m)};
+  if(!ghReady()){msg("Falta configurar GitHub (usuario y token).");$("ghbox").open=true;ghFill();return}
+  const c=ghCfg();
+  try{
+    msg("⏳ Leyendo tu manifest.json…");await ghResolve(c);
+    const dir=c.path.indexOf("/")>=0?c.path.replace(/[^\/]*$/,""):"";
+    const mpath=dir+"manifest.json",file=c.path.split("/").pop();
+    const cur=await ghGet(c,mpath);
+    if(!cur) throw new Error("No encontré «"+mpath+"» en el repositorio.");
+    const raw=b64dec(cur.content),m=JSON.parse(raw);
+    const want=[
+      {name:"Nueva conversación",short_name:"Nueva",url:file+"?accion=nueva"},
+      {name:"Nota rápida",short_name:"Nota",url:file+"?accion=nota"},
+      {name:"Hablar con Lara",short_name:"Hablar",url:file+"?accion=voz"},
+      {name:"Buscar en todo",short_name:"Buscar",url:file+"?accion=buscar"}
+    ];
+    const have=Array.isArray(m.shortcuts)?m.shortcuts:[];
+    const acc=u=>(String(u||"").match(/accion=(\w+)/)||[])[1]||String(u||"");
+    let changed=0;
+    want.forEach(w=>{if(!have.some(h=>acc(h.url)===acc(w.url))){have.push(w);changed++}});
+    m.shortcuts=have.slice(0,4);
+    if(!m.share_target){
+      m.share_target={action:file,method:"POST",enctype:"multipart/form-data",params:{title:"title",text:"text",url:"url",files:[{name:"archivo",accept:["image/*","text/*","application/pdf",".txt",".md",".csv",".json"]}]}};changed++;
+    }
+    if(!changed){msg("✅ Tu manifest ya tiene accesos directos y compartir. No cambié nada.");return}
+    if(!confirm("Voy a agregar accesos directos (nueva conversación, nota rápida, hablar, buscar) y la opción «Compartir → Lara» a tu manifest.json. Antes guardo un respaldo del actual. ¿Continuar?")) {msg("Cancelado. No cambié nada.");return}
+    const bpath="respaldos/manifest_antes_de_v"+APP_V+".json",ex=await ghGet(c,bpath);
+    await ghPut(c,bpath,raw,"Respaldo del manifest antes de agregar accesos directos",ex&&ex.sha);
+    await ghPut(c,mpath,JSON.stringify(m,null,2),"Accesos directos y compartir hacia Lara",cur.sha);
+    secLog("manifest","agregué accesos directos y compartir");
+    msg("✅ Listo. Espera 1 o 2 minutos. Android actualiza los accesos directos solo en uno o dos días; si no aparecen, desinstala Lara de la pantalla de inicio y vuelve a instalarla.");
+  }catch(e){msg("❌ "+(e.message||e))}
+}
+$("manup").onclick=manifestUpgrade;
 
 render();
 </script>
