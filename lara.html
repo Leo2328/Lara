@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v50</title>
+<title>Lara v51</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -203,7 +203,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 50. Incluye aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 51. Incluye calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -218,6 +218,12 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="iconpick" style="display:flex;gap:12px;flex-wrap:wrap"></div>
   <div class="row"><button id="iconhome" type="button">📲 Aplicar a la pantalla de inicio</button></div>
   <div id="iconmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
+  <label>🧮 Matemáticas</label>
+  <p class="hint">Lara calcula con una calculadora exacta dentro de la app (sin errores de redondeo y sin gastar cuota) y revisa las cuentas de sus respuestas. En temas de matemáticas cambia sola al modo Matemáticas.</p>
+  <label style="display:flex;gap:8px;align-items:center"><input id="mathlocal" type="checkbox" style="width:auto"> Responder cálculos directamente (gratis)</label>
+  <label style="display:flex;gap:8px;align-items:center"><input id="mathcheck" type="checkbox" style="width:auto"> Revisar las cuentas de las respuestas</label>
+  <div class="row"><input id="calcin" placeholder="Prueba: 15% de 2340 · 3/4+1/6 · x^2-5x+6=0"><button id="calcgo" type="button">Calcular</button></div>
+  <div id="calcout" class="hint" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
   <label>📄 Exportar documento</label>
   <p class="hint">Convierte un chat, un proyecto, tus notas o tus tareas en un documento para compartir o imprimir.</p>
   <select id="exptype"><option value="chat">Un chat</option><option value="proj">Un proyecto</option><option value="notes">Mis notas</option><option value="tasks">Tareas, hábitos y recordatorios</option></select>
@@ -398,6 +404,10 @@ if(!profiles.some(p=>p.id==="ana")){
   profiles.push({id:"ana",name:"Analista",prompt:"Eres Lara en modo analista. En preguntas complejas responde con esta estructura: 1) Respuesta breve. 2) Evidencias y datos que la respaldan. 3) Otras interpretaciones o posturas, y por qué alguien las defendería. 4) Puntos débiles o lo que no se sabe. 5) Nivel de certeza (alto, medio o bajo) y por qué. 6) Qué convendría verificar. Sé concreta y no te alargues sin necesidad. Si hay búsqueda web disponible, úsala para datos actuales y nombra las fuentes."});
   saveProfiles();
 }
+if(!profiles.some(p=>p.id==="mat")){
+  profiles.push({id:"mat",name:"Matemáticas",prompt:"Eres Lara en modo matemáticas: una tutora paciente y exacta. Habla en español claro. Razona paso a paso con esta estructura: 1) Datos, 2) Plan, 3) Desarrollo, 4) Resultado, 5) Verificación (por estimación, otra vía o sustituyendo). Cuida las unidades y el sentido del resultado. No hagas cuentas de cabeza: usa [[CALC: expresión]] para toda la aritmética. Si falta un dato, pregúntalo en vez de suponerlo. Si el usuario está aprendiendo, explica el porqué de cada paso con un ejemplo corto."});
+  saveProfiles();
+}
 if(!profiles.some(p=>p.id==="pla")){
   profiles.push({id:"pla",name:"Planificador",prompt:"Eres Lara, una asistente que ayuda a planificar proyectos de forma sencilla. Habla en español con calidez. Haz UNA pregunta a la vez. Primero aclara el objetivo, luego propón un plan en pasos pequeños y realistas (máximo 5), y al final resume las decisiones tomadas para que el usuario pueda guardarlas. No inventes detalles que el usuario no haya dicho."});
   saveProfiles();
@@ -478,7 +488,7 @@ function effProf(){
   if(p.id!=="gen") return p;
   const lu=history.length?history[history.length-1]:null;
   const t=lu&&lu.role==="user"&&lu.parts&&lu.parts[0]?(lu.parts[0].text||""):"";
-  return (t&&BIBLE_RE.test(t)&&profiles.find(x=>x.id==="bib"))||p;
+  return (t&&BIBLE_RE.test(t)&&profiles.find(x=>x.id==="bib"))||(t&&(MATH_RE.test(t)||/\d\s*[+\-*\/^×÷]\s*\d/.test(t))&&profiles.find(x=>x.id==="mat"))||p;
 }
 
 function logEvt(k,d){
@@ -549,7 +559,7 @@ function styleText(){
 function isHard(){
   const t=lastUserText(),p=curProf();
   if(store.get("lara_model","")) return false;
-  if(["bib","ana","pla"].includes(p.id)||BIBLE_RE.test(t)) return true;
+  if(["bib","ana","pla","mat"].includes(p.id)||BIBLE_RE.test(t)||MATH_RE.test(t)) return true;
   return false;
 }
 function autoRevOn(){return store.get("lara_autorev","0")==="1"&&!saverOn()}
@@ -632,7 +642,7 @@ function ttsStyle(){
 }
 function buildSys(){
   let s=effProf().prompt;
-  s+=personaText();
+  s+=personaText();s+=mathRulesText();
   s+="\n\nContinuidad de conversación: interpreta mensajes breves como «sí», «listo», «sigue», «nueva mejora» o «continúa» usando los mensajes anteriores. Conserva nombres de proyectos, objetivos, restricciones, decisiones confirmadas y pasos completados. No vuelvas a preguntar algo que ya está claro en el contexto. La corrección más reciente del usuario prevalece. Distingue hechos confirmados de suposiciones; si falta un dato imprescindible, haz una sola pregunta breve. Si el usuario dice «listo», reconoce el avance y ofrece el siguiente paso concreto. Si el usuario pide información actual, consulta la búsqueda web cuando esté disponible y presenta enlaces de fuentes reales; si no pudiste buscar, dilo claramente.\n\nCalidad de análisis: distingue hechos, interpretaciones y opiniones; en temas debatidos presenta las posturas principales y tu nivel de certeza; no inventes datos, cifras ni citas; si algo puede haber cambiado, dilo.";
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+memFor(lastUserText()).join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias, o decisiones tomadas en un proyecto, indicando el nombre del proyecto) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta. Si el usuario corrige o contradice algo que sabías de él, añade también [[OLVIDAR: palabras clave del dato viejo]] y luego el [[MEMORIA: dato nuevo]]. Si la petición es ambigua y de ello depende el resultado, haz UNA sola pregunta corta antes de responder; si es simple, responde directamente.";
@@ -645,7 +655,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=50;
+const APP_V=51;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -694,7 +704,7 @@ async function askGemini(key,onChunk){
     for(let i=0;i<3;i++){
       let res;
       try{
-        res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":streamGenerateContent?alt=sse",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({...base,...(tools?{tools:[{google_search:{}}]}:{}),...(think?{generationConfig:{thinkingConfig:{thinkingBudget:1024}}}:{})}),signal:ctrl?ctrl.signal:undefined});
+        res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":streamGenerateContent?alt=sse",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({...base,...(tools?{tools:[{google_search:{}}]}:{}),...(think?{generationConfig:{thinkingConfig:{thinkingBudget:(MATH_RE.test(lastUserText())||curProf().id==="mat"?2048:1024)}}}:{})}),signal:ctrl?ctrl.signal:undefined});
       }catch(e){if(e&&e.name==="AbortError") throw new Error("Detenido.");netFail=true;if(i<1){await sleep(1500);continue}break}
       if(res.ok){const dd=await readStream(res,onChunk);store.set("lara_model_ok",model);bump(model);if(wanted&&!tools) dd._ns=1;return dd}
       let data={};try{data=await res.json()}catch(e){}
@@ -795,6 +805,7 @@ $("f").onsubmit=async ev=>{
   add("user",(pendingImg||pendingTxt)?text+" 📎":text);
   document.querySelectorAll(".acts").forEach(x=>x.remove());
   if(selfImproveIntent(text)){chatSelfFlow(text);return}
+  if(!hadAttach&&!window._sharedExt){const ml=mathLocal(text);if(ml){history.push({role:"model",parts:[{text:ml}]});saveChats();add("lara",ml);addActions();logEvt("mathlocal","");try{speak(ml.replace(/[*_`]/g,""))}catch(e){}return}}
   const bubble=add("lara","…");
   ctrl=new AbortController();$("send").type="button";$("send").textContent="Detener";$("send").onclick=()=>{if(ctrl) ctrl.abort()};
   try{
@@ -806,7 +817,7 @@ $("f").onsubmit=async ev=>{
     const untrusted=usedWeb||hadAttach||text.length>1500||/https?:\/\//i.test(text)||!!window._sharedExt;window._sharedExt=false;
     if(!reply) throw new Error("Lara no devolvió respuesta. Intenta de nuevo.");
     let extra=[];let mejoraReq="";
-    let clean=guardTags(reply,untrusted).replace(/\[\[MEJORA:\s*([^\]]+?)\]\]/g,(m,t)=>{mejoraReq=t.trim().slice(0,600);return ""}).replace(/\[\[PROYECTO:\s*([^|\]]+?)\s*(?:\|\s*([^\]]+?))?\]\]/g,(m,n,g)=>{projUpsert(n,p=>{if(g) p.goal=g.slice(0,200)});store.set("lara_activeproj",n.trim());extra.push("📁 Proyecto «"+n.trim()+"» actualizado");return ""})
+    let clean=calcTags(guardTags(reply,untrusted)).replace(/\[\[MEJORA:\s*([^\]]+?)\]\]/g,(m,t)=>{mejoraReq=t.trim().slice(0,600);return ""}).replace(/\[\[PROYECTO:\s*([^|\]]+?)\s*(?:\|\s*([^\]]+?))?\]\]/g,(m,n,g)=>{projUpsert(n,p=>{if(g) p.goal=g.slice(0,200)});store.set("lara_activeproj",n.trim());extra.push("📁 Proyecto «"+n.trim()+"» actualizado");return ""})
       .replace(/\[\[DECISION:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\]\]/g,(m,n,t)=>{projUpsert(n,p=>{if(!p.decisions.some(d=>norm(d.t)===norm(t))) p.decisions.push({t:t.slice(0,200),d:Date.now()})});extra.push("📁 Decisión guardada en «"+n.trim()+"»");return ""})
       .replace(/\[\[PROXIMO:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\]\]/g,(m,n,t)=>{projUpsert(n,p=>{p.next=t.slice(0,200)});extra.push("📁 Próximo paso guardado en «"+n.trim()+"»");return ""})
       .replace(/\[\[LECCION:\s*([^\]]+?)\]\]/g,(m,t)=>{addLesson(t);extra.push("🧩 Lo tendré en cuenta");return ""}).replace(/\[\[OLVIDAR:\s*([^\]]+?)\]\]/g,(m,t)=>{const k=norm(t).trim();if(k.length>=3){const n0=mems.length;mems=mems.filter(x=>!norm(x).includes(k));if(mems.length<n0){saveMems();extra.push("🧠 Actualicé un recuerdo")}}return ""})
@@ -818,6 +829,7 @@ $("f").onsubmit=async ev=>{
     if(window._tagsBlocked){window._tagsBlocked=false;extra.push("🛡️ No guardé datos de esta respuesta porque usó contenido externo.")}
     if(!mejoraReq&&selfRefusal(clean)&&selfTopic(text)){window._selfCtxT=Date.now();clean="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";selfBtns=true}
     if(!clean) clean="Listo.";
+    clean=mathCheckNote(clean);
     if(extra.length) clean+="\n\n"+extra.join(" · ");
     clean+=sourcesText(data);
     setText(bubble,clean);
@@ -2293,6 +2305,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:51,items:["Calculadora exacta dentro de Lara: responde cuentas y ecuaciones al instante, sin errores de redondeo y sin gastar cuota (ej. 15% de 2340, 3/4+1/6, x²−5x+6=0).","Cuando Gemini te ayuda con matemáticas, Lara hace las cuentas con la calculadora y revisa que cuadren.","Nuevo perfil Matemáticas: razona paso a paso y verifica el resultado; se activa solo con temas de matemáticas."]},
  {v:50,items:["Aviso de vencimiento del token de GitHub: indica la fecha y Lara te avisa antes, con un recordatorio y los pasos para renovarlo.","Si dos teléfonos cambian el mismo chat o proyecto, Lara te muestra los dos y tú eliges (unir, quedarte con uno o usar el otro).","Exportar a PDF, Word o texto: un chat, un proyecto, tus notas o tus tareas."]},
  {v:49,items:["Íconos intercambiables: elige entre 5 diseños (Actual, Letra L, Aurora, Línea luminosa y Clara) en Ajustes → 🎨 Ícono de Lara, y cámbialo cuando quieras.","Un botón aplica el ícono elegido a la pantalla de inicio publicando los archivos en tu GitHub."]},
  {v:48,items:["Nuevo ícono de Lara: una burbuja de conversación luminosa con destellos, sobre un fondo verde azulado.","La esfera del encabezado ahora tiene la misma forma de burbuja."]},
@@ -2643,6 +2656,7 @@ async function selfTest(){
     add(rg&&rg.active?"ok":"warn","Service worker (instalación y caché)",rg?(rg.active?"activo":"instalándose"):"no registrado");
   });
   await T("Token",async()=>{const t=tokenStatus();add(t.st,"Vencimiento del token de GitHub",t.txt)});
+  await T("Calculadora",async()=>{const r=mathSelfCheck();add(r.ok===r.total?"ok":"bad","Calculadora exacta",r.ok+" de "+r.total+" cuentas de control correctas")});
   await T("Integridad",async()=>{const r=await integrityCheck(false);add(r.state==="ok"?"ok":r.state==="alert"?"bad":"info","Integridad del archivo",r.msg)});
   const bad=rows.filter(r=>r.s==="bad").length,ok=rows.filter(r=>r.s==="ok").length,warn=rows.filter(r=>r.s==="warn").length;
   show("Resultado: "+ok+" correctas · "+bad+" con problemas · "+warn+" avisos."+(bad?" Revisa las líneas con ❌.":" Todo lo esencial funciona."));
@@ -3030,6 +3044,396 @@ $("exptype").onchange=fillExportLists;
 $("exppdf").onclick=()=>expRun("pdf");
 $("expdoc").onclick=()=>expRun("doc");
 $("exptxt").onclick=()=>expRun("txt");
+
+const LMath=(function(){
+/* ===== Matemáticas: calculadora exacta (sin eval) ===== */
+const BI=BigInt;
+function qn(n,d){n=BI(n);d=BI(d===undefined?1:d);if(d===0n) throw new Error("división entre cero");if(d<0n){n=-n;d=-d}let a=n<0n?-n:n,b=d;while(b){const t=a%b;a=b;b=t}if(a>1n){n/=a;d/=a}return {n:n,d:d}}
+const isQ=v=>!!v&&typeof v==="object"&&typeof v.n==="bigint";
+function toF(v){if(typeof v==="number") return v;if(typeof v!=="object") throw new Error("valor no numérico");if(v.d===1n) return Number(v.n);return Number(v.n*(10n**40n)/v.d)/1e40}
+const mAdd=(a,b)=>isQ(a)&&isQ(b)?qn(a.n*b.d+b.n*a.d,a.d*b.d):toF(a)+toF(b);
+const mSub=(a,b)=>isQ(a)&&isQ(b)?qn(a.n*b.d-b.n*a.d,a.d*b.d):toF(a)-toF(b);
+const mMul=(a,b)=>isQ(a)&&isQ(b)?qn(a.n*b.n,a.d*b.d):toF(a)*toF(b);
+function mDiv(a,b){if(isQ(a)&&isQ(b)){if(b.n===0n) throw new Error("división entre cero");return qn(a.n*b.d,a.d*b.n)}const y=toF(b);if(y===0) throw new Error("división entre cero");return toF(a)/y}
+function mPow(a,b){
+  if(isQ(a)&&isQ(b)&&b.d===1n){
+    let e=b.n;const neg=e<0n;if(neg) e=-e;
+    const bits=(a.n<0n?-a.n:a.n).toString(2).length+a.d.toString(2).length;
+    if(e*BI(bits)>60000n) throw new Error("el número es demasiado grande");
+    const r=qn(a.n**e,a.d**e);
+    return neg?qn(r.d,r.n):r;
+  }
+  const r=Math.pow(toF(a),toF(b));
+  if(!isFinite(r)||isNaN(r)) throw new Error("el resultado no es un número real o es demasiado grande");
+  return r;
+}
+function isqrt(n){if(n<2n) return n;let x=1n<<BI((n.toString(2).length+1)>>1);for(;;){const y=(x+n/x)>>1n;if(y>=x) return x;x=y}}
+function mSqrt(a){
+  if(isQ(a)){
+    if(a.n<0n) throw new Error("la raíz de un número negativo no es real");
+    const sn=isqrt(a.n),sd=isqrt(a.d);if(sn*sn===a.n&&sd*sd===a.d) return qn(sn,sd);
+  }
+  const x=toF(a);if(x<0) throw new Error("la raíz de un número negativo no es real");return Math.sqrt(x);
+}
+function decPlaces(d){let a=0,b=0;while(d%2n===0n){d/=2n;a++}while(d%5n===0n){d/=5n;b++}return {k:Math.max(a,b),term:d===1n}}
+function fmtDec(q,dec){
+  const neg=q.n<0n,n=neg?-q.n:q.n,dp=decPlaces(q.d),k=dp.term?Math.min(60,dp.k):(dec||10);
+  const sc=10n**BI(k),v=(n*sc*2n+q.d)/(2n*q.d);
+  let s=v.toString();while(s.length<=k) s="0"+s;
+  const ip=s.slice(0,s.length-k),fp=s.slice(s.length-k).replace(/0+$/,"");
+  return (neg&&v!==0n?"-":"")+ip+(fp?"."+fp:"");
+}
+function fmtF(x){if(Number.isInteger(x)&&Math.abs(x)<1e21) return String(x);return String(parseFloat(x.toPrecision(12)))}
+function fmtInline(v){if(typeof v==="string") return v;if(isQ(v)) return v.d===1n?v.n.toString():fmtDec(v,10);return fmtF(v)}
+function fmtFull(v){
+  if(isQ(v)){
+    if(v.d===1n) return v.n.toString();
+    const dp=decPlaces(v.d),frac=v.n.toString()+"/"+v.d.toString();
+    return dp.term?fmtDec(v)+" (= "+frac+")":frac+" ≈ "+fmtDec(v,10);
+  }
+  return "≈ "+fmtF(v);
+}
+function numQ(s){
+  const m=/^(\d*)\.?(\d*)(?:e([+-]?\d+))?$/i.exec(s);if(!m) throw new Error("número no válido «"+s+"»");
+  const ip=m[1]||"0",fp=m[2]||"";let n=BI(ip+fp),d=10n**BI(fp.length);
+  if(m[3]){const e=parseInt(m[3],10);if(Math.abs(e)>300) throw new Error("exponente demasiado grande");if(e>=0) n*=10n**BI(e);else d*=10n**BI(-e)}
+  return qn(n,d);
+}
+class MathUnknown extends Error{}
+class MathSyntax extends Error{}
+function mtok(src){
+  const s=String(src).replace(/[×·∙⋅]/g,"*").replace(/÷/g,"/").replace(/[−–—]/g,"-").replace(/\*\*/g,"^").replace(/π/g,"pi").replace(/√/g,"sqrt").replace(/²/g,"^2").replace(/³/g,"^3");
+  const T=[];let i=0;
+  while(i<s.length){
+    const c=s[i];
+    if(/\s/.test(c)){i++;continue}
+    const rest=s.slice(i);let m;
+    if((m=/^(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/i.exec(rest))){T.push({t:"n",v:numQ(m[0])});i+=m[0].length;continue}
+    if((m=/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ_0-9]*/.exec(rest))){T.push({t:"i",v:m[0].toLowerCase()});i+=m[0].length;continue}
+    if(c==='"'||c==="'"){const j=s.indexOf(c,i+1);if(j<0) throw new MathSyntax("comillas sin cerrar");T.push({t:"s",v:s.slice(i+1,j).toLowerCase()});i=j+1;continue}
+    if("+-*/^(),;=!%".includes(c)){T.push({t:"o",v:c});i++;continue}
+    throw new MathSyntax("símbolo no reconocido «"+c+"»");
+  }
+  return T;
+}
+const ALIAS={raiz:"sqrt",promedio:"mean",media:"mean",mediana:"median",factorial:"fact",potencia:"pow",redondear:"round",absoluto:"abs",minimo:"min",maximo:"max",suma:"sum",mcd:"gcd",mcm:"lcm",combinaciones:"ncr",permutaciones:"npr",desvest:"stdev",varianza:"var",seno:"sin",coseno:"cos",tangente:"tan",cuota:"pmt",interes:"interest",conv:"conv",convertir:"conv",techo:"ceil",piso:"floor",residuo:"mod",log10:"log",ln:"ln"};
+const UNITS={length:{mm:"0.001",cm:"0.01",m:"1",km:"1000",in:"0.0254",ft:"0.3048",yd:"0.9144",mi:"1609.344"},mass:{mg:"0.000001",g:"0.001",kg:"1",lb:"0.45359237",oz:"0.028349523125",t:"1000"},volume:{ml:"0.001",l:"1",gal:"3.785411784",cup:"0.2365882365",floz:"0.0295735295625"},time:{s:"1",min:"60",h:"3600",day:"86400",week:"604800"},speed:{ms:"1",kmh:"0.2777777777777777777778",mph:"0.44704"}};
+function convUnits(v,from,to){
+  const a=String(from).toLowerCase(),b=String(to).toLowerCase();
+  if(["c","f","k"].includes(a)&&["c","f","k"].includes(b)){
+    const x=toF(v);let c=a==="c"?x:a==="f"?(x-32)*5/9:x-273.15;return b==="c"?c:b==="f"?c*9/5+32:c+273.15;
+  }
+  for(const g of Object.values(UNITS)){if(a in g&&b in g) return mDiv(mMul(v,numQ(g[a])),numQ(g[b]))}
+  throw new Error("no sé convertir de «"+from+"» a «"+to+"»");
+}
+function listArgs(a){const L=[];a.forEach(x=>{if(typeof x==="string") throw new Error("se esperaba un número");L.push(x)});if(!L.length) throw new Error("faltan datos");return L}
+function needInt(v,name){if(!isQ(v)||v.d!==1n) throw new Error(name+" necesita un número entero");return v.n}
+function bigFact(n){if(n<0n) throw new Error("el factorial no existe para negativos");if(n>1000n) throw new Error("factorial demasiado grande (máximo 1000)");let r=1n;for(let i=2n;i<=n;i++) r*=i;return r}
+function bigGcd(a,b){a=a<0n?-a:a;b=b<0n?-b:b;while(b){const t=a%b;a=b;b=t}return a}
+function qsort(L){return L.slice().sort((x,y)=>{const d=mSub(x,y);const f=toF(d);return f<0?-1:f>0?1:0})}
+function mMean(L){return mDiv(L.reduce((s,x)=>mAdd(s,x),qn(0)),qn(L.length))}
+function mVar(L,pop){
+  if(L.length<(pop?1:2)) throw new Error("faltan datos para la varianza");
+  const m=mMean(L);const ss=L.reduce((s,x)=>{const d=mSub(x,m);return mAdd(s,mMul(d,d))},qn(0));
+  return mDiv(ss,qn(L.length-(pop?0:1)));
+}
+function mRound(x,dd){
+  const d=dd===undefined?0:Number(needInt(dd,"round"));
+  if(isQ(x)){const sc=qn(10n**BI(Math.max(0,d)),1n);const sc2=d<0?qn(1,10n**BI(-d)):sc;const y=mMul(x,sc2);const neg=y.n<0n;const an=neg?-y.n:y.n;let r=(an*2n+y.d)/(2n*y.d);if(neg) r=-r;return mDiv(qn(r),sc2)}
+  const f=Math.pow(10,d);return Math.round(toF(x)*f)/f;
+}
+const FN={
+  sqrt:a=>mSqrt(a[0]),cbrt:a=>{const x=a[0];if(isQ(x)){const r=Math.round(Math.cbrt(toF(x)));if(mPow(qn(r),qn(3)).n===x.n&&x.d===1n) return qn(r)}return Math.cbrt(toF(x))},
+  abs:a=>isQ(a[0])?qn(a[0].n<0n?-a[0].n:a[0].n,a[0].d):Math.abs(a[0]),
+  floor:a=>isQ(a[0])?qn(a[0].n/a[0].d-(a[0].n<0n&&a[0].n%a[0].d!==0n?1n:0n)):Math.floor(a[0]),
+  ceil:a=>isQ(a[0])?qn(a[0].n/a[0].d+(a[0].n>0n&&a[0].n%a[0].d!==0n?1n:0n)):Math.ceil(a[0]),
+  trunc:a=>isQ(a[0])?qn(a[0].n/a[0].d):Math.trunc(a[0]),
+  round:a=>mRound(a[0],a[1]),
+  sign:a=>qn(toF(a[0])>0?1:toF(a[0])<0?-1:0),
+  min:a=>qsort(listArgs(a))[0],max:a=>{const L=qsort(listArgs(a));return L[L.length-1]},
+  sum:a=>listArgs(a).reduce((s,x)=>mAdd(s,x),qn(0)),
+  mean:a=>mMean(listArgs(a)),
+  median:a=>{const L=qsort(listArgs(a)),n=L.length;return n%2?L[(n-1)/2]:mDiv(mAdd(L[n/2-1],L[n/2]),qn(2))},
+  var:a=>mVar(listArgs(a),false),varp:a=>mVar(listArgs(a),true),
+  stdev:a=>mSqrt(mVar(listArgs(a),false)),stdevp:a=>mSqrt(mVar(listArgs(a),true)),
+  gcd:a=>qn(listArgs(a).reduce((g,x)=>bigGcd(g,needInt(x,"mcd")),0n)),
+  lcm:a=>qn(listArgs(a).reduce((l,x)=>{const n=needInt(x,"mcm");const g=bigGcd(l,n);return g===0n?0n:(l/g)*(n<0n?-n:n)},1n)),
+  fact:a=>qn(bigFact(needInt(a[0],"factorial"))),
+  ncr:a=>{const n=needInt(a[0],"nCr"),k=needInt(a[1],"nCr");if(k<0n||k>n) return qn(0);const kk=k>n-k?n-k:k;let r=1n;for(let i=1n;i<=kk;i++) r=r*(n-kk+i)/i;return qn(r)},
+  npr:a=>{const n=needInt(a[0],"nPr"),k=needInt(a[1],"nPr");if(k<0n||k>n) return qn(0);let r=1n;for(let i=0n;i<k;i++) r*=(n-i);return qn(r)},
+  mod:a=>{if(isQ(a[0])&&isQ(a[1])&&a[0].d===1n&&a[1].d===1n){if(a[1].n===0n) throw new Error("módulo entre cero");const r=a[0].n%a[1].n;return qn(r<0n?r+(a[1].n<0n?-a[1].n:a[1].n):r)}const y=toF(a[1]);if(y===0) throw new Error("módulo entre cero");return toF(a[0])-y*Math.floor(toF(a[0])/y)},
+  pow:a=>mPow(a[0],a[1]),exp:a=>Math.exp(toF(a[0])),
+  ln:a=>{const x=toF(a[0]);if(x<=0) throw new Error("el logaritmo necesita un número positivo");return Math.log(x)},
+  log:a=>{const x=toF(a[0]);if(x<=0) throw new Error("el logaritmo necesita un número positivo");if(a.length>1){const b=toF(a[1]);if(b<=0||b===1) throw new Error("base no válida");return Math.log(x)/Math.log(b)}return Math.log10(x)},
+  log2:a=>{const x=toF(a[0]);if(x<=0) throw new Error("el logaritmo necesita un número positivo");return Math.log2(x)},
+  sin:a=>Math.sin(toF(a[0])),cos:a=>Math.cos(toF(a[0])),tan:a=>Math.tan(toF(a[0])),
+  asin:a=>Math.asin(toF(a[0])),acos:a=>Math.acos(toF(a[0])),atan:a=>Math.atan(toF(a[0])),
+  sind:a=>{const x=toF(a[0])%360;return x%180===0?0:Math.sin(x*Math.PI/180)},cosd:a=>{const x=toF(a[0])%360;return (x-90)%180===0?0:Math.cos(x*Math.PI/180)},tand:a=>Math.tan(toF(a[0])*Math.PI/180),
+  rad:a=>toF(a[0])*Math.PI/180,deg:a=>toF(a[0])*180/Math.PI,
+  pmt:a=>{const r=a[0],n=a[1],pv=a[2];if(isQ(r)&&r.n===0n) return mDiv(pv,n);return mDiv(mMul(pv,r),mSub(qn(1),mPow(mAdd(qn(1),r),mSub(qn(0),n))))},
+  compound:a=>mMul(a[0],mPow(mAdd(qn(1),a[1]),a[2])),
+  interest:a=>mMul(mMul(a[0],a[1]),a[2]),
+  aumento:a=>mMul(a[0],mAdd(qn(1),mDiv(a[1],qn(100)))),descuento:a=>mMul(a[0],mSub(qn(1),mDiv(a[1],qn(100)))),
+  porcentaje:a=>mMul(mDiv(a[0],a[1]),qn(100)),
+  conv:a=>convUnits(a[0],a[1],a[2]),
+  frac:a=>a[0]
+};
+const CONSTS={pi:Math.PI,e:Math.E,tau:2*Math.PI};
+function fnLookup(name){const n=ALIAS[name]||name;return Object.prototype.hasOwnProperty.call(FN,n)?FN[n]:null}
+class MParser{
+  constructor(tokens,env){this.t=tokens;this.p=0;this.env=env||new Map();this.usedOp=false;this.pct=false;this.depth=0}
+  peek(){return this.t[this.p]}next(){return this.t[this.p++]}
+  isOp(v){const t=this.peek();return t&&t.t==="o"&&t.v===v}
+  expect(v){if(!this.isOp(v)) throw new MathSyntax("falta «"+v+"»");this.p++}
+  expr(){
+    let v=this.mul();
+    for(;;){
+      if(this.isOp("+")){this.p++;this.usedOp=true;v=mAdd(v,this.mul())}
+      else if(this.isOp("-")){this.p++;this.usedOp=true;v=mSub(v,this.mul())}
+      else break;
+    }
+    return v;
+  }
+  mul(){
+    let v=this.unary();
+    for(;;){
+      const t=this.peek();if(!t) break;
+      if(t.t==="o"&&(t.v==="*"||t.v==="/")){this.p++;this.usedOp=true;const r=this.unary();v=t.v==="*"?mMul(v,r):mDiv(v,r)}
+      else if(t.t==="i"&&(t.v==="of"||t.v==="de")){if(!this.pct) throw new MathSyntax("«"+t.v+"» solo se usa después de un porcentaje");this.p++;this.usedOp=true;const r=this.unary();v=mMul(v,r)}
+      else if(t.t==="i"&&t.v==="mod"){this.p++;this.usedOp=true;v=FN.mod([v,this.unary()])}
+      else if((t.t==="i"&&t.v!=="of"&&t.v!=="de"&&t.v!=="mod")||(t.t==="o"&&t.v==="(")){const r=this.unary();v=mMul(v,r);this.usedOp=true}
+      else break;
+    }
+    return v;
+  }
+  unary(){
+    if(this.isOp("-")){this.p++;const v=this.unary();return isQ(v)?qn(-v.n,v.d):-v}
+    if(this.isOp("+")){this.p++;return this.unary()}
+    return this.power();
+  }
+  power(){
+    const b=this.postfix();
+    if(this.isOp("^")){this.p++;this.usedOp=true;const e=this.unary();return mPow(b,e)}
+    return b;
+  }
+  postfix(){
+    let v=this.primary();
+    for(;;){
+      if(this.isOp("!")){this.p++;this.usedOp=true;v=qn(bigFact(needInt(v,"el factorial")));this.pct=false}
+      else if(this.isOp("%")){this.p++;this.usedOp=true;v=mDiv(v,qn(100));this.pct=true}
+      else break;
+    }
+    return v;
+  }
+  primary(){
+    const t=this.next();this.pct=false;
+    if(!t) throw new MathSyntax("la expresión está incompleta");
+    if(t.t==="n") return t.v;
+    if(t.t==="s") return t.v;
+    if(t.t==="o"&&t.v==="("){this.depth++;const v=this.expr();this.expect(")");this.depth--;return v}
+    if(t.t==="i"){
+      if(this.isOp("(")){
+        const f=fnLookup(t.v);if(!f) throw new MathUnknown("función desconocida «"+t.v+"»");
+        this.p++;this.depth++;const args=[];
+        if(!this.isOp(")")){for(;;){args.push(this.expr());if(this.isOp(",")||this.isOp(";")){this.p++;continue}break}}
+        this.expect(")");this.depth--;this.usedOp=true;
+        return f(args);
+      }
+      if(this.env.has(t.v)) return this.env.get(t.v);
+      if(Object.prototype.hasOwnProperty.call(CONSTS,t.v)){this.usedOp=true;return CONSTS[t.v]}
+      throw new MathUnknown("no conozco «"+t.v+"»");
+    }
+    throw new MathSyntax("no entiendo «"+t.v+"»");
+  }
+}
+function splitStmts(T){const out=[];let cur=[],d=0;T.forEach(t=>{if(t.t==="o"&&t.v==="(") d++;if(t.t==="o"&&t.v===")") d--;if(t.t==="o"&&t.v===";"&&d===0){out.push(cur);cur=[]}else cur.push(t)});out.push(cur);return out.filter(x=>x.length)}
+function evalMath(src,env){
+  env=env||new Map();
+  if(String(src).length>400) throw new MathSyntax("la expresión es demasiado larga");
+  const stmts=splitStmts(mtok(src));if(!stmts.length) throw new MathSyntax("no hay nada que calcular");
+  let last=null,used=false;
+  stmts.forEach(st=>{
+    let name=null,toks=st;
+    if(st.length>2&&st[0].t==="i"&&st[1].t==="o"&&st[1].v==="="){name=st[0].v;toks=st.slice(2)}
+    const p=new MParser(toks,env);const v=p.expr();
+    if(p.p<toks.length) throw new MathSyntax("sobra «"+(toks[p.p].v)+"»");
+    if(name){if(Object.prototype.hasOwnProperty.call(CONSTS,name)||fnLookup(name)) throw new MathSyntax("«"+name+"» es un nombre reservado");env.set(name,v)}
+    last=v;used=used||p.usedOp;
+  });
+  return {value:last,used:used,env:env};
+}
+
+/* ===== Resolver ecuaciones (grado ≤3 en una variable, sistemas lineales 2×2) ===== */
+function eqVars(src){
+  const set=new Set();
+  mtok(src).forEach((t,i,arr)=>{
+    if(t.t==="i"&&/^[a-df-z]$/.test(t.v)){const nx=arr[i+1];if(!(nx&&nx.t==="o"&&nx.v==="(")) set.add(t.v)}
+  });
+  return [...set].sort();
+}
+function eqSides(s){const p=String(s).split("=");if(p.length!==2||!p[0].trim()||!p[1].trim()) throw new MathSyntax("una ecuación necesita un solo «=»");return p}
+function evalAt(expr,vars){const env=new Map(Object.entries(vars));const r=evalMath(expr,env);if(!isQ(r.value)) throw new Error("la ecuación no es polinómica exacta");return r.value}
+const qs=v=>fmtInline(v).replace(/^-/,"−");
+function coefStr(a){if(a.d===1n) return a.n.toString();const dp=decPlaces(a.d);return dp.term?fmtDec(a):"("+a.n+"/"+a.d+")"}
+function eqLine(label,val){const t=fmtFull(val).replace(/-/g,"−");return t.startsWith("≈")?label+" "+t:label+" = "+t}
+function sup(n){return {2:"²",3:"³"}[n]||"^"+n}
+function polyStr(c,v){
+  const parts=[];
+  for(let k=c.length-1;k>=0;k--){
+    const a=c[k];if(a.n===0n) continue;
+    const neg=a.n<0n,abs=neg?qn(-a.n,a.d):a;
+    let body;
+    const one=abs.n===1n&&abs.d===1n;
+    if(k===0) body=coefStr(abs);
+    else body=(one?"":coefStr(abs))+v+(k>1?sup(k):"");
+    parts.push((parts.length?(neg?" − ":" + "):(neg?"−":""))+body);
+  }
+  return parts.length?parts.join(""):"0";
+}
+function solvePoly(src,v){
+  const [l,r]=eqSides(src),f=x=>evalAt("("+l+")-("+r+")",Object.assign({},{[v]:x}));
+  const q=k=>qn(k);
+  const f0=f(q(0)),f1=f(q(1)),f2=f(q(2)),f3=f(q(3)),f4=f(q(4));
+  const d1=mSub(f1,f0),d2=mAdd(mSub(f2,mMul(q(2),f1)),f0),d3=mSub(mAdd(mSub(f3,mMul(q(3),f2)),mMul(q(3),f1)),f0);
+  const c3=mDiv(d3,q(6)),c2=mSub(mDiv(d2,q(2)),mDiv(d3,q(2))),c1=mAdd(mSub(d1,mDiv(d2,q(2))),mDiv(d3,q(3))),c0=f0;
+  const pred=mAdd(mAdd(mAdd(mMul(c3,q(64)),mMul(c2,q(16))),mMul(c1,q(4))),c0);
+  if(!(isQ(pred)&&mSub(pred,f4).n===0n)) return null;
+  const c=[c0,c1,c2,c3];let deg=3;while(deg>0&&c[deg].n===0n) deg--;
+  const head="Ecuación: "+polyStr(c.slice(0,deg+1),v)+" = 0";
+  if(deg===0) return head+"\n"+(c0.n===0n?"Se cumple para cualquier valor de "+v+" (infinitas soluciones).":"No tiene solución.");
+  if(deg===1){const x=mDiv(mSub(q(0),c0),c1);return head+"\n"+eqLine(v+" = −b/a",x)+"\nVerificación: al sustituir "+v+" da 0."}
+  if(deg===2) return head+"\n"+quad(c[2],c[1],c[0],v);
+  // grado 3: raíces racionales
+  let L=c.slice();let lcmd=1n;L.forEach(a=>{lcmd=lcmd/bigGcd(lcmd,a.d)*a.d});
+  const I=L.map(a=>a.n*(lcmd/a.d));
+  const divs=n=>{n=n<0n?-n:n;const out=[];for(let i=1n;i*i<=n&&i<=100000n;i++){if(n%i===0n){out.push(i);if(i*i!==n) out.push(n/i)}}return out};
+  const p=I[0]===0n?[0n]:divs(I[0]),qd=divs(I[3]),roots=[];
+  const evalI=(xn,xd)=>{let s=0n;for(let k=3;k>=0;k--){s=s*xn+I[k]*(xd**BI(3-k))*0n}return null};
+  const test=x=>{let s=qn(0);for(let k=3;k>=0;k--) s=mAdd(mMul(s,x),L[k]);return s.n===0n};
+  const cand=[];
+  if(I[0]===0n) cand.push(qn(0));
+  p.forEach(a=>qd.forEach(b=>{if(a!==0n){cand.push(qn(a,b));cand.push(qn(-a,b))}}));
+  let found=null;for(const x of cand){if(test(x)){found=x;break}}
+  if(!found) return null;
+  // división sintética: a3 x^3+a2 x^2+a1 x+a0 = (x-r)(b2 x^2+b1 x+b0)
+  const b2=L[3],b1=mAdd(L[2],mMul(found,b2)),b0=mAdd(L[1],mMul(found,b1));
+  return head+"\n"+eqLine("Una raíz racional: "+v,found)+"\nAl dividir queda: "+polyStr([b0,b1,b2],v)+" = 0\n"+quad(b2,b1,b0,v,true,found);
+}
+function quad(a,b,c,v,extra,known){
+  const disc=mSub(mMul(b,b),mMul(qn(4),mMul(a,c)));
+  let out="a = "+qs(a)+", b = "+qs(b)+", c = "+qs(c)+"\nΔ = b² − 4ac = "+qs(disc);
+  const two=mMul(qn(2),a);
+  if(disc.n<0n) return out+"\nComo Δ < 0 no hay soluciones reales."+(extra?"\n"+eqLine("Solución real: "+v,known):"");
+  if(disc.n===0n){const x=mDiv(mSub(qn(0),b),two);return out+"\nΔ = 0: una solución doble.\n"+eqLine(v+" = −b/(2a)",x)+(extra&&mSub(x,known).n!==0n?"\n"+eqLine("También: "+v,known):"")}
+  const sq=mSqrt(disc);
+  const x1=mDiv(mAdd(mSub(qn(0),b),sq),two),x2=mDiv(mSub(mSub(qn(0),b),sq),two);
+  out+="\n"+v+" = (−b ± √Δ)/(2a) = ("+qs(mSub(qn(0),b))+" ± √"+qs(disc)+")/"+qs(two)+"\n"+eqLine(v+"₁",x1)+"\n"+eqLine(v+"₂",x2);
+  if(extra){const all=[known,x1,x2].sort((p,q2)=>toF(p)-toF(q2));out+="\nSoluciones: "+all.map(x=>qs(x)).join(", ")}
+  else out+="\nVerificación: ambos valores anulan la ecuación.";
+  return out;
+}
+function solveSystem(eqs,vars){
+  const [x,y]=vars,co=[];
+  for(const e of eqs){
+    const [l,r]=eqSides(e),g=(a,b)=>evalAt("("+l+")-("+r+")",{[x]:qn(a),[y]:qn(b)});
+    const g00=g(0,0),a=mSub(g(1,0),g00),b=mSub(g(0,1),g00);
+    if(mSub(g(1,1),mAdd(mAdd(a,b),g00)).n!==0n||mSub(g(2,0),mAdd(mMul(qn(2),a),g00)).n!==0n||mSub(g(0,2),mAdd(mMul(qn(2),b),g00)).n!==0n) return null;
+    co.push({a:a,b:b,r:mSub(qn(0),g00)});
+  }
+  const [e1,e2]=co,det=mSub(mMul(e1.a,e2.b),mMul(e2.a,e1.b));
+  const lin=(e)=>polyStr([qn(0),e.a],x).replace(/^0$/,"").concat(e.b.n===0n?"":(e.b.n<0n?" − ":" + ")+((e.b.n<0n?qn(-e.b.n,e.b.d):e.b).n===1n&&e.b.d===1n?"":coefStr(e.b.n<0n?qn(-e.b.n,e.b.d):e.b))+y);
+  let out="Sistema:\n(1) "+lin(e1)+" = "+qs(e1.r)+"\n(2) "+lin(e2)+" = "+qs(e2.r)+"\nDeterminante = "+qs(det);
+  if(det.n===0n) return out+"\nEl determinante es 0: no hay una solución única (puede no tener solución o tener infinitas).";
+  const X=mDiv(mSub(mMul(e1.r,e2.b),mMul(e2.r,e1.b)),det),Y=mDiv(mSub(mMul(e1.a,e2.r),mMul(e2.a,e1.r)),det);
+  return out+"\n"+eqLine(x,X)+"\n"+eqLine(y,Y)+"\nVerificación: al sustituir en (1) y (2) se cumplen ambas.";
+}
+function solveEquation(src){
+  const parts=String(src).split(/\s*(?:;|\n)\s*/).filter(x=>x.trim());
+  if(parts.length===2&&parts.every(p=>p.includes("="))){
+    const vs=[...new Set(parts.flatMap(eqVars))].sort();if(vs.length===2) return solveSystem(parts,vs);
+    return null;
+  }
+  if(parts.length!==1||!parts[0].includes("=")) return null;
+  const vs=eqVars(parts[0]);if(vs.length!==1) return null;
+  return solvePoly(parts[0],vs[0]);
+}
+
+return {evalMath,fmtInline,fmtFull,solveEquation,numQ,isQ,toF,qn,MathUnknown,MathSyntax,fmtDec};
+})();
+
+/* ===== Matemáticas en Lara ===== */
+const MATH_RE=/ecuaci[oó]n|derivad|integral|l[ií]mite|porcentaj|fracci[oó]n|ra[ií]z|logaritm|probabilidad|estad[ií]stic|promedio|mediana|desviaci[oó]n|inter[eé]s|pr[eé]stamo|\bcuota|descuento|\biva\b|propina|[aá]rea|per[ií]metro|volumen|trigonom|\bseno|coseno|tangente|teorema|pit[aá]gor|matriz|[aá]lgebra|geometr[ií]a|\bmcd\b|\bmcm\b|factorial|polinomio|sistema de ecuaciones|regla de tres|proporci[oó]n|despeja|simplifica|factoriza|\bcalcula|cu[aá]nto (?:es|son|da|suma|vale)/i;
+function mathNeeded(t){return MATH_RE.test(t||"")||(/\d/.test(t||"")&&/[+\-*\/^%=×÷]/.test(t||""))}
+const MATH_RULES="MATEMÁTICAS: no hagas cuentas de cabeza. Para CUALQUIER operación con números escribe [[CALC: expresión]] en lugar del resultado y la app pondrá el valor exacto. Usa + - * / ^ %, paréntesis y funciones como sqrt, round(x,2), fact, ncr, npr, mean, median, stdev, gcd, lcm, pmt(tasa,n,monto), compound, aumento, descuento, conv(valor,\"km\",\"mi\"). Ejemplo: «12 × 15 = [[CALC: 12*15]]». Guarda pasos con [[LET: iva = 1250*0.16]] y reutilízalos en otros [[CALC: ...]]. Razona paso a paso: datos, plan, desarrollo, resultado y una verificación (estimación o sustitución). Si falta un dato, pregúntalo en vez de suponerlo. Nunca escribas tú el número final de una cuenta.";
+function mathRulesText(){return mathNeeded(lastUserText())?"\n\n"+MATH_RULES:""}
+function calcTags(text){
+  const env=new Map();
+  return text.replace(/\[\[(LET|CALC):\s*([^\]]+?)\]\]/g,(m,k,e)=>{
+    try{const r=LMath.evalMath(e,env);return k==="LET"?"":LMath.fmtInline(r.value).replace(/^-/,"−")}
+    catch(x){logEvt("calc",e.slice(0,60));return k==="LET"?"":"⚠️(no pude calcular «"+e.trim().slice(0,40)+"»)"}
+  });
+}
+function normNum(s){
+  let x=s.replace(/[.,]+$/,"");
+  if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(x)) return x.replace(/\./g,"").replace(",",".");
+  if(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(x)) return x.replace(/,/g,"");
+  if(/^\d+,\d{3}$/.test(x)&&x.length<=7) return x.replace(",","");
+  if(/^\d+,\d+$/.test(x)) return x.replace(",",".");
+  return x;
+}
+function mathCheckNote(text){
+  if(store.get("lara_mathcheck","1")!=="1") return text;
+  const re=/(\(?\d[\d.,]*\)?(?:\s*[+\-−×x*·\/÷^]\s*\(?\d[\d.,]*\)?)+)\s*=\s*(−?-?\d[\d.,]*)/g;
+  const bad=[];let m,g=0;
+  while((m=re.exec(text))&&g++<25){
+    try{
+      const lhs=m[1].replace(/\d[\d.,]*/g,n=>{const tail=(n.match(/[.,]+$/)||[""])[0];return normNum(n)+(tail&&/^[.,]+$/.test(tail)?"":"")}).replace(/(\d)\s*x\s*(?=\d|\()/g,"$1*");
+      const r=LMath.evalMath(lhs);
+      const rr=normNum(m[2].replace("−","-").replace(/^--/,"-"));
+      const neg=rr.startsWith("-"),rv=LMath.numQ(neg?rr.slice(1):rr),rq=neg?LMath.qn(-rv.n,rv.d):rv;
+      const dec=(rr.split(".")[1]||"").length;
+      const diff=Math.abs(LMath.toF(r.value)-LMath.toF(rq)),tol=0.5*Math.pow(10,-dec)+1e-9;
+      if(diff>tol&&diff>Math.abs(LMath.toF(rq))*1e-9) bad.push("«"+m[0].replace(/\s+/g," ").trim()+"» da "+LMath.fmtInline(r.value).replace(/^-/,"−"));
+    }catch(e){}
+  }
+  if(!bad.length) return text;
+  logEvt("mathfix",bad.length+" cuentas");
+  return text+"\n\n🧮 Revisé las cuentas con la calculadora y "+(bad.length>1?"estas no cuadran":"esta no cuadra")+": "+bad.slice(0,3).join("; ")+".";
+}
+function mathLocal(text){
+  if(store.get("lara_mathlocal","1")!=="1") return null;
+  let t=String(text||"").trim();
+  if(!t||t.length>200) return null;
+  if(/^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}$/.test(t)) return null;
+  if(/^\+?[\d\s()-]{7,}$/.test(t)&&!/[*\/^%+]/.test(t.replace(/^\+/,""))) return null;
+  t=t.replace(/^(?:lara[,\s]+)?(?:por favor[,\s]+)?(?:cu[aá]nto\s+(?:es|son|da|suma|vale|ser[ií]a)(?:\s+el)?|calcula(?:me)?|cu[aá]l\s+es\s+el\s+resultado\s+de|resuelve(?:me)?|dime\s+cu[aá]nto\s+es|result(?:ado)?\s+de)\s*[:,]?\s*/i,"");
+  t=t.replace(/[?¿!¡]+/g,"").replace(/\s*=\s*$/,"").trim();
+  if(!t) return null;
+  if(!/[a-zA-Z]\s*\(/.test(t)) t=t.replace(/(\d),(\d{1,2})(?!\d)/g,"$1.$2");
+  const foot="\n\n(Cálculo exacto hecho en tu teléfono, sin gastar cuota.)";
+  try{
+    if(t.includes("=")){const r=LMath.solveEquation(t);return r?"🧮 **Resolví la ecuación**\n"+r+foot:null}
+    const r=LMath.evalMath(t);
+    if(!r.used) return null;
+    return "🧮 **"+t.replace(/\*/g,"×").replace(/\^/g,"^")+"** = **"+LMath.fmtFull(r.value).replace(/(^|[^\d.])-(?=\d)/g,"$1−")+"**"+foot;
+  }catch(e){
+    if(e instanceof LMath.MathUnknown||e instanceof LMath.MathSyntax) return null;
+    return "🧮 No puedo calcular eso: "+(e.message||"error")+".";
+  }
+}
+const MATH_TESTS=[["0.1+0.2","0.3"],["15% de 2340","351"],["3/4+1/6","0.9166666667"],["2^10","1024"],["-2^2","-4"],["sqrt(144)","12"],["25!","15511210043330985984000000"],["ncr(10,3)","120"],["gcd(48,18)","6"],["round(2.675,2)","2.68"],["mean(1,2,3,4)","2.5"],["1250*1.16","1450"]];
+function mathSelfCheck(){let ok=0;MATH_TESTS.forEach(([e,x])=>{try{if(LMath.fmtInline(LMath.evalMath(e).value)===x) ok++}catch(err){}});return {ok:ok,total:MATH_TESTS.length}}
+$("mathlocal").checked=store.get("lara_mathlocal","1")==="1";$("mathlocal").onchange=e=>store.set("lara_mathlocal",e.target.checked?"1":"0");
+$("mathcheck").checked=store.get("lara_mathcheck","1")==="1";$("mathcheck").onchange=e=>store.set("lara_mathcheck",e.target.checked?"1":"0");
+$("calcgo").onclick=()=>{
+  const v=$("calcin").value.trim(),o=$("calcout");
+  if(!v){o.textContent="Escribe una cuenta o una ecuación.";return}
+  const keep=store.get("lara_mathlocal","1");store.set("lara_mathlocal","1");
+  let r=null;try{r=mathLocal(v)}catch(e){}
+  store.set("lara_mathlocal",keep);
+  o.textContent=r?r.replace(/\*\*/g,"").replace(/_/g,""):"Eso no parece una cuenta que yo pueda resolver sola. Pregúntaselo a Lara en el chat.";
+};
+$("calcin").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("calcgo").click()}});
 
 render();
 </script>
