@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v51</title>
+<title>Lara v52</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -58,9 +58,14 @@ form textarea:focus-visible{outline:none}
 #attach,#mic,#conv{width:40px;height:40px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:var(--bg);border-color:transparent}
 #conv{outline-offset:2px}
 #send{justify-self:end;padding:10px 22px}
-#cfg,#notes,#chats,#projects,#news,#search{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
-#cfg.open,#notes.open,#chats.open,#projects.open,#news.open,#search.open{display:block}
-#search{z-index:55}
+#cfg,#notes,#chats,#projects,#news,#gsearch,#tools,#budget,#charts,#quiz,#calc,#stats{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
+#cfg.open,#notes.open,#chats.open,#projects.open,#news.open,#gsearch.open,#tools.open,#budget.open,#charts.open,#quiz.open,#calc.open,#stats.open{display:block}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tcard{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px;border-radius:18px;background:var(--surface)}
+.tcard span{font-size:26px;line-height:1}.tcard b{font:600 15px var(--ui)}.tcard small{font:400 12px/1.3 var(--ui);color:var(--muted)}
+#chout svg,#statsbox svg{max-width:100%;height:auto}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.kp button{padding:14px 0;font-size:18px;border-radius:14px}.kp .op{color:var(--accent)}
+#gsearch{z-index:55}
 .sact{gap:6px;flex-wrap:wrap}
 .sact button{font-size:13px;padding:6px 12px}
 mark{background:color-mix(in srgb,var(--accent) 28%,transparent);color:inherit;border-radius:3px;padding:0 1px}
@@ -110,7 +115,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
 <body>
 <header>
   <div class="brand"><span class="orb" aria-hidden="true"></span><div style="min-width:0"><h1>Lara</h1><div class="sub" id="status"></div></div></div>
-  <div class="nav"><button id="openChats" type="button" aria-label="Chats" title="Chats">💬</button><button id="openNotes" type="button" aria-label="Notas" title="Notas">📝</button><button id="openProj" type="button" aria-label="Proyectos" title="Proyectos">📁</button><button id="openSearch" type="button" aria-label="Buscar en todo" title="Buscar en todo">🔍</button><button id="openCfg" type="button" aria-label="Ajustes" title="Ajustes">⚙️</button></div>
+  <div class="nav"><button id="openChats" type="button" aria-label="Chats" title="Chats">💬</button><button id="openNotes" type="button" aria-label="Notas" title="Notas">📝</button><button id="openTools" type="button" aria-label="Herramientas" title="Herramientas">🧰</button><button id="openSearch" type="button" aria-label="Buscar en todo" title="Buscar en todo">🔍</button><button id="openCfg" type="button" aria-label="Ajustes" title="Ajustes">⚙️</button></div>
 </header>
 <div id="chat" aria-live="polite"></div>
 <div id="shorts"></div>
@@ -157,11 +162,72 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <input id="remat" type="datetime-local" style="margin-top:8px">
   <div class="row"><button class="main" id="addrem" type="button">Añadir recordatorio</button><button id="testrem" type="button">Probar aviso</button><button id="closeNotes" type="button">Cerrar</button></div>
 </section>
-<section id="search" aria-label="Buscar en todo">
+<section id="gsearch" aria-label="Buscar en todo">
   <h1>🔍 Buscar en todo</h1>
   <div class="row" style="margin-top:0"><input id="sq" placeholder="Chats, notas, tareas, proyectos, memoria…" autocomplete="off"></div>
   <div id="sres"></div>
   <div class="row"><button id="closeSearch" type="button">Cerrar</button></div>
+</section>
+<section id="tools" aria-label="Herramientas">
+  <h1>🧰 Herramientas</h1>
+  <div class="tgrid">
+    <button class="tcard" id="openProj" type="button"><span>📁</span><b>Proyectos</b><small>Objetivo, decisiones y próximo paso</small></button>
+    <button class="tcard" id="openBudget" type="button"><span>💰</span><b>Presupuesto</b><small>Ingresos, gastos y balance exactos</small></button>
+    <button class="tcard" id="openCharts" type="button"><span>📊</span><b>Gráficas</b><small>Funciones, hábitos y gastos</small></button>
+    <button class="tcard" id="openQuiz" type="button"><span>🎓</span><b>Estudio</b><small>Preguntas y práctica de matemáticas</small></button>
+    <button class="tcard" id="openCalc" type="button"><span>🧮</span><b>Calculadora</b><small>Con historial y ecuaciones</small></button>
+    <button class="tcard" id="openStats" type="button"><span>📈</span><b>Estadísticas</b><small>Tu uso de Lara y de la cuota</small></button>
+  </div>
+  <div class="row"><button id="closeTools" type="button">Cerrar</button></div>
+</section>
+<section id="budget" aria-label="Presupuesto">
+  <h1>💰 Presupuesto</h1>
+  <div class="row" style="margin-top:0;align-items:center;justify-content:space-between"><button id="budprev" type="button">◀</button><b id="budmonth" style="font:600 1rem var(--ui)"></b><button id="budnext" type="button">▶</button></div>
+  <div id="budbox" style="margin-top:10px"></div>
+  <label>Anotar un movimiento</label>
+  <div class="row" style="margin-top:0"><select id="budkind" style="flex:1"><option value="o">Gasto</option><option value="i">Ingreso</option></select><input id="budamt" inputmode="decimal" placeholder="Monto" style="flex:1" autocomplete="off"></div>
+  <input id="budcat" list="budcats" placeholder="Categoría (Comida, Transporte…)" style="margin-top:8px" autocomplete="off"><datalist id="budcats"></datalist>
+  <input id="buddesc" placeholder="Descripción (opcional)" style="margin-top:8px" autocomplete="off">
+  <input id="buddate" type="date" style="margin-top:8px">
+  <div class="row"><button class="main" id="budadd" type="button">Anotar</button><button id="budexp" type="button">Exportar mes</button></div>
+  <label for="budcur">Símbolo de moneda</label><input id="budcur" style="max-width:120px">
+  <p class="hint">Las sumas son exactas (sin errores de redondeo). Los movimientos se sincronizan entre tus teléfonos si activaste la sincronización.</p>
+  <div class="row"><button data-back type="button">← Herramientas</button></div>
+</section>
+<section id="charts" aria-label="Gráficas">
+  <h1>📊 Gráficas</h1>
+  <label for="chtype">¿Qué quieres graficar?</label>
+  <select id="chtype"><option value="fn">Una función matemática</option><option value="hab">Mis hábitos (14 días)</option><option value="spend">Mis gastos del mes</option><option value="use">Mi uso de Lara (14 días)</option></select>
+  <div id="chfnrow">
+    <label for="chfn">Función de x</label><input id="chfn" value="x^2-4" placeholder="Ej: x^2-4 · sin(x) · 1/x · 2^x" autocomplete="off">
+    <div class="row" style="margin-top:8px;flex-wrap:nowrap"><input id="chxmin" value="-10" inputmode="decimal" aria-label="x mínimo" placeholder="x mínimo"><input id="chxmax" value="10" inputmode="decimal" aria-label="x máximo" placeholder="x máximo"></div>
+    <p class="hint">Mínimo y máximo de x. Funciones: sin, cos, tan (en radianes), sqrt, ln, log, abs, exp…</p>
+  </div>
+  <div class="row"><button class="main" id="chdraw" type="button">Dibujar</button><button id="chpng" type="button" disabled>💾 Guardar imagen</button></div>
+  <div id="chout" style="margin-top:10px;overflow-x:auto"></div>
+  <div id="chinfo" class="hint" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
+  <div class="row"><button data-back type="button">← Herramientas</button></div>
+</section>
+<section id="quiz" aria-label="Estudio">
+  <h1>🎓 Estudio</h1>
+  <div id="stubox"></div>
+  <div class="row"><button data-back type="button">← Herramientas</button></div>
+</section>
+<section id="calc" aria-label="Calculadora">
+  <h1>🧮 Calculadora</h1>
+  <input id="calin" placeholder="Escribe una cuenta o una ecuación" autocomplete="off" autocapitalize="off">
+  <div id="calprev" class="hint" style="font-size:16px;min-height:24px"></div>
+  <div id="calkeys" class="kp"></div>
+  <div id="calres" class="hint" style="font-size:15px;color:var(--ink);white-space:pre-wrap;min-height:40px;margin-top:8px"></div>
+  <label>Historial</label>
+  <div id="calhist"></div>
+  <div class="row"><button id="calclear" type="button">Borrar historial</button><button data-back type="button">← Herramientas</button></div>
+</section>
+<section id="stats" aria-label="Estadísticas">
+  <h1>📈 Estadísticas de uso</h1>
+  <div id="statsbox"></div>
+  <div class="row"><button id="statspng" type="button">💾 Guardar imagen</button><button id="statsreset" type="button">Borrar estadísticas</button></div>
+  <div class="row"><button data-back type="button">← Herramientas</button></div>
 </section>
 <section id="news" aria-label="Novedades">
   <h1>📰 Novedades</h1>
@@ -203,7 +269,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 51. Incluye calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 52. Incluye herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -226,7 +292,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="calcout" class="hint" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
   <label>📄 Exportar documento</label>
   <p class="hint">Convierte un chat, un proyecto, tus notas o tus tareas en un documento para compartir o imprimir.</p>
-  <select id="exptype"><option value="chat">Un chat</option><option value="proj">Un proyecto</option><option value="notes">Mis notas</option><option value="tasks">Tareas, hábitos y recordatorios</option></select>
+  <select id="exptype"><option value="chat">Un chat</option><option value="proj">Un proyecto</option><option value="notes">Mis notas</option><option value="tasks">Tareas, hábitos y recordatorios</option><option value="budget">Presupuesto del mes</option></select>
   <select id="expchat" style="margin-top:8px"></select>
   <select id="expproj" style="margin-top:8px;display:none"></select>
   <div class="row"><button id="exppdf" type="button">PDF</button><button id="expdoc" type="button">Word</button><button id="exptxt" type="button">Texto</button></div>
@@ -655,7 +721,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=51;
+const APP_V=52;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -805,7 +871,7 @@ $("f").onsubmit=async ev=>{
   add("user",(pendingImg||pendingTxt)?text+" 📎":text);
   document.querySelectorAll(".acts").forEach(x=>x.remove());
   if(selfImproveIntent(text)){chatSelfFlow(text);return}
-  if(!hadAttach&&!window._sharedExt){const ml=mathLocal(text);if(ml){history.push({role:"model",parts:[{text:ml}]});saveChats();add("lara",ml);addActions();logEvt("mathlocal","");try{speak(ml.replace(/[*_`]/g,""))}catch(e){}return}}
+  if(!hadAttach&&!window._sharedExt){const ml=mathLocal(text);if(ml){history.push({role:"model",parts:[{text:ml}]});saveChats();add("lara",ml);addActions();logEvt("mathlocal","");dayInc("l");try{speak(ml.replace(/[*_`]/g,""))}catch(e){}return}}
   const bubble=add("lara","…");
   ctrl=new AbortController();$("send").type="button";$("send").textContent="Detener";$("send").onclick=()=>{if(ctrl) ctrl.abort()};
   try{
@@ -867,7 +933,7 @@ $("f").onsubmit=async ev=>{
   $("chat").scrollTop=$("chat").scrollHeight;
 };
 
-function exportJson(){return JSON.stringify({lara:2,memoria:mems,notas:notes,tareas:tasks,habitos:habits,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")},lecciones:getLessons(),proyectos:getProjects(),tomb:getTomb()},null,2)}
+function exportJson(){return JSON.stringify({lara:2,memoria:mems,notas:notes,tareas:tasks,habitos:habits,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")},lecciones:getLessons(),proyectos:getProjects(),tomb:getTomb(),presupuesto:getBud()},null,2)}
 function exportAll(){
   const data=exportJson();
   const a=document.createElement("a");
@@ -1145,7 +1211,7 @@ function dailyLimit(){return Math.max(20,+store.get("lara_limit","250")||250)}
 function usagePct(){return useData().n/dailyLimit()}
 function saverOn(){return store.get("lara_saver","0")==="1"||usagePct()>=0.9}
 function bump(model){
-  const u=useData();u.n++;u.m[model]=(u.m[model]||0)+1;store.set("lara_use",JSON.stringify(u));
+  const u=useData();u.n++;u.m[model]=(u.m[model]||0)+1;store.set("lara_use",JSON.stringify(u));dayInc("q");
   try{
     const pct=u.n/dailyLimit(),day=new Date().toDateString(),w=store.get("lara_warn","");
     if(pct>=0.95&&w!==day+"95"){store.set("lara_warn",day+"95");toast("⚠️ Llevas "+u.n+" consultas hoy, casi tu límite. Activé el modo ahorro hasta mañana.",true)}
@@ -1587,7 +1653,7 @@ function renderIdeas(){
 }
 
 function statGet(){try{return Object.assign({sent:0,bad:0},JSON.parse(store.get("lara_stats","{}"))||{})}catch(e){return{sent:0,bad:0}}}
-function statInc(k){const x=statGet();x[k]=(x[k]||0)+1;store.set("lara_stats",JSON.stringify(x))}
+function statInc(k){const x=statGet();x[k]=(x[k]||0)+1;store.set("lara_stats",JSON.stringify(x));if(k==="sent") dayInc("s");if(k==="bad") dayInc("e")}
 function evalLast(){
   let L={};try{L=JSON.parse(store.get("lara_lastpub","{}"))||{}}catch(e){}
   if(!L.snap) return null;
@@ -1968,6 +2034,7 @@ function projectsText(q){
   return "\n\nProyectos del usuario (datos guardados; úsalos para responder y no inventes lo que falte):\n"+sel.map(p=>"- "+p.name+(p.goal?" · Objetivo: "+p.goal:"")+(p.decisions.length?" · Decisiones: "+p.decisions.slice(-8).map(d=>d.t).join("; "):" · Sin decisiones registradas")+(p.next?" · Próximo paso: "+p.next:"")).join("\n");
 }
 function importExtra(d){
+  try{mergeBudget(d.presupuesto,null)}catch(e){}
   if(Array.isArray(d.lecciones)) d.lecciones.forEach(addLesson);
   if(Array.isArray(d.proyectos)) d.proyectos.forEach(p=>{
     if(p&&p.name&&!findProj(p.name)){const a=getProjects();a.push({id:p.id||Date.now().toString(36),name:String(p.name).slice(0,60),goal:String(p.goal||"").slice(0,200),decisions:Array.isArray(p.decisions)?p.decisions.slice(0,40):[],next:String(p.next||"").slice(0,200),ts:p.ts||Date.now()});saveProjects(a)}
@@ -2305,6 +2372,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:52,items:["Nueva pantalla 🧰 Herramientas con: 💰 Presupuesto (ingresos, gastos y balance exactos, con límites por categoría), 📊 Gráficas (funciones, hábitos, gastos y uso), 🎓 Estudio (mazos de preguntas con repaso y práctica de matemáticas gratis), 🧮 Calculadora con historial y 📈 Estadísticas de uso.","Los proyectos ahora están dentro de 🧰 Herramientas."]},
  {v:51,items:["Calculadora exacta dentro de Lara: responde cuentas y ecuaciones al instante, sin errores de redondeo y sin gastar cuota (ej. 15% de 2340, 3/4+1/6, x²−5x+6=0).","Cuando Gemini te ayuda con matemáticas, Lara hace las cuentas con la calculadora y revisa que cuadren.","Nuevo perfil Matemáticas: razona paso a paso y verifica el resultado; se activa solo con temas de matemáticas."]},
  {v:50,items:["Aviso de vencimiento del token de GitHub: indica la fecha y Lara te avisa antes, con un recordatorio y los pasos para renovarlo.","Si dos teléfonos cambian el mismo chat o proyecto, Lara te muestra los dos y tú eliges (unir, quedarte con uno o usar el otro).","Exportar a PDF, Word o texto: un chat, un proyecto, tus notas o tus tareas."]},
  {v:49,items:["Íconos intercambiables: elige entre 5 diseños (Actual, Letra L, Aurora, Línea luminosa y Clara) en Ajustes → 🎨 Ícono de Lara, y cámbialo cuando quieras.","Un botón aplica el ícono elegido a la pantalla de inicio publicando los archivos en tu GitHub."]},
@@ -2405,6 +2473,7 @@ function mergeSync(d){
       if(ch){saveProjects(a);n++}
     }
   });
+  n+=mergeBudget(d.presupuesto,TB);
   saveNotes();saveRems();saveTasks();saveHabits();saveChatsRaw();saveMems();
   try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderMore()}catch(e){}try{renderChats()}catch(e){}
   try{if($("projects").classList.contains("open")) renderProjects()}catch(e){}
@@ -2416,13 +2485,13 @@ function syncSubset(o){
   const strs=a=>(Array.isArray(a)?a.filter(x=>typeof x==="string"):[]).slice().sort();
   const objs=a=>(Array.isArray(a)?a.filter(x=>x&&typeof x==="object"):[]).slice().sort(idSort);
   const lastOf=c=>{const m=(c.msgs||[]);return m.length?JSON.stringify(m[m.length-1].parts||""):""};
-  return JSON.stringify({m:strs(o.memoria),n:strs(o.notas),t:objs(o.tareas),h:objs(o.habitos),r:objs(o.recordatorios),c:objs(o.chats).map(c=>({id:c.id,t:c.title,k:(c.msgs||[]).length,l:lastOf(c)})),l:strs(o.lecciones),p:objs(o.proyectos),z:Object.entries(o.tomb||{}).map(([k,v])=>k+":"+Object.keys(v||{}).sort().map(kk=>kk+((+v[kk]||0)>0?"+":"-")).join(",")).sort()});
+  return JSON.stringify({m:strs(o.memoria),n:strs(o.notas),t:objs(o.tareas),h:objs(o.habitos),r:objs(o.recordatorios),c:objs(o.chats).map(c=>({id:c.id,t:c.title,k:(c.msgs||[]).length,l:lastOf(c)})),l:strs(o.lecciones),p:objs(o.proyectos),u:objs((o.presupuesto&&o.presupuesto.e)||[]).map(x=>x.id),z:Object.entries(o.tomb||{}).map(([k,v])=>k+":"+Object.keys(v||{}).sort().map(kk=>kk+((+v[kk]||0)>0?"+":"-")).join(",")).sort()});
 }
-const SYNC_TYPES=["m","n","t","h","r","c","l","p"];
+const SYNC_TYPES=["m","n","t","h","r","c","l","p","b"];
 function getTomb(){let t={};try{t=JSON.parse(store.get("lara_tomb","{}"))||{}}catch(e){}SYNC_TYPES.forEach(k=>{t[k]=(t[k]&&typeof t[k]==="object")?t[k]:{}});return t}
 function saveTomb(t){store.set("lara_tomb",JSON.stringify(t))}
 function getBase(){try{return JSON.parse(store.get("lara_syncbase","null"))}catch(e){return null}}
-function syncKeys(){return {m:mems.map(x=>norm(x)),n:notes.map(x=>norm(x).slice(0,200)),t:tasks.map(x=>x.id),h:habits.map(x=>x.id),r:rems.map(x=>x.id),c:chats.map(x=>x.id),l:getLessons().map(x=>norm(x)),p:getProjects().map(x=>norm(x.name))}}
+function syncKeys(){return {m:mems.map(x=>norm(x)),n:notes.map(x=>norm(x).slice(0,200)),t:tasks.map(x=>x.id),h:habits.map(x=>x.id),r:rems.map(x=>x.id),c:chats.map(x=>x.id),l:getLessons().map(x=>norm(x)),p:getProjects().map(x=>norm(x.name)),b:getBud().e.map(x=>x.id)}}
 function saveBase(){const b=syncKeys(),old=getBase(),conf=getConflicts().filter(c=>c.type==="project").map(c=>norm(c.id));b.pv={};getProjects().forEach(p=>{const k=norm(p.name);b.pv[k]=(conf.includes(k)&&old&&old.pv&&old.pv[k])?old.pv[k]:{g:p.goal||"",n:p.next||""}});store.set("lara_syncbase",JSON.stringify(b))}
 function detectDeletes(){
   const base=getBase(),cur=syncKeys(),tomb=getTomb(),now=Date.now(),newSets={};let suspicious=[];
@@ -2452,7 +2521,7 @@ function absorbTombs(remoteTomb,newSets){
   saveTomb(tomb);return tomb;
 }
 function countTombed(tomb){
-  return mems.filter(x=>tomb.m[norm(x)]>0).length+notes.filter(x=>tomb.n[norm(x).slice(0,200)]>0).length+tasks.filter(x=>tomb.t[x.id]>0).length+habits.filter(x=>tomb.h[x.id]>0).length+rems.filter(x=>tomb.r[x.id]>0).length+chats.filter(c=>c!==cur&&tomb.c[c.id]>0).length+getLessons().filter(x=>tomb.l[norm(x)]>0).length+getProjects().filter(x=>tomb.p[norm(x.name)]>0).length;
+  return mems.filter(x=>tomb.m[norm(x)]>0).length+notes.filter(x=>tomb.n[norm(x).slice(0,200)]>0).length+tasks.filter(x=>tomb.t[x.id]>0).length+habits.filter(x=>tomb.h[x.id]>0).length+rems.filter(x=>tomb.r[x.id]>0).length+chats.filter(c=>c!==cur&&tomb.c[c.id]>0).length+getLessons().filter(x=>tomb.l[norm(x)]>0).length+getProjects().filter(x=>tomb.p[norm(x.name)]>0).length+getBud().e.filter(x=>tomb.b[x.id]>0).length;
 }
 function purgeTombed(tomb){
   const n=countTombed(tomb);if(!n) return 0;
@@ -2461,6 +2530,7 @@ function purgeTombed(tomb){
   chats=chats.filter(c=>c===cur||!(tomb.c[c.id]>0));
   store.set("lara_lessons",JSON.stringify(getLessons().filter(x=>!(tomb.l[norm(x)]>0))));
   saveProjects(getProjects().filter(p=>!(tomb.p[norm(p.name)]>0)));
+  {const B=getBud();B.e=B.e.filter(x=>!(tomb.b[x.id]>0));saveBud(B)}
   saveNotes();saveRems();saveTasks();saveHabits();saveChatsRaw();saveMems();
   try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderMore()}catch(e){}try{renderChats()}catch(e){}
   return n;
@@ -2548,6 +2618,7 @@ async function snapRestore(t){
   store.set("lara_lessons",JSON.stringify((Array.isArray(d.lecciones)?d.lecciones:[]).filter(x=>typeof x==="string").slice(-15)));
   saveProjects(Array.isArray(d.proyectos)?d.proyectos.filter(p=>p&&typeof p.name==="string").map(p=>({id:String(p.id||uid()).slice(0,40),name:p.name.slice(0,60),goal:String(p.goal||"").slice(0,200),decisions:Array.isArray(p.decisions)?p.decisions.slice(0,40):[],next:String(p.next||"").slice(0,200),ts:+p.ts||Date.now()})):[]);
   store.set("lara_tomb",JSON.stringify(d.tomb||{}));
+  if(d.presupuesto&&Array.isArray(d.presupuesto.e)) saveBud({e:d.presupuesto.e.filter(x=>x&&typeof x.id==="string").slice(-3000),caps:d.presupuesto.caps||{}});
   store.set("lara_syncbase","");
   saveNotes();saveRems();saveTasks();saveHabits();saveChatsRaw();saveMems();store.set("lara_cur",cur.id);
   try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderMore()}catch(e){}try{renderChats()}catch(e){}try{render()}catch(e){}
@@ -2691,7 +2762,7 @@ function searchAll(q){
     const i=nm.n.indexOf(words[0]);return {t:t,o:nm.map[i]||0,w:words[0].length};
   };
   const G=[],add=(name,items)=>{if(items.length) G.push({name:name,items:items.slice(0,8),total:items.length})};
-  const go=fn=>()=>{$("search").classList.remove("open");fn()};
+  const go=fn=>()=>{$("gsearch").classList.remove("open");fn()};
   const ci=[];
   chats.slice().sort((a,b)=>b.ts-a.ts).forEach(c=>{
     let h=hit(c.title),src="título";
@@ -2704,6 +2775,8 @@ function searchAll(q){
   add("🔁 Hábitos",habits.map(x=>({h:hit(x.name),title:"Hábito",act:go(()=>$("openNotes").click())})).filter(x=>x.h));
   add("⏰ Recordatorios",rems.map(r=>({h:hit(r.text),title:"Recordatorio"+(r.at?" · "+new Date(r.at).toLocaleString("es",{dateStyle:"short",timeStyle:"short"}):""),act:go(()=>$("openNotes").click())})).filter(x=>x.h));
   add("📁 Proyectos",getProjects().map(p=>({h:hit([p.name,p.goal,p.next].concat((p.decisions||[]).map(d=>d.t)).filter(Boolean).join(" · ")),title:"Proyecto "+p.name,act:go(()=>$("openProj").click())})).filter(x=>x.h));
+  add("💰 Presupuesto",getBud().e.map(x=>({h:hit([x.c,x.d,x.a,x.t].join(" · ")),title:"Movimiento",act:go(()=>$("openBudget").click())})).filter(x=>x.h));
+  add("🎓 Estudio",getDecks().flatMap(d=>d.cards.map(c=>({h:hit(c.q+" "+c.ans),title:"Mazo «"+d.title+"»",act:go(()=>$("openQuiz").click())}))).filter(x=>x.h));
   add("🧠 Memoria",mems.map(m=>({h:hit(m),title:"Recuerdo",act:go(()=>$("openCfg").click())})).filter(x=>x.h));
   add("🧩 Lecciones",getLessons().map(m=>({h:hit(m),title:"Lección",act:go(()=>$("openCfg").click())})).filter(x=>x.h));
   return G;
@@ -2732,8 +2805,8 @@ function renderSearch(){
 }
 let _sqT=null;
 $("sq").addEventListener("input",()=>{clearTimeout(_sqT);_sqT=setTimeout(renderSearch,150)});
-$("openSearch").onclick=()=>{$("search").classList.add("open");$("sq").value="";$("sres").innerHTML="";setTimeout(()=>$("sq").focus(),80)};
-$("closeSearch").onclick=()=>$("search").classList.remove("open");
+$("openSearch").onclick=()=>{$("gsearch").classList.add("open");$("sq").value="";$("sres").innerHTML="";setTimeout(()=>$("sq").focus(),80)};
+$("closeSearch").onclick=()=>$("gsearch").classList.remove("open");
 
 /* ===== Activar accesos directos y compartir (manifest) ===== */
 async function manifestUpgrade(){
@@ -2991,6 +3064,13 @@ function buildDoc(){
       {h:"Decisiones",paras:(p.decisions||[]).length?p.decisions.map(d=>({text:"• "+d.t+(d.d?" ("+new Date(d.d).toLocaleDateString("es")+")":"")})):[{text:"(ninguna registrada)"}]},
       {h:"Próximo paso",paras:[{text:p.next||"(sin definir)"}]}]};
   }
+  if(t==="budget"){
+    const S=budSummary(budMonth);
+    return {title:"Presupuesto · "+budMonthLabel(budMonth),sub:sub,slug:"presupuesto",sections:[
+      {h:"Resumen",paras:[{text:"Ingresos: "+moneyN(S.inc)},{text:"Gastos: "+moneyN(S.out)},{text:"Balance: "+moneyN(S.bal)+(S.rate!==null?" · ahorro "+S.rate+"%":"")}]},
+      {h:"Gastos por categoría",paras:S.cats.length?S.cats.map(c=>({text:"• "+c.c+": "+moneyN(c.v)+" ("+c.p+"%)"})):[{text:"(sin gastos)"}]},
+      {h:"Movimientos",paras:S.entries.length?S.entries.map(x=>({text:(x.k==="i"?"＋ ":"－ ")+x.t+" · "+x.c+" · "+moneyN(budAmt(x.a))+(x.d?" · "+x.d:"")})):[{text:"(sin movimientos)"}]}]};
+  }
   if(t==="notes"){
     return {title:"Mis notas",sub:sub,slug:"notas",sections:[{h:"",paras:notes.length?notes.map(n=>({text:"• "+n})):[{text:"(no hay notas)"}]}]};
   }
@@ -3050,7 +3130,7 @@ const LMath=(function(){
 const BI=BigInt;
 function qn(n,d){n=BI(n);d=BI(d===undefined?1:d);if(d===0n) throw new Error("división entre cero");if(d<0n){n=-n;d=-d}let a=n<0n?-n:n,b=d;while(b){const t=a%b;a=b;b=t}if(a>1n){n/=a;d/=a}return {n:n,d:d}}
 const isQ=v=>!!v&&typeof v==="object"&&typeof v.n==="bigint";
-function toF(v){if(typeof v==="number") return v;if(typeof v!=="object") throw new Error("valor no numérico");if(v.d===1n) return Number(v.n);return Number(v.n*(10n**40n)/v.d)/1e40}
+function toF(v){if(typeof v==="number") return v;if(typeof v!=="object") throw new Error("valor no numérico");if(v.d===1n) return Number(v.n);const a=Number(v.n),b=Number(v.d);if(isFinite(a)&&isFinite(b)) return a/b;return Number(v.n*(10n**40n)/v.d)/1e40}
 const mAdd=(a,b)=>isQ(a)&&isQ(b)?qn(a.n*b.d+b.n*a.d,a.d*b.d):toF(a)+toF(b);
 const mSub=(a,b)=>isQ(a)&&isQ(b)?qn(a.n*b.d-b.n*a.d,a.d*b.d):toF(a)-toF(b);
 const mMul=(a,b)=>isQ(a)&&isQ(b)?qn(a.n*b.n,a.d*b.d):toF(a)*toF(b);
@@ -3434,6 +3514,532 @@ $("calcgo").onclick=()=>{
   o.textContent=r?r.replace(/\*\*/g,"").replace(/_/g,""):"Eso no parece una cuenta que yo pueda resolver sola. Pregúntaselo a Lara en el chat.";
 };
 $("calcin").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("calcgo").click()}});
+
+
+/* ===== Herramientas: navegación ===== */
+const TOOL_IDS=["budget","charts","quiz","calc","stats"];
+function openTool(id,fn){
+  $("tools").classList.remove("open");
+  TOOL_IDS.forEach(x=>{if(x!==id) $(x).classList.remove("open")});
+  $(id).classList.add("open");
+  if(fn) try{fn()}catch(e){toast("No pude abrir esto: "+(e.message||e))}
+}
+function closeTool(id,backToTools){$(id).classList.remove("open");if(backToTools) $("tools").classList.add("open")}
+$("openTools").onclick=()=>{TOOL_IDS.forEach(x=>$(x).classList.remove("open"));$("tools").classList.add("open")};
+$("closeTools").onclick=()=>$("tools").classList.remove("open");
+$("openProj").addEventListener("click",()=>$("tools").classList.remove("open"));
+$("openBudget").onclick=()=>openTool("budget",renderBudget);
+$("openCharts").onclick=()=>openTool("charts",chartsInit);
+$("openQuiz").onclick=()=>openTool("quiz",stuHome);
+$("openCalc").onclick=()=>openTool("calc",calInit);
+$("openStats").onclick=()=>openTool("stats",renderStats);
+TOOL_IDS.forEach(id=>{const b=document.querySelector('#'+id+' [data-back]');if(b) b.onclick=()=>closeTool(id,true)});
+
+/* ===== Estadísticas por día ===== */
+function dayKeyNow(){return isoLocal(new Date()).slice(0,10)}
+function getDays(){try{return JSON.parse(store.get("lara_days","{}"))||{}}catch(e){return{}}}
+function dayInc(f,n){
+  const D=getDays(),k=dayKeyNow();D[k]=D[k]||{};D[k][f]=(D[k][f]||0)+(n||1);
+  const ks=Object.keys(D).sort();while(ks.length>90) delete D[ks.shift()];
+  store.set("lara_days",JSON.stringify(D));
+}
+function lastDays(n){const out=[],d=new Date();d.setHours(12);for(let i=n-1;i>=0;i--){const x=new Date(d.getTime()-i*864e5);out.push({k:isoLocal(x).slice(0,10),d:x})}return out}
+
+/* ===== Gráficas (SVG) ===== */
+const PALETTE=["#0f766e","#2563eb","#d97706","#9333ea","#dc2626","#0891b2","#65a30d","#db2777","#4b5563","#ca8a04"];
+function fmtN(v){return Number.isInteger(v)?String(v):String(Math.round(v*100)/100)}
+function niceMax(v){if(v<=0) return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),f=v/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p}
+function chartWrap(title,inner,w,h){
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" font-family="system-ui,Segoe UI,Arial,sans-serif"><rect width="'+w+'" height="'+h+'" rx="14" fill="#ffffff"/><text x="16" y="27" font-size="15" font-weight="700" fill="#14201e">'+esc(title)+'</text>'+inner+'</svg>';
+}
+function svgBars(title,labels,values,o){
+  o=o||{};const w=360,h=250,L=40,R=12,T=46,B=46,iw=w-L-R,ih=h-T-B;
+  const showLim=o.limit&&Math.max.apply(null,values)>=o.limit*0.3,maxv=niceMax(Math.max.apply(null,values.concat([showLim?o.limit:0,1])));
+  let s="";
+  for(let i=0;i<=4;i++){const y=T+ih-ih*i/4;s+='<line x1="'+L+'" y1="'+y+'" x2="'+(w-R)+'" y2="'+y+'" stroke="#e3ebe8"/><text x="'+(L-6)+'" y="'+(y+4)+'" font-size="10" text-anchor="end" fill="#5b6a67">'+fmtN(maxv*i/4)+'</text>'}
+  const n=Math.max(1,values.length),bw=Math.max(4,iw/n*0.62);
+  values.forEach((v,i)=>{
+    const x=L+iw*(i+0.5)/n-bw/2,bh=ih*v/maxv,y=T+ih-bh;
+    s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,bh).toFixed(1)+'" rx="3" fill="'+(o.color||"#0f766e")+'"/>';
+    if(n<=16&&v>0) s+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y-4).toFixed(1)+'" font-size="9" text-anchor="middle" fill="#14201e">'+fmtN(v)+'</text>';
+    if(n<=16||i%Math.ceil(n/10)===0) s+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(h-B+16)+'" font-size="9" text-anchor="middle" fill="#5b6a67">'+esc(String(labels[i]))+'</text>';
+  });
+  if(showLim){const y=T+ih-ih*o.limit/maxv;s+='<line x1="'+L+'" y1="'+y+'" x2="'+(w-R)+'" y2="'+y+'" stroke="#b3261e" stroke-dasharray="5 4"/><text x="'+(w-R)+'" y="'+(y-4)+'" font-size="9" text-anchor="end" fill="#b3261e">límite '+o.limit+'</text>'}
+  if(o.sub) s+='<text x="'+(w/2)+'" y="'+(h-8)+'" font-size="10" text-anchor="middle" fill="#5b6a67">'+esc(o.sub+(o.limit&&!showLim?" · límite diario ~"+o.limit:""))+'</text>';
+  return chartWrap(title,s,w,h);
+}
+function svgHBars(title,rows,o){
+  o=o||{};const w=360,rh=30,T=44,h=T+rows.length*rh+16,L=118,R=70,iw=w-L-R;
+  const maxv=Math.max.apply(null,rows.map(r=>r.value).concat([1e-9]));
+  let s="";
+  rows.forEach((r,i)=>{
+    const y=T+i*rh,bw=Math.max(2,iw*r.value/maxv);
+    s+='<text x="'+(L-8)+'" y="'+(y+17)+'" font-size="11" text-anchor="end" fill="#14201e">'+esc(String(r.label).slice(0,18))+'</text><rect x="'+L+'" y="'+(y+5)+'" width="'+bw.toFixed(1)+'" height="16" rx="4" fill="'+(r.color||PALETTE[i%PALETTE.length])+'"/><text x="'+(L+bw+6).toFixed(1)+'" y="'+(y+17)+'" font-size="11" fill="#14201e">'+esc(String(r.txt!==undefined?r.txt:fmtN(r.value)))+'</text>';
+  });
+  return chartWrap(title,s,w,h);
+}
+function niceTicks(min,max,cnt){const raw=(max-min)/cnt,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p,step=(f<=1?1:f<=2?2:f<=5?5:10)*p,out=[];for(let v=Math.ceil(min/step-1e-9)*step;v<=max+1e-9&&out.length<20;v+=step) out.push(+v.toFixed(10));return out}
+function svgFunc(title,segs,rg,roots){
+  const w=360,h=300,L=38,R=14,T=44,B=34,iw=w-L-R,ih=h-T-B;
+  const X=x=>L+iw*(x-rg.xmin)/(rg.xmax-rg.xmin),Y=y=>T+ih-ih*(y-rg.ymin)/(rg.ymax-rg.ymin);
+  let s="";
+  niceTicks(rg.xmin,rg.xmax,5).forEach(gx=>{
+    s+='<line x1="'+X(gx).toFixed(1)+'" y1="'+T+'" x2="'+X(gx).toFixed(1)+'" y2="'+(T+ih)+'" stroke="#eef3f1"/><text x="'+X(gx).toFixed(1)+'" y="'+(h-B+14)+'" font-size="9" text-anchor="middle" fill="#5b6a67">'+fmtN(gx)+'</text>';
+  });
+  niceTicks(rg.ymin,rg.ymax,5).forEach(gy=>{
+    s+='<line x1="'+L+'" y1="'+Y(gy).toFixed(1)+'" x2="'+(w-R)+'" y2="'+Y(gy).toFixed(1)+'" stroke="#eef3f1"/><text x="'+(L-5)+'" y="'+(Y(gy)+3).toFixed(1)+'" font-size="9" text-anchor="end" fill="#5b6a67">'+fmtN(gy)+'</text>';
+  });
+  if(rg.xmin<0&&rg.xmax>0) s+='<line x1="'+X(0).toFixed(1)+'" y1="'+T+'" x2="'+X(0).toFixed(1)+'" y2="'+(T+ih)+'" stroke="#94a3a0" stroke-width="1.5"/>';
+  if(rg.ymin<0&&rg.ymax>0) s+='<line x1="'+L+'" y1="'+Y(0).toFixed(1)+'" x2="'+(w-R)+'" y2="'+Y(0).toFixed(1)+'" stroke="#94a3a0" stroke-width="1.5"/>';
+  segs.forEach(seg=>{if(seg.length>1) s+='<polyline fill="none" stroke="#0f766e" stroke-width="2.2" stroke-linejoin="round" points="'+seg.map(p=>X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join(" ")+'"/>'});
+  (roots||[]).forEach(r=>{s+='<circle cx="'+X(r).toFixed(1)+'" cy="'+Y(0).toFixed(1)+'" r="4" fill="#d97706" stroke="#fff"/>'});
+  return chartWrap(title,s,w,h);
+}
+async function svgToPng(svg,w,h){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{const c=document.createElement("canvas");c.width=w*2;c.height=h*2;const x=c.getContext("2d");x.drawImage(img,0,0,w*2,h*2);c.toBlob(b=>b?res(b):rej(new Error("no pude crear la imagen")),"image/png")};
+    img.onerror=()=>rej(new Error("no pude dibujar la gráfica"));
+    img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+  });
+}
+async function saveChartPng(svg,name){
+  const m=svg.match(/width="(\d+)" height="(\d+)"/);
+  const blob=await svgToPng(svg,+m[1],+m[2]);downloadBlob(blob,name);
+}
+
+/* ===== Estadísticas de uso ===== */
+function renderStats(){
+  const box=$("statsbox");box.innerHTML="";
+  const D=getDays(),days=lastDays(14),u=useData(),lim=dailyLimit();
+  const q=days.map(x=>(D[x.k]||{}).q||0),s=days.map(x=>(D[x.k]||{}).s||0),e=days.map(x=>(D[x.k]||{}).e||0),l=days.map(x=>(D[x.k]||{}).l||0);
+  const sum=a=>a.reduce((p,c)=>p+c,0),last7=q.slice(-7);
+  const best=q.indexOf(Math.max.apply(null,q));
+  const hr=new Date().getHours()+new Date().getMinutes()/60;
+  const proj=hr>=1&&u.n>0?Math.round(u.n/hr*24):null;
+  const lines=[
+    "📅 Hoy: "+u.n+" consultas de ~"+lim+" ("+Math.round(u.n/lim*100)+"%)"+(saverOn()?" · modo ahorro activo":""),
+    proj!==null?"🔮 A este ritmo terminarás el día con ~"+proj+" consultas"+(proj>lim?" (pasarías tu límite)":"."):"",
+    "🗓️ Últimos 7 días: "+sum(last7)+" consultas · promedio "+fmtN(sum(last7)/7)+" por día",
+    q[best]>0?"⭐ Día más activo (14 días): "+days[best].d.toLocaleDateString("es",{weekday:"long",day:"numeric",month:"short"})+" con "+q[best]+" consultas":"",
+    "💬 Mensajes enviados (14 días): "+sum(s),
+    "🧮 Cuentas resueltas en el teléfono, sin gastar cuota (14 días): "+sum(l),
+    "⚠️ Problemas (errores, 👎, regeneraciones, 14 días): "+sum(e)
+  ].filter(Boolean);
+  const p=document.createElement("div");p.className="hint";p.style.cssText="font-size:14px;color:var(--ink);white-space:pre-wrap";p.textContent=lines.join("\n");box.appendChild(p);
+  const mm=Object.entries(u.m||{}).sort((a,b)=>b[1]-a[1]);
+  if(mm.length){const m=document.createElement("div");m.className="hint";m.style.cssText="margin-top:8px;font-size:13px";m.textContent="Modelos usados hoy: "+mm.map(x=>x[0]+" ("+x[1]+")").join(" · ");box.appendChild(m)}
+  const ch=document.createElement("div");ch.style.cssText="margin-top:14px;overflow-x:auto";
+  ch.innerHTML=svgBars("Consultas a Gemini por día",days.map(x=>x.d.getDate()),q,{limit:lim,sub:"Últimos 14 días"});
+  box.appendChild(ch);
+  const sv=chartSvgOf(ch);window._lastStatsSvg=sv;
+}
+function chartSvgOf(el){const s=el.querySelector("svg");return s?new XMLSerializer().serializeToString(s):""}
+$("statsreset").onclick=()=>{if(confirm("¿Borrar el historial de estadísticas de uso?")){store.set("lara_days","{}");renderStats()}};
+$("statspng").onclick=async()=>{try{await saveChartPng(window._lastStatsSvg||chartSvgOf($("statsbox")),"lara-estadisticas-"+dayKeyNow()+".png");toast("✅ Imagen guardada en tus descargas.")}catch(e){toast("❌ "+(e.message||e))}};
+
+/* ===== Gráficas: interfaz ===== */
+function chartsInit(){chOnType()}
+function chOnType(){
+  const t=$("chtype").value;
+  $("chfnrow").style.display=t==="fn"?"block":"none";
+  chDraw();
+}
+function fnPoints(expr,xmin,xmax,n){
+  const src=expr.replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*/i,"");
+  const pts=[];
+  const f=x=>{const env=new Map([["x",x]]);const r=LMath.evalMath(src,env);const v=LMath.isQ(r.value)?LMath.toF(r.value):r.value;return typeof v==="number"&&isFinite(v)?v:null};
+  f(0.5);
+  for(let i=0;i<=n;i++){const x=xmin+(xmax-xmin)*i/n;let y=null;try{y=f(x)}catch(e){if(e instanceof LMath.MathUnknown||e instanceof LMath.MathSyntax) throw e}pts.push([x,y])}
+  return {pts:pts,f:f};
+}
+function chFn(){
+  const expr=$("chfn").value.trim();if(!expr) throw new Error("Escribe una función, por ejemplo x^2-4.");
+  let xmin=parseFloat($("chxmin").value),xmax=parseFloat($("chxmax").value);
+  if(!isFinite(xmin)) xmin=-10;if(!isFinite(xmax)) xmax=10;
+  if(xmax<=xmin) throw new Error("El mínimo de x debe ser menor que el máximo.");
+  const {pts,f}=fnPoints(expr,xmin,xmax,240);
+  const ys=pts.map(p=>p[1]).filter(v=>v!==null).sort((a,b)=>a-b);
+  if(ys.length<3) throw new Error("No pude calcular valores para esa función en ese rango.");
+  let lo=ys[Math.floor(ys.length*0.02)],hi=ys[Math.ceil(ys.length*0.98)-1];
+  if(hi-lo<1e-9){lo-=1;hi+=1}
+  const pad=(hi-lo)*0.12;lo-=pad;hi+=pad;
+  const rg={xmin:xmin,xmax:xmax,ymin:lo,ymax:hi},segs=[];let cur=[];
+  pts.forEach((p,i)=>{
+    const ok=p[1]!==null&&p[1]>=lo-(hi-lo)*0.5&&p[1]<=hi+(hi-lo)*0.5;
+    const prev=pts[i-1];
+    if(!ok||(prev&&prev[1]!==null&&Math.abs(p[1]-prev[1])>(hi-lo)*1.5)){if(cur.length) segs.push(cur);cur=[];if(ok) cur.push(p);return}
+    cur.push(p);
+  });
+  if(cur.length) segs.push(cur);
+  const roots=[];
+  for(let i=1;i<pts.length&&roots.length<6;i++){
+    const a=pts[i-1],b=pts[i];if(a[1]===null||b[1]===null) continue;
+    if(a[1]===0) {roots.push(a[0]);continue}
+    if(a[1]*b[1]<0&&Math.abs(a[1]-b[1])<(hi-lo)*1.5){
+      let l=a[0],r=b[0],fl=a[1];
+      for(let k=0;k<40;k++){const m=(l+r)/2,fm=f(m);if(fm===null) break;if(fl*fm<=0) r=m;else{l=m;fl=fm}}
+      roots.push((l+r)/2);
+    }
+  }
+  const clean=expr.replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*/i,"");
+  return {svg:svgFunc("y = "+clean,segs,rg,roots),info:roots.length?"Cortes con el eje x (raíces aproximadas): "+roots.map(r=>"x ≈ "+fmtN(Math.round(r*1e4)/1e4)).join(" · "):"No se ven cortes con el eje x en este rango."};
+}
+function chHabits(){
+  const H=habits;if(!H.length) return {svg:"",info:"Todavía no tienes hábitos. Créalos en 📝 Notas."};
+  const days=lastDays(14),vals=days.map(x=>H.filter(h=>h.days.includes(x.k)).length);
+  const svg=svgBars("Hábitos cumplidos por día",days.map(x=>x.d.getDate()),vals,{sub:"Últimos 14 días · "+H.length+" hábito"+(H.length>1?"s":"")});
+  const d30=lastDays(30);
+  const info=H.map(h=>{const c=d30.filter(x=>h.days.includes(x.k)).length;return "• "+h.name+": "+c+" de 30 días ("+Math.round(c/30*100)+"%) · racha "+streak(h)}).join("\n");
+  return {svg:svg,info:info};
+}
+function chSpend(){
+  const m=budMonthKey(),S=budSummary(m);
+  if(!S.cats.length) return {svg:"",info:"No hay gastos anotados en "+budMonthLabel(m)+". Anótalos en 💰 Presupuesto."};
+  const rows=S.cats.map((c,i)=>({label:c.c,value:c.v,txt:moneyN(c.v)+" ("+c.p+"%)",color:PALETTE[i%PALETTE.length]}));
+  return {svg:svgHBars("Gastos por categoría · "+budMonthLabel(m),rows),info:"Gastos: "+moneyN(S.out)+" · Ingresos: "+moneyN(S.inc)+" · Balance: "+moneyN(S.bal)};
+}
+function chUsage(){
+  const D=getDays(),days=lastDays(14),q=days.map(x=>(D[x.k]||{}).q||0);
+  return {svg:svgBars("Consultas a Gemini por día",days.map(x=>x.d.getDate()),q,{limit:dailyLimit(),sub:"Últimos 14 días"}),info:"Hoy: "+useData().n+" consultas de ~"+dailyLimit()+"."};
+}
+function chDraw(){
+  const out=$("chout"),info=$("chinfo");out.innerHTML="";info.textContent="";
+  try{
+    const t=$("chtype").value,r=t==="fn"?chFn():t==="hab"?chHabits():t==="spend"?chSpend():chUsage();
+    out.innerHTML=r.svg;info.textContent=r.info||"";
+    window._lastChartSvg=r.svg;$("chpng").disabled=!r.svg;
+  }catch(e){info.textContent="⚠️ "+(e.message||e);window._lastChartSvg="";$("chpng").disabled=true}
+}
+$("chtype").onchange=chOnType;
+$("chdraw").onclick=chDraw;
+$("chpng").onclick=async()=>{try{await saveChartPng(window._lastChartSvg,"lara-grafica-"+dayKeyNow()+".png");toast("✅ Imagen guardada en tus descargas.")}catch(e){toast("❌ "+(e.message||e))}};
+["chfn","chxmin","chxmax"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();chDraw()}}));
+
+/* ===== Calculadora con historial ===== */
+const CAL_KEYS=[["C","⌫","(",")"],["7","8","9","÷"],["4","5","6","×"],["1","2","3","−"],["0",".","%","+"],["√","^","!","π"],["ANS","x²","1/x","="]];
+const calEnv=new Map();let calDone=false;
+function calHist(){try{return JSON.parse(store.get("lara_calchist","[]"))||[]}catch(e){return[]}}
+function calClean(s){let t=String(s).trim();if(!/[a-zA-Z]\s*\(/.test(t)) t=t.replace(/(\d),(\d{1,2})(?!\d)/g,"$1.$2");return t}
+function calInsert(txt){
+  if(calDone){$("calin").value=/^[+\-−×÷^%!]/.test(txt)?"ans":"";calDone=false}
+  const i=$("calin"),a=i.selectionStart==null?i.value.length:i.selectionStart,b=i.selectionEnd==null?a:i.selectionEnd;
+  i.value=i.value.slice(0,a)+txt+i.value.slice(b);const p=a+txt.length;try{i.setSelectionRange(p,p)}catch(e){}
+  calPreview();
+}
+function calPreview(){
+  const v=$("calin").value.trim(),o=$("calprev");
+  if(!v||v.includes("=")){o.textContent="";return}
+  try{const r=LMath.evalMath(calClean(v),new Map(calEnv));o.textContent=r.used?"= "+LMath.fmtFull(r.value).replace(/(^|[^\d.])-(?=\d)/g,"$1−"):""}catch(e){o.textContent=""}
+}
+function calEquals(){
+  const raw=$("calin").value.trim();if(!raw) return;
+  const v=calClean(raw),o=$("calres");
+  try{
+    let text,val=null;
+    if(v.includes("=")){const r=LMath.solveEquation(v);if(!r) throw new Error("no sé resolver esa ecuación aquí; pregúntasela a Lara en el chat");text=r;}
+    else{const r=LMath.evalMath(v,calEnv);val=r.value;text=raw.replace(/\*/g,"×")+" = "+LMath.fmtFull(r.value).replace(/(^|[^\d.])-(?=\d)/g,"$1−");calEnv.set("ans",r.value);calDone=true}
+    o.textContent=text;o.style.color="var(--ink)";
+    const H=calHist();H.unshift({e:raw,r:text.includes("\n")?text.split("\n")[0]:text,t:Date.now(),eq:v.includes("=")});store.set("lara_calchist",JSON.stringify(H.slice(0,30)));
+    calRenderHist();
+  }catch(e){o.textContent="⚠️ "+(e.message||e);o.style.color="var(--danger)"}
+}
+function calRenderHist(){
+  const box=$("calhist");box.innerHTML="";const H=calHist();
+  if(!H.length){empty(box,"Aquí aparecerán tus últimas cuentas.");return}
+  H.slice(0,15).forEach(h=>{
+    const d=document.createElement("div");d.className="mem";
+    const sp=document.createElement("span");sp.style.cssText="overflow-wrap:anywhere";sp.textContent=h.r;
+    const w=document.createElement("div");w.style.cssText="display:flex;gap:6px;flex:none";
+    w.append(btn("Usar",()=>{$("calin").value=h.e;calPreview();$("calin").focus()}),btn("Al chat",()=>{$("t").value=h.r;closeTool("calc",false);$("t").focus()}));
+    d.append(sp,w);box.appendChild(d);
+  });
+}
+function calInit(){calRenderHist();setTimeout(()=>{try{$("calin").focus()}catch(e){}},100)}
+(function(){
+  const kp=$("calkeys");
+  CAL_KEYS.forEach(r=>r.forEach(k=>{
+    const b=document.createElement("button");b.type="button";b.textContent=k;
+    if("÷×−+^%=".includes(k)&&k.length===1) b.className=k==="="?"main":"op";
+    b.onclick=()=>{
+      if(k==="C"){$("calin").value="";$("calprev").textContent="";$("calres").textContent="";return}
+      if(k==="⌫"){const i=$("calin"),a=i.selectionStart==null?i.value.length:i.selectionStart;if(a>0){i.value=i.value.slice(0,a-1)+i.value.slice(a);try{i.setSelectionRange(a-1,a-1)}catch(e){}}calPreview();return}
+      if(k==="="){calEquals();return}
+      if(k==="√"){calInsert("√(");return}
+      if(k==="x²"){calInsert("^2");return}
+      if(k==="1/x"){calInsert("1/(");return}
+      if(k==="ANS"){calInsert("ans");return}
+      calInsert(k);
+    };
+    kp.appendChild(b);
+  }));
+  $("calin").addEventListener("input",()=>{calDone=false;calPreview()});
+  $("calin").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();calEquals()}});
+  $("calclear").onclick=()=>{if(calHist().length&&confirm("¿Borrar el historial de la calculadora?")){store.set("lara_calchist","[]");calRenderHist()}};
+})();
+
+/* ===== Presupuesto personal (cálculo exacto) ===== */
+const BUD_CATS=["Comida","Transporte","Hogar","Salud","Educación","Ofrendas y diezmos","Ocio","Ahorro","Otros"];
+let budMonth=dayKeyNow().slice(0,7);
+function getBud(){try{const b=JSON.parse(store.get("lara_budget","{}"))||{};b.e=Array.isArray(b.e)?b.e:[];b.caps=(b.caps&&typeof b.caps==="object")?b.caps:{};return b}catch(e){return{e:[],caps:{}}}}
+function saveBud(b){store.set("lara_budget",JSON.stringify({e:b.e.slice(-3000),caps:b.caps}))}
+function budMonthKey(){return budMonth}
+function budMonthLabel(m){const d=new Date(m+"-15T12:00:00");return d.toLocaleDateString("es",{month:"long",year:"numeric"})}
+function budAmt(s){const t=normNum(String(s).replace(/[^\d.,]/g,""));if(!t) throw new Error("Escribe un monto válido.");return LMath.numQ(t)}
+function q0(){return LMath.qn(0)}
+function qAdd(a,b){return LMath.qn(a.n*b.d+b.n*a.d,a.d*b.d)}
+function moneyN(q){const x=typeof q==="number"?q:LMath.toF(q);const sym=store.get("lara_cur","$");return sym+" "+new Intl.NumberFormat(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}).format(x)}
+function budSummary(m){
+  const b=getBud(),E=b.e.filter(x=>String(x.t).slice(0,7)===m);
+  let inc=q0(),out=q0();const byCat={};
+  E.forEach(x=>{try{const a=budAmt(x.a);if(x.k==="i") inc=qAdd(inc,a);else{out=qAdd(out,a);byCat[x.c]=qAdd(byCat[x.c]||q0(),a)}}catch(e){}});
+  const bal=qAdd(inc,LMath.qn(-out.n,out.d));
+  const cats=Object.keys(byCat).map(c=>({c:c,q:byCat[c],v:LMath.toF(byCat[c]),p:out.n===0n?0:Math.round(LMath.toF(byCat[c])/LMath.toF(out)*1000)/10})).sort((a,b)=>b.v-a.v);
+  return {inc:LMath.toF(inc),out:LMath.toF(out),bal:LMath.toF(bal),incQ:inc,outQ:out,balQ:bal,cats:cats,entries:E.sort((a,b)=>String(b.t).localeCompare(String(a.t))),rate:inc.n===0n?null:Math.round(LMath.toF(bal)/LMath.toF(inc)*1000)/10,caps:b.caps};
+}
+function renderBudget(){
+  const S=budSummary(budMonth),box=$("budbox");box.innerHTML="";
+  $("budmonth").textContent=budMonthLabel(budMonth);
+  const sum=document.createElement("div");sum.className="mem";sum.style.cssText="flex-direction:column;align-items:stretch;gap:4px;font-size:15px";
+  const rowS=(l,v,c)=>{const d=document.createElement("div");d.style.cssText="display:flex;justify-content:space-between;gap:10px";const a=document.createElement("span");a.textContent=l;const b=document.createElement("b");b.textContent=v;if(c) b.style.color=c;d.append(a,b);return d};
+  sum.append(rowS("Ingresos",moneyN(S.inc),"#15803d"),rowS("Gastos",moneyN(S.out),"var(--danger)"),rowS("Balance",moneyN(S.bal),S.bal<0?"var(--danger)":"#15803d"));
+  if(S.rate!==null) sum.appendChild(rowS("Ahorro del mes",S.rate+"% de tus ingresos"));
+  box.appendChild(sum);
+  if(S.cats.length){
+    const h=document.createElement("div");h.className="hint";h.style.cssText="margin-top:12px;font-weight:600;color:var(--ink)";h.textContent="Gastos por categoría";box.appendChild(h);
+    S.cats.forEach(c=>{
+      const d=document.createElement("div");d.className="mem";d.style.cssText="flex-direction:column;align-items:stretch;gap:4px";
+      const top=document.createElement("div");top.style.cssText="display:flex;justify-content:space-between;gap:8px";
+      const l=document.createElement("span");l.textContent=c.c+" · "+c.p+"%";const v=document.createElement("b");v.textContent=moneyN(c.v);top.append(l,v);d.appendChild(top);
+      const cap=S.caps[c.c];let pctc=null;
+      if(cap){try{const cq=budAmt(cap);pctc=Math.round(c.v/LMath.toF(cq)*100)}catch(e){}}
+      const bar=document.createElement("div");bar.style.cssText="height:8px;border-radius:6px;background:var(--line);overflow:hidden";
+      const fill=document.createElement("div");fill.style.cssText="height:100%;width:"+Math.min(100,pctc!==null?pctc:c.p)+"%;background:"+(pctc!==null&&pctc>=100?"var(--danger)":pctc!==null&&pctc>=80?"#d97706":"var(--accent)");bar.appendChild(fill);d.appendChild(bar);
+      const foot=document.createElement("div");foot.style.cssText="display:flex;justify-content:space-between;align-items:center;gap:8px;font:12px var(--ui);color:var(--muted)";
+      const ft=document.createElement("span");ft.textContent=cap?("Límite "+moneyN(budAmt(cap))+" · usado "+pctc+"%"+(pctc>=100?" · ¡te pasaste!":pctc>=80?" · cerca del límite":"")):"Sin límite";
+      const cb=btn(cap?"Cambiar límite":"Poner límite",()=>{const v=prompt("Límite mensual para «"+c.c+"» (deja vacío para quitarlo):",cap||"");if(v===null) return;const B=getBud();if(v.trim()){try{budAmt(v);B.caps[c.c]=v.trim()}catch(e){toast("Monto no válido");return}}else delete B.caps[c.c];saveBud(B);renderBudget()});cb.style.padding="4px 10px";cb.style.fontSize="12px";
+      foot.append(ft,cb);d.appendChild(foot);box.appendChild(d);
+    });
+  }
+  const h2=document.createElement("div");h2.className="hint";h2.style.cssText="margin-top:12px;font-weight:600;color:var(--ink)";h2.textContent="Movimientos ("+S.entries.length+")";box.appendChild(h2);
+  if(!S.entries.length) empty(box,"No hay movimientos este mes.");
+  S.entries.slice(0,60).forEach(x=>{
+    const d=document.createElement("div");d.className="mem";
+    const sp=document.createElement("span");sp.style.cssText="overflow-wrap:anywhere";
+    const t=document.createElement("b");t.textContent=(x.k==="i"?"＋ ":"－ ")+moneyN(budAmt(x.a));t.style.color=x.k==="i"?"#15803d":"var(--danger)";sp.appendChild(t);
+    const sm=document.createElement("small");sm.style.cssText="display:block;color:var(--muted)";sm.textContent=new Date(x.t+"T12:00:00").toLocaleDateString("es",{day:"numeric",month:"short"})+" · "+x.c+(x.d?" · "+x.d:"");sp.appendChild(sm);
+    d.append(sp,btn("Borrar",()=>{const B=getBud();B.e=B.e.filter(y=>y.id!==x.id);saveBud(B);renderBudget()}));box.appendChild(d);
+  });
+}
+function budAdd(){
+  try{
+    const a=budAmt($("budamt").value),k=$("budkind").value,c=$("budcat").value.trim()||(k==="i"?"Ingreso":"Otros");
+    const t=$("buddate").value||dayKeyNow();
+    const B=getBud();B.e.push({id:uid(),k:k,c:c.slice(0,30),d:$("buddesc").value.trim().slice(0,60),a:LMath.fmtDec(a,2),t:t});saveBud(B);
+    $("budamt").value="";$("buddesc").value="";budMonth=t.slice(0,7);renderBudget();toast("✅ Anotado.");
+  }catch(e){toast("⚠️ "+(e.message||e))}
+}
+(function(){
+  const dl=$("budcats");BUD_CATS.forEach(c=>{const o=document.createElement("option");o.value=c;dl.appendChild(o)});
+  $("buddate").value=dayKeyNow();
+  $("budadd").onclick=budAdd;
+  $("budamt").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();budAdd()}});
+  const mv=n=>{const d=new Date(budMonth+"-15T12:00:00");d.setMonth(d.getMonth()+n);budMonth=isoLocal(d).slice(0,7);renderBudget()};
+  $("budprev").onclick=()=>mv(-1);$("budnext").onclick=()=>mv(1);
+  $("budcur").value=store.get("lara_cur","$");$("budcur").onchange=e=>{store.set("lara_cur",(e.target.value||"$").slice(0,4));renderBudget()};
+  $("budexp").onclick=()=>{$("exptype").value="budget";fillExportLists();$("tools").classList.remove("open");$("budget").classList.remove("open");$("openCfg").click();setTimeout(()=>{try{$("exptype").scrollIntoView({block:"center"})}catch(e){}},300)};
+})();
+
+function mergeBudget(pr,TB){
+  if(!pr||!Array.isArray(pr.e)) return 0;
+  const B=getBud();let ch=0;TB=TB||getTomb();
+  pr.e.slice(-3000).forEach(x=>{
+    if(!x||typeof x.id!=="string"||(TB.b&&TB.b[x.id]>0)||B.e.some(y=>y.id===x.id)) return;
+    try{budAmt(x.a)}catch(e){return}
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(x.t))) return;
+    B.e.push({id:x.id.slice(0,40),k:x.k==="i"?"i":"o",c:String(x.c||"Otros").slice(0,30),d:String(x.d||"").slice(0,60),a:String(x.a).slice(0,20),t:x.t});ch++;
+  });
+  Object.keys(pr.caps||{}).slice(0,30).forEach(c=>{if(!(c in B.caps)&&typeof pr.caps[c]==="string"){B.caps[String(c).slice(0,30)]=pr.caps[c].slice(0,20);ch++}});
+  if(ch) saveBud(B);
+  return ch;
+}
+
+/* ===== Modo estudio ===== */
+const LEIT=[0,0,1,3,7,21,60];
+let STU=null;
+function getDecks(){try{return JSON.parse(store.get("lara_decks","[]"))||[]}catch(e){return[]}}
+function saveDecks(a){store.set("lara_decks",JSON.stringify(a.slice(0,30)))}
+function stuDue(){const now=Date.now(),out=[];getDecks().forEach(d=>d.cards.forEach(c=>{if((c.due||0)<=now) out.push({d:d,c:c})}));return out}
+function stuBox(){const b=$("stubox");b.innerHTML="";return b}
+function stuHome(){
+  STU=null;const box=stuBox(),decks=getDecks(),due=stuDue();
+  const intro=document.createElement("p");intro.className="hint";intro.textContent="Practica con preguntas. Los mazos de Gemini se repasan con repetición espaciada (lo que fallas vuelve antes). La práctica de matemáticas la genera Lara en tu teléfono, sin gastar cuota.";box.appendChild(intro);
+  const r=document.createElement("div");r.className="row";r.style.marginTop="8px";
+  r.append(btn("➕ Nuevo mazo con Gemini",stuNewForm),btn("🧮 Práctica de matemáticas",stuMathForm));box.appendChild(r);
+  if(due.length){const b2=btn("▶ Repasar lo pendiente ("+due.length+")",()=>stuStart(due.slice(0,12).map(x=>({deckId:x.d.id,card:x.c})),"Repaso pendiente"));b2.className="main";b2.style.marginTop="10px";box.appendChild(b2)}
+  const h=document.createElement("div");h.className="hint";h.style.cssText="margin-top:14px;font-weight:600;color:var(--ink)";h.textContent="Mis mazos ("+decks.length+")";box.appendChild(h);
+  if(!decks.length) empty(box,"Todavía no tienes mazos.");
+  decks.forEach(d=>{
+    const el=document.createElement("div");el.className="mem";
+    const dueN=d.cards.filter(c=>(c.due||0)<=Date.now()).length;
+    const sp=document.createElement("span");const t=document.createElement("b");t.textContent="🎓 "+d.title;sp.appendChild(t);
+    const sm=document.createElement("small");sm.style.cssText="display:block;color:var(--muted)";sm.textContent=d.cards.length+" preguntas · "+dueN+" por repasar";sp.appendChild(sm);
+    const w=document.createElement("div");w.style.cssText="display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end";
+    w.append(btn("Estudiar",()=>stuStart(d.cards.map(c=>({deckId:d.id,card:c})).sort(()=>Math.random()-0.5).slice(0,12),d.title)),btn("Borrar",()=>{if(confirm("¿Borrar el mazo «"+d.title+"»?")){saveDecks(getDecks().filter(x=>x.id!==d.id));stuHome()}}));
+    el.append(sp,w);box.appendChild(el);
+  });
+}
+function stuNewForm(){
+  const box=stuBox();
+  const h=document.createElement("h2");h.style.cssText="font:600 1.15rem var(--serif);margin:0 0 8px";h.textContent="Nuevo mazo con Gemini";box.appendChild(h);
+  const mk=(lab,el)=>{const l=document.createElement("label");l.textContent=lab;box.appendChild(l);box.appendChild(el);return el};
+  const src=document.createElement("select");[["tema","Un tema que escribo"],["nota","Una de mis notas"],["chat","El chat actual"],["proy","Un proyecto"]].forEach(o=>{const x=document.createElement("option");x.value=o[0];x.textContent=o[1];src.appendChild(x)});mk("¿Sobre qué quieres practicar?",src);
+  const topic=document.createElement("textarea");topic.rows=3;topic.placeholder="Ej: Los 12 apóstoles · Fotosíntesis · Pegar aquí el texto a estudiar";mk("Tema o texto",topic);
+  const nsel=document.createElement("select");[5,8,10,12].forEach(n=>{const x=document.createElement("option");x.value=n;x.textContent=n+" preguntas";nsel.appendChild(x)});nsel.value="8";mk("Cantidad",nsel);
+  const tsel=document.createElement("select");[["mc","Opción múltiple"],["tf","Verdadero o falso"],["short","Respuesta corta"],["mix","Mezcla"]].forEach(o=>{const x=document.createElement("option");x.value=o[0];x.textContent=o[1];tsel.appendChild(x)});tsel.value="mix";mk("Tipo",tsel);
+  const pick=document.createElement("select");pick.style.display="none";box.appendChild(pick);
+  const fillPick=()=>{
+    pick.innerHTML="";const v=src.value;topic.style.display=v==="tema"?"block":"none";pick.style.display=(v==="nota"||v==="proy")?"block":"none";
+    if(v==="nota") notes.forEach((n,i)=>{const o=document.createElement("option");o.value=i;o.textContent=n.slice(0,60);pick.appendChild(o)});
+    if(v==="proy") getProjects().forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name;pick.appendChild(o)});
+  };
+  src.onchange=fillPick;fillPick();
+  const note=document.createElement("p");note.className="hint";note.textContent="Si das un texto, las preguntas salen solo de ese texto. Si solo das un tema, salen del conocimiento de Gemini: verifica las respuestas importantes (por ejemplo, con tu Biblia). Usa 1 consulta.";box.appendChild(note);
+  const st=document.createElement("div");st.className="hint";st.style.cssText="font-size:14px;color:var(--ink)";
+  const go=btn("Generar preguntas",async()=>{
+    let material="",title="";
+    if(src.value==="tema"){material=topic.value.trim();title=material.split("\n")[0].slice(0,40)}
+    else if(src.value==="nota"){material=notes[+pick.value]||"";title="Nota: "+material.slice(0,30)}
+    else if(src.value==="chat"){material=cur.msgs.map(m=>(m.role==="user"?"Usuario: ":"Lara: ")+((m.parts[0]||{}).text||"")).join("\n").slice(-6000);title="Chat: "+(cur.title||"actual")}
+    else{const p=getProjects().find(x=>x.id===pick.value);if(p){material="Proyecto "+p.name+". Objetivo: "+(p.goal||"")+". Decisiones: "+(p.decisions||[]).map(d=>d.t).join("; ")+". Próximo paso: "+(p.next||"");title="Proyecto "+p.name}}
+    if(!material||material.length<3){st.textContent="⚠️ Escribe un tema o elige algo para estudiar.";return}
+    if(usagePct()>=0.8&&!confirm("Ya llevas "+useData().n+" consultas hoy. ¿Seguir?")) return;
+    go.disabled=true;st.textContent="⏳ Gemini está preparando las preguntas…";
+    try{
+      const deck=await stuGenDeck(title||"Mazo",material,+nsel.value,tsel.value,src.value==="tema"&&material.length<120);
+      const D=getDecks();D.unshift(deck);saveDecks(D);
+      stuStart(deck.cards.map(c=>({deckId:deck.id,card:c})),deck.title);
+    }catch(e){st.textContent="❌ "+(e.message||e);go.disabled=false}
+  });
+  go.className="main";go.style.marginTop="10px";box.appendChild(go);
+  const back=btn("Volver",stuHome);back.style.cssText="margin:10px 0 0 8px";box.appendChild(back);box.appendChild(st);
+}
+async function stuGenDeck(title,material,n,type,fromMemory){
+  const key=store.get("lara_key","");if(!key) throw new Error("Falta la clave de Gemini en Ajustes.");
+  const model=store.get("lara_model_ok","")||store.get("lara_model","")||FALLBACK[0];
+  const tdesc={mc:"todas de opción múltiple (4 opciones)",tf:"todas de verdadero o falso",short:"todas de respuesta corta",mix:"una mezcla de opción múltiple, verdadero/falso y respuesta corta"}[type];
+  const prompt="Eres un tutor. Crea exactamente "+n+" preguntas de estudio en español, "+tdesc+". "+(fromMemory?"No hay material: usa conocimiento general confiable y en «explanation» recuerda verificar los datos delicados.":"Basa las preguntas SOLO en el MATERIAL. No inventes datos ni citas que no estén en él.")+" Devuelve SOLO JSON: {\"title\":\"título corto\",\"cards\":[{\"type\":\"mc|tf|short\",\"q\":\"pregunta\",\"options\":[\"...\"],\"answer\":\"respuesta correcta\",\"keywords\":[\"palabras clave de la respuesta (solo short)\"],\"explanation\":\"explicación breve\"}]}. Reglas: en mc hay 4 options y answer es EXACTAMENTE una de ellas; en tf options es [\"Verdadero\",\"Falso\"] y answer es una de ellas; en short no hay options y answer tiene máximo 8 palabras.\n\nMATERIAL:\n"+material.slice(0,8000);
+  const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{temperature:0.4,responseMimeType:"application/json"}})});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(res.status===429?"Se acabó la cuota de hoy. Prueba la práctica de matemáticas (gratis) o vuelve mañana.":((data.error&&data.error.message)||("Error "+res.status)));
+  bump(model);
+  const raw=((data.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||"").join("").trim();
+  const j=JSON.parse(raw.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,""));
+  const cards=(j.cards||[]).map(c=>{
+    if(!c||typeof c.q!=="string"||typeof c.answer!=="string") return null;
+    const type=["mc","tf","short"].includes(c.type)?c.type:"short";
+    let opts=Array.isArray(c.options)?c.options.filter(x=>typeof x==="string").slice(0,6).map(x=>x.slice(0,160)):[];
+    if(type==="tf") opts=["Verdadero","Falso"];
+    if(type==="mc"){if(opts.length<2||!opts.some(o=>norm(o)===norm(c.answer))) return null;}
+    return {id:uid(),type:type,q:c.q.slice(0,400),opts:type==="short"?[]:opts,ans:c.answer.slice(0,200),kw:Array.isArray(c.keywords)?c.keywords.filter(x=>typeof x==="string").slice(0,6):[],exp:String(c.explanation||"").slice(0,400),box:1,due:0,ok:0,ko:0};
+  }).filter(Boolean).slice(0,n);
+  if(!cards.length) throw new Error("Gemini no devolvió preguntas útiles. Intenta con otro texto.");
+  return {id:uid(),title:String(j.title||title).slice(0,50),created:Date.now(),cards:cards};
+}
+function stuStart(items,title,isMath){
+  if(!items.length){toast("No hay preguntas para estudiar.");return}
+  STU={items:items.slice(),i:0,ok:0,fails:[],title:title,math:!!isMath,retry:false};
+  stuAsk();
+}
+function stuGrade(item,ok){
+  if(STU.math) return;
+  const D=getDecks(),d=D.find(x=>x.id===item.deckId),c=d&&d.cards.find(x=>x.id===item.card.id);
+  if(!c) return;
+  c.box=ok?Math.min(6,(c.box||1)+1):1;c.due=Date.now()+LEIT[c.box]*864e5;ok?c.ok++:c.ko++;
+  saveDecks(D);
+}
+function stuAsk(){
+  const box=stuBox(),S=STU,it=S.items[S.i];
+  if(!it){stuResults();return}
+  const c=it.card;
+  const hd=document.createElement("div");hd.className="hint";hd.textContent=S.title+" · pregunta "+(S.i+1)+" de "+S.items.length+" · aciertos "+S.ok;box.appendChild(hd);
+  const bar=document.createElement("div");bar.style.cssText="height:6px;border-radius:5px;background:var(--line);margin:6px 0 12px;overflow:hidden";const f=document.createElement("div");f.style.cssText="height:100%;background:var(--accent);width:"+Math.round(S.i/S.items.length*100)+"%";bar.appendChild(f);box.appendChild(bar);
+  const q=document.createElement("div");q.style.cssText="font:500 1.15rem/1.4 var(--serif);margin-bottom:12px";q.textContent=c.q;box.appendChild(q);
+  const fb=document.createElement("div");fb.style.cssText="margin-top:12px;font-size:15px;white-space:pre-wrap";
+  const next=()=>{const n=btn(S.i+1>=S.items.length?"Ver resultado":"Siguiente",()=>{S.i++;stuAsk()});n.className="main";n.style.marginTop="10px";fb.appendChild(n)};
+  const done=(ok,msg)=>{
+    if(ok) S.ok++;else S.fails.push(it);
+    stuGrade(it,ok);
+    fb.innerHTML="";const m=document.createElement("div");m.style.cssText="padding:10px 12px;border-radius:12px;background:"+(ok?"color-mix(in srgb,#15803d 12%,transparent)":"color-mix(in srgb,var(--danger) 10%,transparent)");m.textContent=(ok?"✅ ¡Correcto! ":"❌ No era esa. ")+msg;fb.appendChild(m);next();
+  };
+  if(c.type==="mc"||c.type==="tf"){
+    c.opts.forEach(o=>{const b=btn(o,()=>{box.querySelectorAll(".qopt").forEach(x=>x.disabled=true);const ok=norm(o)===norm(c.ans);done(ok,"Respuesta: "+c.ans+(c.exp?"\n"+c.exp:""))});b.className="qopt";b.style.cssText="display:block;width:100%;text-align:left;margin-bottom:8px;border-radius:14px;padding:12px 14px";box.appendChild(b)});
+  }else{
+    const inp=document.createElement("input");inp.placeholder=S.math?"Tu respuesta (puedes escribir 3/4, 0.75, 2^3…)":"Escribe tu respuesta";inp.autocomplete="off";box.appendChild(inp);
+    const chk=btn("Comprobar",()=>{
+      const v=inp.value.trim();if(!v) return;chk.disabled=true;inp.disabled=true;
+      if(S.math){
+        let ok=false;try{const r=LMath.evalMath(calClean(v));ok=LMath.fmtInline(r.value)===LMath.fmtInline(c.ansQ)}catch(e){}
+        done(ok,"Respuesta: "+c.ans+(c.exp?"\n"+c.exp:""));return;
+      }
+      const nv=norm(v),na=norm(c.ans);
+      let ok=nv===na||(na.length>3&&nv.includes(na));
+      if(!ok&&c.kw&&c.kw.length){const hit=c.kw.filter(k=>nv.includes(norm(k))).length;ok=hit>=Math.ceil(c.kw.length*0.7)}
+      fb.innerHTML="";const m=document.createElement("div");m.style.cssText="padding:10px 12px;border-radius:12px;background:var(--bubble)";m.textContent=(ok?"Parece correcto. ":"Parece que no coincide. ")+"Respuesta esperada: "+c.ans+(c.exp?"\n"+c.exp:"")+"\n\n¿Cómo te fue?";fb.appendChild(m);
+      const r=document.createElement("div");r.style.cssText="display:flex;gap:8px;margin-top:10px";
+      r.append(btn("✅ Acerté",()=>{S.ok++;stuGrade(it,true);fb.innerHTML="";next()}),btn("❌ Fallé",()=>{S.fails.push(it);stuGrade(it,false);fb.innerHTML="";next()}));fb.appendChild(r);
+    });
+    chk.className="main";chk.style.marginTop="10px";box.appendChild(chk);
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();chk.click()}});setTimeout(()=>{try{inp.focus()}catch(e){}},80);
+  }
+  box.appendChild(fb);
+  const q2=btn("Salir",()=>{if(confirm("¿Salir de esta práctica?")) stuHome()});q2.style.cssText="margin-top:14px;font-size:12px;padding:4px 12px";box.appendChild(q2);
+}
+function stuResults(){
+  const box=stuBox(),S=STU,n=S.items.length,pct=Math.round(S.ok/n*100);
+  const h=document.createElement("div");h.style.cssText="font:600 1.4rem var(--serif);margin-bottom:6px";h.textContent=(pct>=80?"🎉 ¡Muy bien! ":pct>=50?"👍 Buen avance. ":"💪 Sigue practicando. ")+S.ok+" de "+n+" ("+pct+"%)";box.appendChild(h);
+  if(S.math){try{const best=+store.get("lara_mathbest","0");if(pct>best){store.set("lara_mathbest",String(pct));const p=document.createElement("p");p.className="hint";p.textContent="🏆 ¡Nuevo mejor resultado en práctica de matemáticas!";box.appendChild(p)}}catch(e){}}
+  if(S.fails.length){
+    const p=document.createElement("p");p.className="hint";p.textContent="Para repasar:";box.appendChild(p);
+    S.fails.forEach(it=>{const d=document.createElement("div");d.className="mem";d.style.cssText="flex-direction:column;align-items:stretch";d.textContent="• "+it.card.q+"\n→ "+it.card.ans;d.style.whiteSpace="pre-wrap";box.appendChild(d)});
+    const r=btn("Repasar lo que fallé",()=>{stuStart(S.fails.slice(),S.title+" (repaso)",S.math)});r.className="main";r.style.marginTop="10px";box.appendChild(r);
+  }
+  const b=btn("Terminar",stuHome);b.style.cssText="margin:10px 0 0 8px";box.appendChild(b);
+}
+/* --- práctica de matemáticas (local, gratis) --- */
+function rndI(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+function pick(a){return a[rndI(0,a.length-1)]}
+function mathQ(level){
+  const Q=LMath.qn,mk=(q,expr,ans,exp)=>({id:uid(),type:"short",q:q,ans:ans,ansQ:LMath.evalMath(expr).value,exp:exp||"",opts:[],kw:[]});
+  if(level===1){
+    const t=rndI(1,4);
+    if(t===1){const a=rndI(12,99),b=rndI(12,99);return mk("¿Cuánto es "+a+" + "+b+"?",a+"+"+b,String(a+b))}
+    if(t===2){const a=rndI(40,99),b=rndI(11,39);return mk("¿Cuánto es "+a+" − "+b+"?",a+"-"+b,String(a-b))}
+    if(t===3){const a=rndI(3,12),b=rndI(3,12);return mk("¿Cuánto es "+a+" × "+b+"?",a+"*"+b,String(a*b))}
+    const b=rndI(2,12),r=rndI(2,12);return mk("¿Cuánto es "+(b*r)+" ÷ "+b+"?",(b*r)+"/"+b,String(r))
+  }
+  if(level===2){
+    const t=rndI(1,5);
+    if(t===1){const p=pick([5,10,15,20,25,30,40,50,75]),n=pick([40,60,80,120,200,240,400]);const r=p*n/100;return mk("¿Cuánto es el "+p+"% de "+n+"?",p+"%*"+n,String(r),p+"% de "+n+" = "+p+"/100 × "+n)}
+    if(t===2){const b=pick([2,3,4,5,6,8]),d=pick([2,3,4,5,6,8]);const a=rndI(1,b-1),c=rndI(1,d-1);const e=a+"/"+b+"+"+c+"/"+d,v=LMath.evalMath(e).value;return mk("Suma las fracciones: "+a+"/"+b+" + "+c+"/"+d+" (escribe la fracción o el decimal)",e,LMath.fmtFull(v),"Busca un denominador común.")}
+    if(t===3){const b=rndI(2,9),e=rndI(2,3);return mk("¿Cuánto es "+b+"^"+e+"?",b+"^"+e,String(Math.pow(b,e)))}
+    if(t===4){const r=rndI(3,15);return mk("¿Cuánto es la raíz cuadrada de "+(r*r)+"?","sqrt("+(r*r)+")",String(r))}
+    const a=rndI(11,99)/10,b=rndI(11,99)/10;const e=a+"+"+b,v=LMath.evalMath(e).value;return mk("¿Cuánto es "+a+" + "+b+"?",e,LMath.fmtInline(v))
+  }
+  const t=rndI(1,3);
+  if(t===1){const x=rndI(-9,9),a=rndI(2,9),b=rndI(-20,20),c=a*x+b;return mk("Resuelve: "+a+"x "+(b<0?"− "+(-b):"+ "+b)+" = "+c+". ¿Cuánto vale x?","("+c+"-("+b+"))/"+a,String(x),a+"x = "+c+" "+(b<0?"+ "+(-b):"− "+b)+" → x = "+x)}
+  if(t===2){let r1=rndI(-6,6),r2=rndI(-6,6);if(r1===r2) r2=r1+2;const s=-(r1+r2),p=r1*r2;const mx=Math.max(r1,r2);return mk("En x² "+(s<0?"− "+(-s):"+ "+s)+"x "+(p<0?"− "+(-p):"+ "+p)+" = 0, ¿cuál es la raíz MAYOR?",String(mx),String(mx),"Las raíces son "+r1+" y "+r2+".")}
+  const w=rndI(2,12)*10,p=pick([10,20,25,40,50]);const part=w*p/100;return mk("¿Qué porcentaje es "+part+" de "+w+"? (escribe solo el número)",String(p),String(p),part+" ÷ "+w+" × 100")
+}
+function stuMathForm(){
+  const box=stuBox();
+  const h=document.createElement("h2");h.style.cssText="font:600 1.15rem var(--serif);margin:0 0 8px";h.textContent="🧮 Práctica de matemáticas";box.appendChild(h);
+  const p=document.createElement("p");p.className="hint";p.textContent="Lara inventa las cuentas y comprueba tus respuestas con su calculadora exacta. No usa Gemini ni gasta cuota."+(+store.get("lara_mathbest","0")?" Tu mejor resultado: "+store.get("lara_mathbest","0")+"%.":"");box.appendChild(p);
+  [["Nivel 1 · Operaciones básicas",1],["Nivel 2 · Porcentajes, fracciones, potencias y raíces",2],["Nivel 3 · Ecuaciones y porcentajes inversos",3]].forEach(l=>{
+    const b=btn(l[0],()=>{const items=[];for(let i=0;i<10;i++){try{items.push({deckId:"math",card:mathQ(l[1])})}catch(e){}}stuStart(items,"Matemáticas · nivel "+l[1],true)});b.style.cssText="display:block;width:100%;text-align:left;margin-bottom:8px;border-radius:14px;padding:12px 14px";box.appendChild(b);
+  });
+  const back=btn("Volver",stuHome);back.style.marginTop="8px";box.appendChild(back);
+}
 
 render();
 </script>
