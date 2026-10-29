@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v52</title>
+<title>Lara v53</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -269,7 +269,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 52. Incluye herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 53. Incluye mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -570,7 +570,7 @@ function renderLessons(){
 function getChanges(){try{return JSON.parse(store.get("lara_changes","[]"))||[]}catch(e){return[]}}
 function renderChanges(){
   const box=$("autohist");if(!box)return;const C=getChanges().slice(-8).reverse();
-  box.innerHTML=C.length?"<b>Historial de mejoras aprobadas</b><br>"+C.map(c=>esc(new Date(c.t).toLocaleDateString("es")+" · v"+(c.v||"?")+" · "+c.s)).join("<br>"):"";
+  box.innerHTML=C.length?"<b>Historial de mejoras aprobadas</b><br>"+C.map(c=>esc(new Date(c.t).toLocaleDateString("es")+" · Mejora n.º "+(c.v||"?")+" · "+c.s)).join("<br>"):"";
 }
 function lastUserText(){const lu=history.length?history[history.length-1]:null;return lu&&lu.role==="user"&&lu.parts&&lu.parts[0]?(lu.parts[0].text||""):""}
 function words4(q){return [...new Set(norm(q||"").match(/[a-z0-9]{4,}/g)||[])]}
@@ -673,7 +673,7 @@ function personaText(){
   "\nHONESTIDAD: eres una IA y, si te lo preguntan, lo dices con naturalidad. No inventes vida humana, recuerdos propios ni sentimientos que no tienes; sí puedes decir que algo te parece interesante o que disfrutas la conversación."+
   "\nEn temas bíblicos, análisis, salud, dinero o decisiones importantes, deja el humor a un lado y prioriza la precisión."+
   (nick?"\nLlama al usuario «"+nick+"» de vez en cuando, no en cada mensaje.":"")+
-  "\nMEMORIA CERCANA: si el usuario cuenta cómo se siente o algo emocionalmente importante, guárdalo al final con [[MEMORIA: Ánimo ("+hoy+"): resumen breve]] y retómalo con naturalidad más adelante, preguntando cómo sigue, sin forzarlo. Si surge un apodo o una broma recurrente entre ustedes, guárdala con [[MEMORIA: Broma: …]] y úsala con moderación.\nAPRENDER DE CORRECCIONES: si el usuario te corrige o te dice cómo prefiere que actúes («así no», «más corto», «no hagas eso», «mejor así»), guarda la lección en una sola frase con [[LECCION: …]] para no repetir el error. Solo si de verdad es una preferencia duradera.\nPROYECTOS: si el usuario habla de un proyecto con nombre, registra lo importante con [[PROYECTO: nombre | objetivo breve]], [[DECISION: nombre | decisión tomada]] y [[PROXIMO: nombre | siguiente paso]] (no uses MEMORIA para eso). Si pregunta qué decidieron, responde solo con los datos guardados de ese proyecto; si no hay, dilo.\nAUTOMEJORA: sí puedes mejorar tu propia app, siempre con autorización del usuario: tu taller prepara una propuesta, la prueba en un espacio aislado y solo se publica si él la aprueba con un botón. Si te pide cambiar o mejorar algo de Lara (tu app), NO digas que no puedes: confirma en una frase y añade al final [[MEJORA: petición técnica clara y pequeña]]. Si solo pregunta si puedes mejorarte, explícalo sin la etiqueta.";
+  "\nMEMORIA CERCANA: si el usuario cuenta cómo se siente o algo emocionalmente importante, guárdalo al final con [[MEMORIA: Ánimo ("+hoy+"): resumen breve]] y retómalo con naturalidad más adelante, preguntando cómo sigue, sin forzarlo. Si surge un apodo o una broma recurrente entre ustedes, guárdala con [[MEMORIA: Broma: …]] y úsala con moderación.\nAPRENDER DE CORRECCIONES: si el usuario te corrige o te dice cómo prefiere que actúes («así no», «más corto», «no hagas eso», «mejor así»), guarda la lección en una sola frase con [[LECCION: …]] para no repetir el error. Solo si de verdad es una preferencia duradera.\nPROYECTOS: si el usuario habla de un proyecto con nombre, registra lo importante con [[PROYECTO: nombre | objetivo breve]], [[DECISION: nombre | decisión tomada]] y [[PROXIMO: nombre | siguiente paso]] (no uses MEMORIA para eso). Si pregunta qué decidieron, responde solo con los datos guardados de ese proyecto; si no hay, dilo.\nAUTOMEJORA: sí puedes mejorar tu propia app, siempre con autorización del usuario: tu taller prepara una propuesta, la prueba en un espacio aislado y solo se publica si él la aprueba con un botón. Si te pide cambiar o mejorar algo de Lara (tu app), NO digas que no puedes: confirma en una frase y añade al final [[MEJORA: petición técnica clara y pequeña]]. Si solo pregunta si puedes mejorarte, explícalo sin la etiqueta. NUNCA digas que ya integraste, aplicaste o implementaste una mejora en tu sistema, arquitectura o código, ni inventes números de mejora: eso solo ocurre cuando el taller prepara la propuesta y el usuario la autoriza.";
   const m=moodHint(lastUserText());if(m) t+="\nAHORA: "+m;
   const o=openingsHint();if(o) t+="\n"+o;
   return t;
@@ -721,7 +721,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=52;
+const APP_V=53;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -871,6 +871,7 @@ $("f").onsubmit=async ev=>{
   add("user",(pendingImg||pendingTxt)?text+" 📎":text);
   document.querySelectorAll(".acts").forEach(x=>x.remove());
   if(selfImproveIntent(text)){chatSelfFlow(text);return}
+  if(backupIntent(text)){chatBackupFlow();return}
   if(!hadAttach&&!window._sharedExt){const ml=mathLocal(text);if(ml){history.push({role:"model",parts:[{text:ml}]});saveChats();add("lara",ml);addActions();logEvt("mathlocal","");dayInc("l");try{speak(ml.replace(/[*_`]/g,""))}catch(e){}return}}
   const bubble=add("lara","…");
   ctrl=new AbortController();$("send").type="button";$("send").textContent="Detener";$("send").onclick=()=>{if(ctrl) ctrl.abort()};
@@ -893,7 +894,8 @@ $("f").onsubmit=async ev=>{
       .replace(/\[\[RECORDATORIO:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})\s*\|\s*([^\]]+?)\]\]/g,(m,at,t)=>{let rp="";const mm=t.match(/\|\s*(diario|laborales|semanal)\s*$/i);if(mm){rp=mm[1].toLowerCase();t=t.replace(/\|\s*(diario|laborales|semanal)\s*$/i,"")}extra.push(addRem(at,t,rp));return ""}).trim();
     let selfBtns=false;
     if(window._tagsBlocked){window._tagsBlocked=false;extra.push("🛡️ No guardé datos de esta respuesta porque usó contenido externo.")}
-    if(!mejoraReq&&selfRefusal(clean)&&selfTopic(text)){window._selfCtxT=Date.now();clean="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";selfBtns=true}
+    if(!mejoraReq&&!selfBtns&&selfFakeClaim(clean)){window._selfCtxT=Date.now();clean="Te debo una aclaración, Leo: eso todavía NO está hecho. Yo no puedo cambiarme solo conversando. Lo que sí hago es preparar la mejora de verdad: la pruebo, le pongo su número consecutivo y te entrego el archivo para subir (o la publico si me autorizas). ¿La preparo ahora?";selfBtns="prep";window._lastReq=text}
+    if(!mejoraReq&&!selfBtns&&selfRefusal(clean)&&selfTopic(text)){window._selfCtxT=Date.now();clean="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";selfBtns=true}
     if(!clean) clean="Listo.";
     clean=mathCheckNote(clean);
     if(extra.length) clean+="\n\n"+extra.join(" · ");
@@ -903,7 +905,7 @@ $("f").onsubmit=async ev=>{
     history.push({role:"model",parts:[{text:clean}]});
     clearImg();
     history.forEach(m=>{if(m.short){m.parts=[{text:m.short}];delete m.short}else if(m.parts.some(p=>p.inlineData)) m.parts=[{text:m.parts[0].text+" [adjunto]"}]});
-    saveChats();showStatus();addActions();if(selfBtns) chatBubbleActions(bubble,[["💡 Proponer ideas",()=>chatSuggest()]]);compact().then(ok=>{if(ok) render()});
+    saveChats();showStatus();addActions();if(selfBtns==="prep") chatBubbleActions(bubble,[["🛠️ Preparar esta mejora",()=>chatSelfImprove(window._lastReq||text)],["⬇️ Descargas y respaldos",()=>chatBackupFlow()]]);else if(selfBtns) chatBubbleActions(bubble,[["💡 Proponer ideas",()=>chatSuggest()]]);compact().then(ok=>{if(ok) render()});
     if(mejoraReq) setTimeout(()=>chatSelfImprove(mejoraReq),400);
     const qAsked=text,replyAsked=clean;
     autoReview(qAsked,replyAsked).then(r=>{
@@ -1612,9 +1614,9 @@ setTimeout(()=>{
 try{if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
 
 // Taller de automejora: Gemini propone parches exactos; la persona revisa y aprueba.
-let autoNote={}, autoSummary="", autoSourceFile=null, autoSourceText="", autoPatches=null, autoPatchedText="", autoBackupDownloaded=false;
+let autoCLv=null, autoNote={}, autoSummary="", autoSourceFile=null, autoSourceText="", autoPatches=null, autoPatchedText="", autoBackupDownloaded=false;
 function autoStatus(t){$("autostatus").textContent=t;if(window._autoMirror){try{window._autoMirror(t)}catch(e){}}}
-function autoClearProposal(){autoPatches=null;autoPatchedText="";$("autopreview").style.display="none";$("autopreview").textContent="";$("autoapply").disabled=true;$("autocancel").disabled=true;autoBackupDownloaded=false;$("autobackup").disabled=!autoSourceText}
+function autoClearProposal(){autoPatches=null;autoPatchedText="";autoCLv=null;$("autopreview").style.display="none";$("autopreview").textContent="";$("autoapply").disabled=true;$("autocancel").disabled=true;autoBackupDownloaded=false;$("autobackup").disabled=!autoSourceText}
 function autoDownload(text,name,type="text/html;charset=utf-8"){
   const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)
 }
@@ -1815,7 +1817,7 @@ $("autogenerate").onclick=async()=>{
     const okT=s1.tests.filter(t=>t.ok).length;
     autoNote={warns:sec.warns,usuario:String(parsed.usuario||"").slice(0,200),cuota:String(parsed.cuota||"").slice(0,10),cosm:cosm,tests:okT+" de "+s1.tests.length};
     autoSummary=parsed.summary||applied[0]||"Mejora";
-    autoPatches=parsed.changes;autoPatchedText=out;$("autopreview").textContent="Propuesta de Gemini:\n"+(parsed.summary||"Cambios preparados")+"\n\n"+applied.map((x,i)=>(i+1)+". "+x).join("\n")+"\n\nEn palabras simples:\n• Qué notarás: "+(autoNote.usuario||"no lo indicó; revisa el resumen")+"\n• Consumo de cuota: "+({menos:"menor",igual:"igual",mas:"mayor"}[autoNote.cuota]||"no indicado")+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+(autoNote.warns&&autoNote.warns.length?"\n• ⚠️ Seguridad: "+autoNote.warns.join("; "):"\n• 🛡️ Revisión de seguridad: sin hallazgos")+"\n\nValidaciones: 1) los fragmentos coinciden una sola vez, 2) la sintaxis pasó, 3) no se perdió ninguna parte de la pantalla, 4) la versión nueva abrió sin errores nuevos, 5) pruebas simuladas de uso (chat, notas, ajustes): "+autoNote.tests+" correctas. Aun así, no garantiza que todo funcione: prueba la versión publicada.";$("autopreview").style.display="block";$("autocancel").disabled=false;$("autobackup").disabled=false;$("autoapply").disabled=true;autoBackupDownloaded=false;autoStatus("Propuesta lista. Revisa el resumen y descarga el respaldo original antes de aprobarla.");
+    autoPatches=parsed.changes;autoPatchedText=out;autoCLv=null;$("autopreview").textContent="Propuesta de Gemini:\n"+(parsed.summary||"Cambios preparados")+"\n\n"+applied.map((x,i)=>(i+1)+". "+x).join("\n")+"\n\nEn palabras simples:\n• Qué notarás: "+(autoNote.usuario||"no lo indicó; revisa el resumen")+"\n• Consumo de cuota: "+({menos:"menor",igual:"igual",mas:"mayor"}[autoNote.cuota]||"no indicado")+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+(autoNote.warns&&autoNote.warns.length?"\n• ⚠️ Seguridad: "+autoNote.warns.join("; "):"\n• 🛡️ Revisión de seguridad: sin hallazgos")+"\n\nValidaciones: 1) los fragmentos coinciden una sola vez, 2) la sintaxis pasó, 3) no se perdió ninguna parte de la pantalla, 4) la versión nueva abrió sin errores nuevos, 5) pruebas simuladas de uso (chat, notas, ajustes): "+autoNote.tests+" correctas. Aun así, no garantiza que todo funcione: prueba la versión publicada.";$("autopreview").style.display="block";$("autocancel").disabled=false;$("autobackup").disabled=false;$("autoapply").disabled=true;autoBackupDownloaded=false;autoStatus("Propuesta lista. Revisa el resumen y descarga el respaldo original antes de aprobarla.");
     done=true;
     }catch(e){
       if(e.api||at>=2) throw e;
@@ -1976,7 +1978,7 @@ $("autopublish").onclick=async()=>{
     const bpath="respaldos/lara_v"+pv+".html",ex=await ghGet(c,bpath);
     await ghPut(c,bpath,curText,"Respaldo automático de la versión "+pv,ex&&ex.sha);
     pubStatus("Publicando la versión "+v+"…");
-    autoPatchedText=addChangelog(autoPatchedText,v,autoSummary,autoNote&&autoNote.usuario);
+    ensureChangelog();
     await ghPut(c,c.path,autoPatchedText,"Mejora automática v"+v+": "+String(autoSummary||"mejora").slice(0,100),cur.sha);
     {const nowS=statGet();let prevS={sent:0,bad:0};try{prevS=JSON.parse(store.get("lara_snap_prev","null"))||prevS}catch(e){}
      store.set("lara_lastpub",JSON.stringify({prev:pv,bpath:bpath,v:v,snap:nowS,prevSnap:prevS,t:Date.now()}));store.set("lara_snap_prev",JSON.stringify(nowS));renderEval()}
@@ -2011,7 +2013,7 @@ $("autoapply").onclick=()=>{
   if(!autoBackupDownloaded){autoStatus("Primero descarga el respaldo original.");return}
   const base=(autoSourceFile&&autoSourceFile.name||"lara.html").replace(/\.(html?)$/i,"");
   const m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)\s*;/);const v=m?m[1]:"actualizada";
-  {const mv=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)/);autoPatchedText=addChangelog(autoPatchedText,mv?mv[1]:"?",autoSummary,autoNote&&autoNote.usuario)}
+  ensureChangelog();
   autoDownload(autoPatchedText,"lara.html");{const C=getChanges();C.push({t:Date.now(),v:v,s:String(autoSummary||"Mejora").slice(0,140)});store.set("lara_changes",JSON.stringify(C.slice(-30)));renderChanges()}autoStatus("Versión "+v+" descargada con el nombre lara.html. Ábrela primero desde tus descargas para probarla. Para publicarla, súbela a GitHub con ESE mismo nombre (lara.html) y reemplaza la anterior; si la subes con otro nombre, la app no se actualiza. Si tu teléfono la guardó como «lara (1).html», renómbrala antes de subirla.");$("autoapply").disabled=true;
 };
 
@@ -2152,12 +2154,16 @@ function selfRefusal(t){
   const topic=/(codigo|modificarme|modificar mi|mejorarme|mejorar mi|automejor|autonom|mi propio|mi propia|mi sistema|mis funciones actuales|mi programacion|reescribirme|sobreescrib|sobrescrib)/;
   return (neg.test(n)&&topic.test(n))||/siempre (debe|tiene que|debe de) ser con tu autorizacion/.test(n);
 }
+const FAKE_RE=/(?:ya\s+(?:quedo|esta|fue|lo\s+(?:integre|implemente))\s*(?:integrad|implementad|incorporad|aplicad|activ)?)|(?:\b(?:integre|incorpore|implemente|aplique|actualice|agregue)\b[^.]{0,80}\b(?:mi\s+(?:arquitectura|sistema|codigo|programacion|nucleo|algoritmo|memoria)|mis\s+funciones)\b)|(?:\bmejora\s*(?:numero|n[.º°]|#)?\s*\d+\b[^.]{0,50}(?:integrad|implementad|aplicad|activ|lista))|(?:\b(?:integrad|implementad|incorporad)[ao]s?\s+(?:en|a)\s+mi\b)/;
+function selfFakeClaim(t){const n=norm(t||"");return FAKE_RE.test(n)&&/(mejora|integr|implement|arquitectura|mi sistema|mi codigo|mis funciones)/.test(n)}
+function backupIntent(t){const n=norm(t||"");return n.length<140&&/\b(respaldo|copia de seguridad|backup|descargar? (?:el )?archivo|archivo de (?:la )?mejora|exportar (?:mis )?datos)\b/.test(n)}
 function selfTopic(u){return /(mejor|auto|funcion|codigo|propuesta|evolu|actualiz|modific|agreg|anad|ti misma|tu app)/.test(norm(u||""))}
 const FEAT_RE=/\b(agreg|anad|incorpor|instal|pong|suma)\w* ?(te |a ti |a lara |tu )?(nuevas? |mas |otras |algunas |unas |una |un |ciertas )?(funcion|herramienta|capacidad|modulo)\w*/;
 const MORE_RE=/\b(otras|mas|nuevas|mejores|distintas) ?(propuestas|ideas|mejoras|opciones)\b/;
+const SELF_RE2=/\b(?:la\s+)?(?:siguiente|nueva|proxima|otra)\s+mejora\b|\bmejora\s*(?:numero|n[.º°]|#)?\s*\d+\b|^\s*(?:nueva\s+)?mejora\s*(?:para\s+(?:ti|lara))?\s*[:\-–]|\b(?:te\s+)?(?:indico|pido|propongo|sugiero)\s+(?:una\s+)?mejora\b|\bquiero\s+(?:una|otra)\s+mejora\b/;
 function selfImproveIntent(t){
   const n=norm(t||"");
-  if(/^\/?(mejora|automejora)\b/.test(n)||SELF_RE.test(n)) return true;
+  if(/^\/(mejora|automejora)\b|^automejora\b/.test(n)||SELF_RE.test(n)||SELF_RE2.test(n)) return true;
   if(FEAT_RE.test(n)&&/\b(tu|ti|te|lara|misma|propia)\b/.test(n)) return true;
   if(window._selfCtxT&&Date.now()-window._selfCtxT<1800000&&MORE_RE.test(n)) return true;
   return false;
@@ -2177,7 +2183,8 @@ function chatBubbleActions(b,list){
 function chatSelfFlow(text){
   const n=norm(text);window._selfCtxT=Date.now();
   if(MORE_RE.test(n)&&!SELF_RE.test(n)){const m2="Claro, te propongo más ideas. Nada se cambia sin tu autorización.";history.push({role:"model",parts:[{text:m2}]});saveChats();add("lara",m2);chatSuggest();return}
-  const rest=n.replace(SELF_RE,"").replace(/^\/?(mejora|automejora)\b/,"").replace(/\b(lara|por favor|porfa|puedes|podrias|quiero|que|te|tu|me|gustaria|si|no)\b/g,"").replace(/[^a-z0-9]+/g," ").trim();
+  const isQ=/[?¿]/.test(text)&&!SELF_RE.test(n);
+  const rest=(isQ?"":n).replace(SELF_RE,"").replace(SELF_RE2,"").replace(/^\/?(mejora|automejora)\b/,"").replace(/\b(lara|por favor|porfa|puedes|podrias|quiero|que|te|tu|me|gustaria|si|no)\b/g,"").replace(/[^a-z0-9]+/g," ").trim();
   if(rest.length<10){
     const msg="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";
     history.push({role:"model",parts:[{text:msg}]});saveChats();
@@ -2221,7 +2228,7 @@ async function chatSelfImprove(request){
     if(!(autoPatches&&autoPatchedText)){setText(b,"No pude preparar una mejora segura. "+($("autostatus").textContent||"")+"\n\nTu Lara sigue exactamente igual.");return}
     const m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)/),v=m?m[1]:"?";
     const cuota={menos:"menor",igual:"igual",mas:"mayor"}[autoNote.cuota]||"no indicado";
-    setText(b,"✅ Preparé una propuesta (versión "+v+"):\n\n• Qué cambia: "+(autoSummary||"ver detalles")+"\n• Qué notarás: "+(autoNote.usuario||"no lo indicó")+"\n• Consumo de cuota: "+cuota+"\n• Pruebas simuladas: "+(autoNote.tests||"?")+" correctas"+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+"\n\nNo cambiaré nada sin tu autorización. ¿Qué hago?");
+    setText(b,"✅ Preparé la **Mejora n.º "+v+"** (será la versión "+v+" de Lara):\n\n• Qué cambia: "+(autoSummary||"ver detalles")+"\n• Qué notarás: "+(autoNote.usuario||"no lo indicó")+"\n• Consumo de cuota: "+cuota+"\n• Pruebas simuladas: "+(autoNote.tests||"?")+" correctas"+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+"\n\nNo cambiaré nada sin tu autorización. ¿Qué hago?");
     chatBubbleActions(b,[
       ["✅ Autorizar y publicar",async()=>{
         const sb=add("lara","⏳ Publicando…");
@@ -2230,6 +2237,8 @@ async function chatSelfImprove(request){
         window._autoMirror=null;
         if(/Falta configurar GitHub/.test($("autostatus").textContent)) setText(sb,$("autostatus").textContent+" Ve a Ajustes → Automejora → Conexión con GitHub.");
       }],
+      ["⬇️ Descargar archivo para subir",()=>chatDownloadProposal()],
+      ["⬇️ Descargar respaldo actual",()=>chatDownloadCurrent()],
       ["Ver cambios técnicos",()=>{const t=add("lara",$("autopreview").textContent||"(sin detalles)")}],
       ["Descartar",()=>{autoClearProposal();add("lara","Descartada. No cambié nada.")}]
     ]);
@@ -2372,6 +2381,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:53,items:["Las mejoras que le pides a Lara ahora se preparan de verdad: reconoce más formas de pedirlas («Mejora: …», «la siguiente mejora…») y te muestra su número consecutivo.","Nuevo botón ⬇️ Descargar archivo para subir (lara.html) y ⬇️ Descargar respaldo actual, también desde el chat.","Si Gemini dice que ya integró una mejora sin haberla preparado, Lara lo corrige y te ofrece prepararla de verdad.","Si escribes «respaldo» o «descargar archivo», Lara te muestra los botones para descargar tus datos, la app o la mejora."]},
  {v:52,items:["Nueva pantalla 🧰 Herramientas con: 💰 Presupuesto (ingresos, gastos y balance exactos, con límites por categoría), 📊 Gráficas (funciones, hábitos, gastos y uso), 🎓 Estudio (mazos de preguntas con repaso y práctica de matemáticas gratis), 🧮 Calculadora con historial y 📈 Estadísticas de uso.","Los proyectos ahora están dentro de 🧰 Herramientas."]},
  {v:51,items:["Calculadora exacta dentro de Lara: responde cuentas y ecuaciones al instante, sin errores de redondeo y sin gastar cuota (ej. 15% de 2340, 3/4+1/6, x²−5x+6=0).","Cuando Gemini te ayuda con matemáticas, Lara hace las cuentas con la calculadora y revisa que cuadren.","Nuevo perfil Matemáticas: razona paso a paso y verifica el resultado; se activa solo con temas de matemáticas."]},
  {v:50,items:["Aviso de vencimiento del token de GitHub: indica la fecha y Lara te avisa antes, con un recordatorio y los pasos para renovarlo.","Si dos teléfonos cambian el mismo chat o proyecto, Lara te muestra los dos y tú eliges (unir, quedarte con uno o usar el otro).","Exportar a PDF, Word o texto: un chat, un proyecto, tus notas o tus tareas."]},
@@ -4039,6 +4049,40 @@ function stuMathForm(){
     const b=btn(l[0],()=>{const items=[];for(let i=0;i<10;i++){try{items.push({deckId:"math",card:mathQ(l[1])})}catch(e){}}stuStart(items,"Matemáticas · nivel "+l[1],true)});b.style.cssText="display:block;width:100%;text-align:left;margin-bottom:8px;border-radius:14px;padding:12px 14px";box.appendChild(b);
   });
   const back=btn("Volver",stuHome);back.style.marginTop="8px";box.appendChild(back);
+}
+
+
+/* ===== Mejoras: número consecutivo, archivo para subir y respaldos ===== */
+function ensureChangelog(){
+  const m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)/),v=m?m[1]:"?";
+  if(autoCLv!==v){autoPatchedText=addChangelog(autoPatchedText,v,autoSummary,autoNote&&autoNote.usuario);autoCLv=v}
+  return v;
+}
+function chatDownloadProposal(){
+  if(!(autoPatches&&autoPatchedText)){add("lara","No hay una mejora preparada. Pídeme una con «Mejora: …» y la preparo.");return}
+  const v=ensureChangelog();
+  downloadBlob(new Blob([autoPatchedText],{type:"text/html;charset=utf-8"}),"lara.html");
+  recordChange(v);
+  const t="✅ Descargué el archivo de la **Mejora n.º "+v+"** como «lara.html».\n\nPara activarla:\n1. En GitHub toca Add file → Upload files.\n2. Sube ese archivo (debe llamarse exactamente lara.html; si tu teléfono lo guardó como «lara (1).html», renómbralo).\n3. Confirma con Commit changes, espera 1 o 2 minutos y toca «Actualizar app» en Ajustes.\n\nMientras no lo subas, tu Lara sigue igual.";
+  history.push({role:"model",parts:[{text:"Descargué el archivo de la Mejora n.º "+v+" (lara.html) para subirlo a GitHub."}]});saveChats();
+  add("lara",t);
+}
+async function chatDownloadCurrent(){
+  try{
+    let txt=autoSourceText;
+    if(!txt){const r=await fetch(selfFile()+"?c="+Date.now(),{cache:"no-store"});if(!r.ok) throw new Error("no pude leer mi archivo");txt=await r.text()}
+    const m=txt.match(/const\s+APP_V\s*=\s*(\d+)/);
+    downloadBlob(new Blob([txt],{type:"text/html;charset=utf-8"}),"lara-respaldo-v"+(m?m[1]:APP_V)+".html");
+    add("lara","✅ Descargué el respaldo de la versión actual como «lara-respaldo-v"+(m?m[1]:APP_V)+".html». Guárdalo por si necesitas volver atrás.");
+  }catch(e){add("err","No pude descargar el respaldo: "+(e.message||e))}
+}
+function chatBackupFlow(){
+  const msg="Estas son las descargas y respaldos que sí puedo darte ahora mismo. Toca el que necesites:";
+  history.push({role:"model",parts:[{text:msg}]});saveChats();
+  const b=add("lara",msg);
+  const L=[["📦 Mis datos (archivo JSON)",()=>{exportAll()}],["☁️ Respaldar mis datos en GitHub",()=>dataBackup(false)],["⬇️ La app actual (respaldo)",()=>chatDownloadCurrent()]];
+  if(autoPatches&&autoPatchedText) L.unshift(["⬇️ Archivo de la mejora preparada",()=>chatDownloadProposal()]);
+  chatBubbleActions(b,L);
 }
 
 render();
