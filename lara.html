@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v56</title>
+<title>Lara v57</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -298,7 +298,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 56. Incluye Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 57. Incluye Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -327,6 +327,10 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <select id="expacct" style="margin-top:8px;display:none"></select>
   <div class="row"><button id="exppdf" type="button">PDF</button><button id="expdoc" type="button">Word</button><button id="exptxt" type="button">Texto</button></div>
   <div id="expmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
+  <label>📊 Excel</label>
+  <p class="hint">Exporta tus tareas, hábitos, recordatorios, memoria, notas y cuentas a un archivo .xlsx. Para importar, usa un Excel con hojas llamadas Tareas, Hábitos, Memoria, Notas o Cuentas (lo más fácil: exporta uno y edítalo). Lara agrega lo nuevo y no borra nada.</p>
+  <div class="row"><button id="xlexp" type="button">📊 Exportar a Excel</button><button id="xlimp" type="button">📥 Importar desde Excel</button><input type="file" id="xlimpf" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>
+  <div id="xlmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
   <label>📲 Accesos directos y compartir</label>
   <p class="hint">Agrega al ícono de Lara los accesos directos (mantén presionado el ícono) y la opción «Compartir → Lara» desde cualquier app. Modifica tu manifest.json en GitHub, guardando antes un respaldo.</p>
   <div class="row"><button id="manup" type="button">📲 Activar accesos directos y compartir</button></div>
@@ -627,6 +631,11 @@ function renderChanges(){
 }
 function lastUserText(){const lu=history.length?history[history.length-1]:null;return lu&&lu.role==="user"&&lu.parts&&lu.parts[0]?(lu.parts[0].text||""):""}
 function words4(q){return [...new Set(norm(q||"").match(/[a-z0-9]{4,}/g)||[])]}
+function numText(){
+  const pr=(window._impPrep||[]).filter(v=>v>APP_V),mx=pr.length?Math.max.apply(null,pr):0;
+  return "\n\nNUMERACIÓN DE MEJORAS (dato real; no lo cambies): la app instalada es la versión "+APP_V+" (Mejora n.º "+APP_V+"). "+(mx?"El taller ya preparó la Mejora n.º "+mx+" y todavía no se publica; no existe una n.º "+(mx+1)+" hasta que se publique. ":"La próxima mejora que prepare el taller será la n.º "+(APP_V+1)+". ")+"Ignora cualquier otro número de versión de tus recuerdos o chats anteriores y NUNCA inventes ni «corrijas» la numeración: el número lo asigna el taller. Si el usuario menciona otro número, dile cuál es el real.";
+}
+function refreshImpPrep(){try{impAll().then(L=>{window._impPrep=L.filter(x=>x.v>APP_V&&x.base===APP_V).map(x=>+x.v)}).catch(()=>{})}catch(e){}}
 function memFor(q){
   const live=mems.filter(m=>!memExpired(m));
   if(live.length<=25) return live.slice().sort((x,y)=>MEM_LAYERS.indexOf(memLayer(x))-MEM_LAYERS.indexOf(memLayer(y)));
@@ -762,7 +771,7 @@ function ttsStyle(){
 }
 function buildSys(){
   let s=effProf().prompt;
-  s+=personaText();s+=mathRulesText();
+  s+=personaText();s+=mathRulesText();s+=numText();
   s+="\n\nContinuidad de conversación: interpreta mensajes breves como «sí», «listo», «sigue», «nueva mejora» o «continúa» usando los mensajes anteriores. Conserva nombres de proyectos, objetivos, restricciones, decisiones confirmadas y pasos completados. No vuelvas a preguntar algo que ya está claro en el contexto. La corrección más reciente del usuario prevalece. Distingue hechos confirmados de suposiciones; si falta un dato imprescindible, haz una sola pregunta breve. Si el usuario dice «listo», reconoce el avance y ofrece el siguiente paso concreto. Si el usuario pide información actual, consulta la búsqueda web cuando esté disponible y presenta enlaces de fuentes reales; si no pudiste buscar, dilo claramente.\n\nCalidad de análisis: distingue hechos, interpretaciones y opiniones; en temas debatidos presenta las posturas principales y tu nivel de certeza; no inventes datos, cifras ni citas; si algo puede haber cambiado, dilo.";
   if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+memFor(lastUserText()).join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias, o decisiones tomadas en un proyecto, indicando el nombre del proyecto) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta. Si el usuario corrige o contradice algo que sabías de él, añade también [[OLVIDAR: palabras clave del dato viejo]] y luego el [[MEMORIA: dato nuevo]]. Si la petición es ambigua y de ello depende el resultado, haz UNA sola pregunta corta antes de responder; si es simple, responde directamente.";
@@ -775,7 +784,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=56;
+const APP_V=57;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -2222,7 +2231,7 @@ function selfRefusal(t){
 }
 const FAKE_RE=/(?:ya\s+(?:quedo|esta|fue|lo\s+(?:integre|implemente))\s*(?:integrad|implementad|incorporad|aplicad|activ)?)|(?:\b(?:integre|incorpore|implemente|aplique|actualice|agregue)\b[^.]{0,80}\b(?:mi\s+(?:arquitectura|sistema|codigo|programacion|nucleo|algoritmo|memoria)|mis\s+funciones)\b)|(?:\bmejora\s*(?:numero|n[.º°]|#)?\s*\d+\b[^.]{0,50}(?:integrad|implementad|aplicad|activ|lista))|(?:\b(?:integrad|implementad|incorporad)[ao]s?\s+(?:en|a)\s+mi\b)/;
 function selfFakeClaim(t){const n=norm(t||"");return FAKE_RE.test(n)&&/(mejora|integr|implement|arquitectura|mi sistema|mi codigo|mis funciones)/.test(n)}
-function backupIntent(t){const n=norm(t||"");return n.length<140&&/\b(respaldo|copia de seguridad|backup|descargar? (?:el )?archivo|archivo de (?:la )?mejora|exportar (?:mis )?datos)\b/.test(n)||(n.length<160&&/(donde (esta|queda|descargo|encuentro)[^.?]{0,40}(archivo|mejora|descarg)|archivo[^.?]{0,30}(generado|para descargar|para subir)|(boton|enlace|link) (para |de )?descarg|descargar (la |el |esa |ese )?(mejora|archivo)|archivo (de|con) (la )?mejora)/.test(n))||(n.length<160&&/\b(genera|generame|generar|crea|creame|crear|prepara|preparame|dame|dime|entrega|entregame|manda|mandame|enviame|quiero|necesito)\b[^.?]{0,25}\barchivo\b/.test(n)&&(/(lara|mejora|\bapp\b|sistema|html|actualiz|descarg)/.test(n)||inSelfCtx()))}
+function backupIntent(t){const n=norm(t||"");return n.length<140&&/\b(respaldo|copia de seguridad|backup|descargar? (?:el )?archivo|archivo de (?:la )?mejora|exportar (?:mis )?datos)\b/.test(n)||(n.length<160&&/(donde (esta|queda|descargo|encuentro)[^.?]{0,40}(archivo|mejora|descarg)|archivo[^.?]{0,30}(generado|para descargar|para subir)|(boton|enlace|link) (para |de )?descarg|descargar (la |el |esa |ese )?(mejora|archivo)|archivo (de|con) (la )?mejora|\b(exporta\w*|importa\w*|descarga\w*|pasa\w*|genera\w*|sube|subir|cargar|quiero|necesito)\b[^.?]{0,40}\b(excel|xlsx)\b|\b(excel|xlsx)\b[^.?]{0,25}\b(exportar|importar|descargar))/.test(n))||(n.length<160&&/\b(genera|generame|generar|crea|creame|crear|prepara|preparame|dame|dime|entrega|entregame|manda|mandame|enviame|quiero|necesito)\b[^.?]{0,25}\barchivo\b/.test(n)&&(/(lara|mejora|\bapp\b|sistema|html|actualiz|descarg)/.test(n)||inSelfCtx()))}
 function selfTopic(u){return /(mejor|auto|funcion|codigo|propuesta|evolu|actualiz|modific|agreg|anad|ti misma|tu app)/.test(norm(u||""))}
 const FEAT_RE=/\b(agreg|anad|incorpor|instal|pong|suma)\w* ?(te |a ti |a lara |tu )?(nuevas? |mas |otras |algunas |unas |una |un |ciertas )?(funcion|herramienta|capacidad|modulo)\w*/;
 const MORE_RE=/\b(otras|mas|nuevas|mejores|distintas) ?(propuestas|ideas|mejoras|opciones)\b/;
@@ -2447,6 +2456,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:57,items:["📊 Excel: en Ajustes puedes exportar tareas, hábitos, recordatorios, memoria, notas y cuentas a un archivo .xlsx, y también importar un Excel con esas hojas. Importar solo agrega lo nuevo; no borra nada. Funciona sin internet.","🔢 Lara ahora conoce el número real de la versión instalada y de la siguiente mejora, y ya no inventa ni confunde la numeración. El número lo asigna el taller.","En el chat, «exporta a Excel» o «importar Excel» te muestra los botones."]},
  {v:56,items:["🔁 Hábitos con dificultad (fácil, media, difícil): cada día cumplido suma 1, 2 o 3 puntos al mes.","🏆 Ahora cada hábito muestra su mejor racha, el porcentaje de los últimos 30 días y los puntos del mes. Cambia la dificultad con el botón «Dificultad».","📋 Mejora n.º 56 aparece en el historial de mejoras (Ajustes → Automejora)."]},
  {v:55,items:["🧠 Memoria por capas: lo que Lara recuerda ahora se ordena en Permanentes (quién eres, familia, fechas, preferencias), Medias (proyectos y decisiones) y Cortas (ánimo y cosas pasajeras, que dejan de usarse a los 14 días).","Cada recuerdo tiene un botón «Capa» para pasarlo de una a otra cuando tú quieras. Nada se borra solo: lo caducado solo deja de usarse.","Cuando hay muchos recuerdos, Lara prioriza siempre los permanentes.","⬇️ Botón «Archivo» en el chat: muestra la mejora preparada con su número consecutivo para descargarla (lara.html) o guardar una copia lara-mejora-N.html. Si le preguntas dónde está el archivo, Lara te muestra los botones en vez de decir que no puede.","🔎 En Mis mejoras, «Reconocer un archivo» te dice qué número de mejora es un archivo y si conviene subirlo."]},
  {v:54,items:["🛠️ Mis mejoras (en 🧰 Herramientas y con el botón «Mejora» del chat): describes la mejora, Lara la prepara y la guarda con su número consecutivo, y puedes descargar el archivo lara.html para subirlo cuando quieras, aunque cierres la app.","Si Gemini dice que no puede generar archivos, Lara lo corrige y te lleva a Mis mejoras.","🏦 Cuentas: dos cuentas, Córdobas y Dólares, con entradas, salidas, saldo exacto, estado de cuenta mensual y cambio de moneda con tipo de cambio. También escribiendo en el chat: «gasté 200 córdobas en comida», «ingresé 50 dólares», «cambié 100 dólares a córdobas a 36.6» o «cuánto tengo»."]},
@@ -4172,6 +4182,7 @@ async function chatBackupFlow(){
   }catch(e){}
   if(!shown&&autoPatches&&autoPatchedText){shown=true;L.unshift(["⬇️ Archivo de la mejora preparada",()=>chatDownloadProposal()])}
   if(!shown){const lr=window._lastReq||lastImproveRequest();if(lr) L.unshift(["🛠️ Preparar la mejora que pedí",()=>chatSelfImprove(lr)])}
+  L.push(["📊 Exportar a Excel",()=>xlExport()],["📥 Importar desde Excel",()=>$("xlimpf").click()]);
   L.push(["🛠️ Abrir Mis mejoras",()=>{$("openTools").click();$("openImps").click()}]);
   chatBubbleActions(b,L);
 }
@@ -4445,6 +4456,7 @@ async function impSave(){
   window._curImpId=rec.id;
   await impPut(rec);
   const all=await impAll();for(const x of all.slice(8)) await impDel(x.id);
+  refreshImpPrep();
 }
 async function impMarkCur(field){
   try{if(!window._curImpId) return;const all=await impAll(),r=all.find(x=>x.id===window._curImpId);if(r){r[field]=true;await impPut(r)}}catch(e){}
@@ -4551,8 +4563,175 @@ function fileRefusal(t){
   return /(no puedo|no me es posible|todavia no|aun no|no tengo (?:la )?(?:capacidad|permiso|acceso)|no estoy en condiciones|debido a las limitaciones|no cuenta con|no dispone|no existe (?:un )?boton|no hay (?:un )?boton)/.test(n)&&/(archivos? descargables?|generar (?:un |el )?archivo|crear (?:un |el )?archivo|descarg\w*|enlace de descarga|archivo fisico|archivo adjunto|funcion de generar|boton (?:nativo )?(?:para )?(?:generar|descargar)|codigo fuente|actualizar el codigo|subir)/.test(n);
 }
 
+/* ===== Excel (.xlsx): exportar e importar, sin internet ===== */
+const XL={
+  T:(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})(),
+  crc(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=XL.T[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0},
+  esc(s){return String(s==null?"":s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")},
+  col(i){let s="";i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s},
+  H:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+  STY:'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>',
+  sheet(rows,widths){
+    let x=XL.H+'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
+    if(widths) x+="<cols>"+widths.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>').join("")+"</cols>";
+    x+="<sheetData>";
+    rows.forEach((r,ri)=>{x+='<row r="'+(ri+1)+'">';r.forEach((v,ci)=>{
+      if(v===""||v==null) return;
+      const ref=XL.col(ci)+(ri+1),st=ri===0?' s="1"':"";
+      if(typeof v==="number"&&isFinite(v)) x+='<c r="'+ref+'"'+st+'><v>'+v+'</v></c>';
+      else x+='<c r="'+ref+'" t="inlineStr"'+st+'><is><t xml:space="preserve">'+XL.esc(v)+'</t></is></c>';
+    });x+="</row>"});
+    return x+"</sheetData></worksheet>";
+  },
+  zip(files){
+    const enc=new TextEncoder(),chunks=[],cen=[];let off=0;
+    const w16=v=>[v&255,(v>>>8)&255],w32=v=>[v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];
+    files.forEach(f=>{
+      const nm=enc.encode(f.n),crc=XL.crc(f.d),sz=f.d.length;
+      chunks.push(new Uint8Array([0x50,0x4b,3,4,...w16(20),...w16(0x0800),...w16(0),...w16(0),...w16(0x21),...w32(crc),...w32(sz),...w32(sz),...w16(nm.length),...w16(0)]),nm,f.d);
+      cen.push(new Uint8Array([0x50,0x4b,1,2,...w16(20),...w16(20),...w16(0x0800),...w16(0),...w16(0),...w16(0x21),...w32(crc),...w32(sz),...w32(sz),...w16(nm.length),...w16(0),...w16(0),...w16(0),...w16(0),...w32(0),...w32(off)]),nm);
+      off+=30+nm.length+sz;
+    });
+    let cs=0;cen.forEach(c=>{cs+=c.length});
+    const end=new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...w16(files.length),...w16(files.length),...w32(cs),...w32(off),0,0]);
+    return new Blob([...chunks,...cen,end],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  },
+  book(sheets){
+    const enc=new TextEncoder(),R="http://schemas.openxmlformats.org/officeDocument/2006/relationships",f=[];
+    f.push({n:"[Content_Types].xml",d:XL.H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map((s,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("")+'</Types>'});
+    f.push({n:"_rels/.rels",d:XL.H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="'+R+'/officeDocument" Target="xl/workbook.xml"/></Relationships>'});
+    f.push({n:"xl/workbook.xml",d:XL.H+'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="'+R+'"><sheets>'+sheets.map((s,i)=>'<sheet name="'+XL.esc(s.n)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join("")+'</sheets></workbook>'});
+    f.push({n:"xl/_rels/workbook.xml.rels",d:XL.H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((s,i)=>'<Relationship Id="rId'+(i+1)+'" Type="'+R+'/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join("")+'<Relationship Id="rId'+(sheets.length+1)+'" Type="'+R+'/styles" Target="styles.xml"/></Relationships>'});
+    f.push({n:"xl/styles.xml",d:XL.H+XL.STY});
+    sheets.forEach((s,i)=>f.push({n:"xl/worksheets/sheet"+(i+1)+".xml",d:XL.sheet(s.rows,s.w)}));
+    return XL.zip(f.map(x=>({n:x.n,d:enc.encode(x.d)})));
+  },
+  async inflate(u8,max){
+    if(typeof DecompressionStream==="undefined") throw new Error("Tu navegador no puede abrir este .xlsx. Actualiza Chrome.");
+    const ds=new DecompressionStream("deflate-raw"),w=ds.writable.getWriter();
+    w.write(u8).catch(()=>{});w.close().catch(()=>{});
+    const rd=ds.readable.getReader(),parts=[];let n=0;
+    for(;;){const r=await rd.read();if(r.done) break;n+=r.value.length;if(n>max){await rd.cancel();throw new Error("El archivo descomprimido es demasiado grande.")}parts.push(r.value)}
+    const out=new Uint8Array(n);let o=0;parts.forEach(p=>{out.set(p,o);o+=p.length});return out;
+  },
+  async unzip(buf){
+    const u=new Uint8Array(buf),dv=new DataView(buf);let e=-1;
+    for(let i=u.length-22;i>=Math.max(0,u.length-65600);i--){if(dv.getUint32(i,true)===0x06054b50){e=i;break}}
+    if(e<0) throw new Error("No es un archivo .xlsx válido.");
+    const n=dv.getUint16(e+10,true),dec=new TextDecoder(),out={};let p=dv.getUint32(e+16,true);
+    for(let i=0;i<n;i++){
+      if(p+46>u.length||dv.getUint32(p,true)!==0x02014b50) break;
+      const meth=dv.getUint16(p+10,true),cs=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true),name=dec.decode(u.subarray(p+46,p+46+nl));
+      p+=46+nl+xl+cl;
+      if(!/^xl\/(workbook\.xml|_rels\/workbook\.xml\.rels|sharedStrings\.xml|worksheets\/[^\/]+\.xml)$/.test(name)) continue;
+      const st=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true),raw=u.subarray(st,st+cs);
+      out[name]=dec.decode(meth===0?raw:await XL.inflate(raw,2e7));
+    }
+    return out;
+  },
+  async read(buf){
+    const files=await XL.unzip(buf);
+    if(!files["xl/workbook.xml"]) throw new Error("No parece un libro de Excel (.xlsx).");
+    const P=s=>new DOMParser().parseFromString(s,"application/xml"),NS=(d,t)=>Array.from(d.getElementsByTagNameNS("*",t)),txt=el=>NS(el,"t").map(t=>t.textContent).join("");
+    const sst=files["xl/sharedStrings.xml"]?NS(P(files["xl/sharedStrings.xml"]),"si").map(txt):[],rels={};
+    if(files["xl/_rels/workbook.xml.rels"]) NS(P(files["xl/_rels/workbook.xml.rels"]),"Relationship").forEach(r=>{rels[r.getAttribute("Id")]=r.getAttribute("Target")||""});
+    const out={};
+    for(const sh of NS(P(files["xl/workbook.xml"]),"sheet")){
+      const name=sh.getAttribute("name")||"",rid=sh.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id")||sh.getAttribute("r:id");
+      const xml=files["xl/"+(rels[rid]||"").replace(/^\/?(xl\/)?/,"")];if(!xml) continue;
+      const rows=[];
+      NS(P(xml),"c").forEach(c=>{
+        const m=(c.getAttribute("r")||"").match(/^([A-Z]+)(\d+)$/);if(!m) return;
+        let ci=0;for(const ch of m[1]) ci=ci*26+ch.charCodeAt(0)-64;ci--;
+        const ri=+m[2]-1;if(ri>20000||ci>40) return;
+        const ty=c.getAttribute("t"),ve=NS(c,"v")[0],v=ve?ve.textContent:"";let val;
+        if(ty==="s") val=sst[+v]||"";else if(ty==="inlineStr") val=txt(c);else if(ty==="str"||ty==="e") val=v;else if(ty==="b") val=v==="1"?"1":"0";else val=v===""?"":(isFinite(+v)?+v:v);
+        (rows[ri]=rows[ri]||[])[ci]=val;
+      });
+      out[name]=rows;
+    }
+    return out;
+  }
+};
+function xlDate(v){
+  if(typeof v==="number"&&v>20000&&v<80000) return new Date(Math.round((v-25569)*864e5)).toISOString().slice(0,10);
+  const s=String(v==null?"":v).trim();let m;
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  if((m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/))) return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");
+  return "";
+}
+function xlMsg(t){const e=$("xlmsg");if(e) e.textContent=t}
+function xlExport(){
+  try{
+    const B=getBank(),nm=id=>(B.accts.find(a=>a.id===id)||{}).name||id;
+    const sheets=[
+      {n:"Tareas",w:[50,10],rows:[["Tarea","Hecha"]].concat(tasks.map(t=>[t.text,t.done?"Sí":"No"]))},
+      {n:"Hábitos",w:[34,12,60],rows:[["Hábito","Dificultad","Días cumplidos"]].concat(habits.map(h=>[h.name,HAB_LVL[habLvl(h)].t,(h.days||[]).join(", ")]))},
+      {n:"Recordatorios",w:[44,18,12,8],rows:[["Recordatorio","Fecha y hora","Repetir","Hecho"]].concat(rems.map(r=>[r.text,String(r.at||"").replace("T"," "),r.rep||"",r.done?"Sí":"No"]))},
+      {n:"Memoria",w:[70,12],rows:[["Recuerdo","Capa"]].concat(mems.map(m=>[m,memLayer(m)]))},
+      {n:"Notas",w:[90],rows:[["Nota"]].concat(notes.map(n=>[n]))},
+      {n:"Cuentas",w:[14,12,14,10,12,22,14,10],rows:[["ID","Fecha","Cuenta","Tipo","Monto","Categoría","Enlace","TC"]].concat(B.tx.map(x=>[x.id,x.t,nm(x.a),x.k==="i"?"Entrada":"Salida",+x.amt,x.c||"",x.link||"",x.fx||""]))}
+    ];
+    const name="lara-datos-"+dkey(new Date())+".xlsx";
+    downloadBlob(XL.book(sheets),name);
+    const t="📊 Descargué «"+name+"» con 6 hojas: Tareas, Hábitos, Recordatorios, Memoria, Notas y Cuentas.";
+    xlMsg(t);toast(t);
+  }catch(e){xlMsg("❌ No pude crear el Excel: "+(e.message||e))}
+}
+async function xlImport(file){
+  try{
+    if(file.size>15e6) throw new Error("El archivo es muy grande (máximo 15 MB).");
+    xlMsg("⏳ Leyendo «"+file.name+"»…");
+    const wb=await XL.read(await file.arrayBuffer()),S=v=>v==null?"":String(v).trim(),cnt={t:0,h:0,m:0,n:0,c:0};
+    const sheet=n=>{const k=Object.keys(wb).find(x=>norm(x)===norm(n));return k?(wb[k]||[]).slice(1):null};
+    const found=[];
+    let rows=sheet("Tareas");
+    if(rows){found.push("Tareas");for(const r of rows){if(!r) continue;const t=S(r[0]).slice(0,200);if(!t||tasks.some(x=>norm(x.text)===norm(t))) continue;tasks.push({id:uid(),text:t,done:/^(si|sí|x|1|true|hecha?)$/i.test(S(r[1]))});cnt.t++}}
+    rows=sheet("Hábitos");
+    if(rows){found.push("Hábitos");for(const r of rows){if(!r) continue;const n=S(r[0]).slice(0,80);if(!n) continue;
+      const lv=HAB_ORD.find(k=>norm(HAB_LVL[k].t)===norm(S(r[1]))),raw=r[2];
+      const days=(typeof raw==="number"?[xlDate(raw)]:S(raw).split(/[,;\s]+/).map(xlDate)).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d));
+      let h=habits.find(x=>norm(x.name)===norm(n)),ch=false;
+      if(!h){h={id:uid(),name:n,days:[],lvl:lv||"media"};habits.push(h);ch=true}else if(lv&&h.lvl!==lv){h.lvl=lv;ch=true}
+      h.days=h.days||[];days.forEach(d=>{if(!h.days.includes(d)){h.days.push(d);ch=true}});h.days=h.days.sort().slice(-400);
+      if(ch) cnt.h++}}
+    rows=sheet("Memoria");
+    if(rows){found.push("Memoria");for(const r of rows){if(!r) continue;const t=S(r[0]).slice(0,200);if(!t) continue;
+      const had=mems.some(m=>m.toLowerCase()===t.toLowerCase());addMem(t);
+      if(!had&&mems.some(m=>m.toLowerCase()===t.toLowerCase())){cnt.m++;const ly=MEM_LAYERS.find(k=>k===norm(S(r[1])));if(ly) setMemLayer(t,ly)}}}
+    rows=sheet("Notas");
+    if(rows){found.push("Notas");for(const r of rows){if(!r) continue;const t=S(r[0]).slice(0,1000);if(!t||notes.includes(t)) continue;notes.push(t);cnt.n++}if(notes.length>100) notes=notes.slice(-100)}
+    rows=sheet("Cuentas");
+    if(rows){found.push("Cuentas");
+      const B=getBank(),tx=[],seen={},hash=s=>{let a=5381,b=52711;for(let i=0;i<s.length;i++){a=((a*33)^s.charCodeAt(i))>>>0;b=((b*31)+s.charCodeAt(i))>>>0}return a.toString(36)+b.toString(36)};
+      const aid=s=>{const n=norm(s);const a=B.accts.find(x=>norm(x.name)===n||norm(x.code)===n||norm(x.cur)===n)||(n.startsWith("cord")?B.accts.find(x=>x.id==="nio"):n.startsWith("dol")?B.accts.find(x=>x.id==="usd"):null);return a?a.id:""};
+      for(const r of rows){if(!r) continue;
+        const date=xlDate(r[1]),a=aid(S(r[2])),tp=norm(S(r[3])),f=Math.abs(Number(String(r[4]==null?"":r[4]).replace(",",".")));
+        const k=/^(entrada|ingreso|i)$/.test(tp)?"i":/^(salida|gasto|egreso|o)$/.test(tp)?"o":"";
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!a||!k||!(f>0)||f>1e12) continue;
+        let amt=(Math.round(f*100)/100).toFixed(2);amt=amt.replace(/0+$/,"").replace(/\.$/,"");if(/e/i.test(amt)) continue;
+        const cat=S(r[5]).slice(0,40),key=[date,a,k,amt,cat].join("|");seen[key]=(seen[key]||0)+1;
+        let id=S(r[0]);if(!/^[\w\-]{1,40}$/.test(id)) id="xl"+hash(key+"#"+seen[key]);
+        const t={id:id,a:a,k:k,amt:amt,c:cat,t:date,ts:Date.parse(date+"T12:00:00Z")*1000+seen[key]};
+        if(S(r[6])) t.link=S(r[6]).slice(0,40);if(S(r[7])) t.fx=S(r[7]).slice(0,12);
+        tx.push(t);
+      }
+      cnt.c=mergeBank({accts:[],tx:tx});
+    }
+    if(!found.length){xlMsg("No encontré hojas con los nombres Tareas, Hábitos, Memoria, Notas o Cuentas. Exporta primero un Excel con Lara y úsalo como plantilla.");return}
+    saveTasks();saveHabits();saveNotes();saveMems();
+    try{renderMore()}catch(e){}try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderBank()}catch(e){}
+    const total=cnt.t+cnt.h+cnt.m+cnt.n+cnt.c;
+    xlMsg("✅ Importé «"+file.name+"» (hojas: "+found.join(", ")+").\n"+(total?"Agregué o actualicé: "+cnt.t+" tareas, "+cnt.h+" hábitos, "+cnt.m+" recuerdos, "+cnt.n+" notas y "+cnt.c+" movimientos de cuentas. No borré nada.":"No había nada nuevo: todo ya estaba en Lara."));
+  }catch(e){xlMsg("❌ No pude importar el Excel: "+(e.message||e))}
+}
+$("xlexp").onclick=xlExport;
+$("xlimp").onclick=()=>$("xlimpf").click();
+$("xlimpf").onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(f) xlImport(f)};
+
+refreshImpPrep();
 try{
-  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos"};
+  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos",57:"Excel (exportar e importar) y numeración de mejoras corregida"};
   Object.keys(NOTES).map(Number).filter(v=>v<=APP_V&&!getChanges().some(c=>+c.v===v)).forEach(v=>recordChangeRaw(v,NOTES[v]));
 }catch(e){}
 render();
