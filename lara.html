@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v53</title>
+<title>Lara v55</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -58,8 +58,8 @@ form textarea:focus-visible{outline:none}
 #attach,#mic,#conv{width:40px;height:40px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:var(--bg);border-color:transparent}
 #conv{outline-offset:2px}
 #send{justify-self:end;padding:10px 22px}
-#cfg,#notes,#chats,#projects,#news,#gsearch,#tools,#budget,#charts,#quiz,#calc,#stats{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
-#cfg.open,#notes.open,#chats.open,#projects.open,#news.open,#gsearch.open,#tools.open,#budget.open,#charts.open,#quiz.open,#calc.open,#stats.open{display:block}
+#cfg,#notes,#chats,#projects,#news,#gsearch,#tools,#budget,#charts,#quiz,#calc,#stats,#bank,#imps{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
+#cfg.open,#notes.open,#chats.open,#projects.open,#news.open,#gsearch.open,#tools.open,#budget.open,#charts.open,#quiz.open,#calc.open,#stats.open,#bank.open,#imps.open{display:block}
 .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tcard{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px;border-radius:18px;background:var(--surface)}
 .tcard span{font-size:26px;line-height:1}.tcard b{font:600 15px var(--ui)}.tcard small{font:400 12px/1.3 var(--ui);color:var(--muted)}
@@ -177,6 +177,8 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
     <button class="tcard" id="openQuiz" type="button"><span>🎓</span><b>Estudio</b><small>Preguntas y práctica de matemáticas</small></button>
     <button class="tcard" id="openCalc" type="button"><span>🧮</span><b>Calculadora</b><small>Con historial y ecuaciones</small></button>
     <button class="tcard" id="openStats" type="button"><span>📈</span><b>Estadísticas</b><small>Tu uso de Lara y de la cuota</small></button>
+    <button class="tcard" id="openBank" type="button"><span>🏦</span><b>Cuentas</b><small>Córdobas y dólares: entradas y salidas</small></button>
+    <button class="tcard" id="openImps" type="button"><span>🛠️</span><b>Mis mejoras</b><small>Prepara y descarga archivos de mejora</small></button>
   </div>
   <div class="row"><button id="closeTools" type="button">Cerrar</button></div>
 </section>
@@ -197,7 +199,8 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
 <section id="charts" aria-label="Gráficas">
   <h1>📊 Gráficas</h1>
   <label for="chtype">¿Qué quieres graficar?</label>
-  <select id="chtype"><option value="fn">Una función matemática</option><option value="hab">Mis hábitos (14 días)</option><option value="spend">Mis gastos del mes</option><option value="use">Mi uso de Lara (14 días)</option></select>
+  <select id="chtype"><option value="fn">Una función matemática</option><option value="hab">Mis hábitos (14 días)</option><option value="spend">Mis gastos del mes</option><option value="use">Mi uso de Lara (14 días)</option><option value="bank">Saldo de una cuenta (30 días)</option></select>
+  <div id="chacctrow" style="display:none"><label for="chacct">Cuenta</label><select id="chacct"></select></div>
   <div id="chfnrow">
     <label for="chfn">Función de x</label><input id="chfn" value="x^2-4" placeholder="Ej: x^2-4 · sin(x) · 1/x · 2^x" autocomplete="off">
     <div class="row" style="margin-top:8px;flex-wrap:nowrap"><input id="chxmin" value="-10" inputmode="decimal" aria-label="x mínimo" placeholder="x mínimo"><input id="chxmax" value="10" inputmode="decimal" aria-label="x máximo" placeholder="x máximo"></div>
@@ -227,6 +230,31 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <h1>📈 Estadísticas de uso</h1>
   <div id="statsbox"></div>
   <div class="row"><button id="statspng" type="button">💾 Guardar imagen</button><button id="statsreset" type="button">Borrar estadísticas</button></div>
+  <div class="row"><button data-back type="button">← Herramientas</button></div>
+</section>
+<section id="bank" aria-label="Cuentas">
+  <h1>🏦 Cuentas</h1>
+  <div id="bankcards"></div>
+  <div class="row" style="margin-top:0"><button class="main" id="bkin" type="button">＋ Entrada</button><button id="bkout" type="button">－ Salida</button><button id="bkfx" type="button">💱 Cambio</button></div>
+  <div id="bkform"></div>
+  <datalist id="bkcats"></datalist>
+  <label style="margin-top:18px">Estado de cuenta · <span id="bkname"></span></label>
+  <div class="row" style="margin-top:4px;align-items:center;justify-content:space-between"><button id="bkprev" type="button">◀</button><b id="bkmonth" style="font:600 1rem var(--ui)"></b><button id="bknext" type="button">▶</button></div>
+  <div id="bkstate" style="margin-top:8px"></div>
+  <div class="row"><div id="bkacctbtns" style="display:flex;gap:8px;flex-wrap:wrap"></div></div>
+  <div class="row"><button id="bkexp" type="button">📄 Exportar estado de cuenta</button><button id="bkaddacct" type="button">➕ Agregar cuenta</button></div>
+  <p class="hint">Las sumas son exactas (sin errores de redondeo). Tus movimientos se sincronizan entre tus teléfonos si activaste la sincronización. También puedes escribirle a Lara: «gasté 200 córdobas en comida», «ingresé 50 dólares de sueldo», «cambié 100 dólares a córdobas a 36.6» o «cuánto tengo».</p>
+  <div class="row"><button data-back type="button">← Herramientas</button></div>
+</section>
+<section id="imps" aria-label="Mis mejoras">
+  <h1>🛠️ Mis mejoras</h1>
+  <p class="hint">Aquí Lara prepara las mejoras y te entrega el archivo para subir. Describe qué quieres cambiar: Lara la prueba, le pone su número consecutivo y la guarda aquí para que la descargues cuando quieras. Nada cambia hasta que subas el archivo o la publiques tú.</p>
+  <textarea id="impreq" rows="3" placeholder="Ej: Agregar en Ajustes un botón que muestre cuánto espacio ocupan mis datos"></textarea>
+  <div class="row"><button class="main" id="impgo" type="button">🛠️ Preparar mejora</button><button id="impbk" type="button">⬇️ Respaldo de la app actual</button></div>
+  <div id="impstatus" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
+  <label>Mejoras preparadas</label>
+  <div id="impbox"></div>
+  <details><summary>¿Cómo subo el archivo a GitHub?</summary><ol class="hint" style="padding-left:20px"><li>Toca ⬇️ Descargar lara.html en la mejora que quieras.</li><li>Abre tu repositorio en GitHub → Add file → Upload files.</li><li>Sube el archivo (debe llamarse exactamente lara.html; si tu teléfono lo guardó como «lara (1).html», renómbralo) y confirma con Commit changes.</li><li>Espera 1 o 2 minutos y toca «Actualizar app» en Ajustes.</li></ol></details>
   <div class="row"><button data-back type="button">← Herramientas</button></div>
 </section>
 <section id="news" aria-label="Novedades">
@@ -269,7 +297,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 53. Incluye mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 55. Incluye Memoria por capas (permanente, media y corta), Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -292,9 +320,10 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="calcout" class="hint" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
   <label>📄 Exportar documento</label>
   <p class="hint">Convierte un chat, un proyecto, tus notas o tus tareas en un documento para compartir o imprimir.</p>
-  <select id="exptype"><option value="chat">Un chat</option><option value="proj">Un proyecto</option><option value="notes">Mis notas</option><option value="tasks">Tareas, hábitos y recordatorios</option><option value="budget">Presupuesto del mes</option></select>
+  <select id="exptype"><option value="chat">Un chat</option><option value="proj">Un proyecto</option><option value="notes">Mis notas</option><option value="tasks">Tareas, hábitos y recordatorios</option><option value="budget">Presupuesto del mes</option><option value="bank">Estado de cuenta</option></select>
   <select id="expchat" style="margin-top:8px"></select>
   <select id="expproj" style="margin-top:8px;display:none"></select>
+  <select id="expacct" style="margin-top:8px;display:none"></select>
   <div class="row"><button id="exppdf" type="button">PDF</button><button id="expdoc" type="button">Word</button><button id="exptxt" type="button">Texto</button></div>
   <div id="expmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
   <label>📲 Accesos directos y compartir</label>
@@ -504,7 +533,7 @@ function addMem(t){
   mems.push(t);
   try{const dm=getMemDates();dm[norm(t)]=Date.now();store.set("lara_memdates",JSON.stringify(dm))}catch(e){}
   if(/^[aá]nimo/i.test(t)){const an=mems.map((m,i)=>/^[aá]nimo/i.test(m)?i:-1).filter(i=>i>=0);if(an.length>6) mems.splice(an[0],1)}
-  if(mems.length>50){const i=mems.findIndex(m=>/^[aá]nimo/i.test(m));mems.splice(i>=0?i:0,1)}
+  if(mems.length>50){let i=mems.findIndex(m=>memExpired(m));if(i<0) i=mems.findIndex(m=>/^[aá]nimo/i.test(m));if(i<0) i=mems.findIndex(m=>memLayer(m)!=="permanente");mems.splice(i>=0?i:0,1)}
   saveMems();
 }
 function getMemDates(){try{return JSON.parse(store.get("lara_memdates","{}"))||{}}catch(e){return{}}}
@@ -528,23 +557,46 @@ function dedupeMems(){
   if(removed){mems=keep;saveMems();renderMems()}
   return removed;
 }
+/* ===== Memoria por capas (Mejora 55) ===== */
+const MEM_LAYERS=["permanente","media","corta"],SHORT_DAYS=14;
+const LAYER_INFO={permanente:{t:"📌 Permanentes",d:"No caducan: quién eres, familia, fechas y preferencias."},media:{t:"🗂️ Medias",d:"Proyectos, decisiones e intereses del momento."},corta:{t:"⏳ Cortas",d:"Ánimo y cosas pasajeras: dejan de usarse a los "+SHORT_DAYS+" días."}};
+function getMemLayers(){try{return JSON.parse(store.get("lara_memlayers","{}"))||{}}catch(e){return{}}}
+function setMemLayer(m,l){try{const L=getMemLayers();L[norm(m)]=l;store.set("lara_memlayers",JSON.stringify(L))}catch(e){}}
+function memLayer(m){
+  const k=norm(m),L=getMemLayers();
+  if(MEM_LAYERS.indexOf(L[k])>=0) return L[k];
+  if(/^(animo|estado)/.test(k)) return "corta";
+  if(/nombre|cumple|nacio|alerg|familia|esposa|esposo|hij[oa]|madre|padre|herman|abuel|prefiere|le gusta|no le gusta|iglesia|creador|el usuario es/.test(k)) return "permanente";
+  return "media";
+}
+function memExpired(m){
+  if(memLayer(m)!=="corta") return false;
+  const ts=getMemDates()[norm(m)];
+  return !!ts&&Date.now()-ts>SHORT_DAYS*864e5;
+}
 function renderMems(){
   const box=$("mems"); box.innerHTML="";
   if(!mems.length){const p=document.createElement("p");p.className="hint";p.textContent="Aún no recuerda nada.";box.appendChild(p);return}
-  const dm=getMemDates(),order=["Sobre ti","Personas","Proyectos","Ánimo","Bromas y apodos","Otros"],groups={};
-  mems.forEach(m=>{(groups[memCat(m)]=groups[memCat(m)]||[]).push(m)});
-  order.filter(c=>groups[c]).forEach(c=>{
-    const h=document.createElement("div");h.className="hint";h.style.cssText="margin-top:12px;font-weight:600;color:var(--ink)";h.textContent=c+" ("+groups[c].length+")";box.appendChild(h);
+  const dm=getMemDates(),groups={};
+  mems.forEach(m=>{(groups[memLayer(m)]=groups[memLayer(m)]||[]).push(m)});
+  MEM_LAYERS.filter(c=>groups[c]).forEach(c=>{
+    const h=document.createElement("div");h.className="hint";h.style.cssText="margin-top:12px;font-weight:600;color:var(--ink)";h.textContent=LAYER_INFO[c].t+" ("+groups[c].length+")";box.appendChild(h);
+    const hd=document.createElement("div");hd.className="hint";hd.textContent=LAYER_INFO[c].d;box.appendChild(hd);
     groups[c].forEach(m=>{
       const d=document.createElement("div");d.className="mem";
       const sp=document.createElement("span");sp.textContent=m;
-      const ts=dm[norm(m)];if(ts){const sm=document.createElement("small");sm.style.cssText="display:block;color:var(--muted)";sm.textContent="guardado el "+new Date(ts).toLocaleDateString("es");sp.appendChild(sm)}
-      const w=document.createElement("div");w.style.cssText="display:flex;gap:6px;flex:none";
+      const sm=document.createElement("small");sm.style.cssText="display:block;color:var(--muted)";
+      const ts=dm[norm(m)];
+      sm.textContent=memCat(m)+(ts?" · guardado el "+new Date(ts).toLocaleDateString("es"):"")+(memExpired(m)?" · caducada (ya no se usa)":"");
+      sp.appendChild(sm);
+      const w=document.createElement("div");w.style.cssText="display:flex;gap:6px;flex:none;flex-wrap:wrap";
       const ed=document.createElement("button");ed.type="button";ed.textContent="Editar";
-      ed.onclick=()=>{const t=prompt("Editar recuerdo",m);if(t&&t.trim()){const i=mems.indexOf(m);if(i>=0){const nt=t.trim().slice(0,200);mems[i]=nt;const x=getMemDates();x[norm(nt)]=x[norm(m)]||Date.now();store.set("lara_memdates",JSON.stringify(x));saveMems();renderMems()}}};
+      ed.onclick=()=>{const t=prompt("Editar recuerdo",m);if(t&&t.trim()){const i=mems.indexOf(m);if(i>=0){const nt=t.trim().slice(0,200),ly=memLayer(m);mems[i]=nt;const x=getMemDates();x[norm(nt)]=x[norm(m)]||Date.now();store.set("lara_memdates",JSON.stringify(x));setMemLayer(nt,ly);saveMems();renderMems()}}};
+      const cp=document.createElement("button");cp.type="button";cp.textContent="Capa";
+      cp.onclick=()=>{const nx=MEM_LAYERS[(MEM_LAYERS.indexOf(memLayer(m))+1)%MEM_LAYERS.length];setMemLayer(m,nx);if(nx==="corta"){const x=getMemDates();x[norm(m)]=Date.now();store.set("lara_memdates",JSON.stringify(x))}renderMems();toast("Ahora es "+LAYER_INFO[nx].t.replace(/^\S+\s/,"").toLowerCase().replace(/s$/,"")+".")};
       const b=document.createElement("button");b.type="button";b.textContent="Borrar";
       b.onclick=()=>{const i=mems.indexOf(m);if(i>=0){mems.splice(i,1);saveMems();renderMems()}};
-      w.append(ed,b);d.append(sp,w);box.appendChild(d);
+      w.append(ed,cp,b);d.append(sp,w);box.appendChild(d);
     });
   });
 }
@@ -575,11 +627,12 @@ function renderChanges(){
 function lastUserText(){const lu=history.length?history[history.length-1]:null;return lu&&lu.role==="user"&&lu.parts&&lu.parts[0]?(lu.parts[0].text||""):""}
 function words4(q){return [...new Set(norm(q||"").match(/[a-z0-9]{4,}/g)||[])]}
 function memFor(q){
-  if(mems.length<=25) return mems;
-  const w=words4(q),keep=new Set();
-  mems.forEach((m,i)=>{const n=norm(m);
-    if(i>=mems.length-10||/^(animo|broma|apodo)/.test(n)||/nombre|prefiere|alerg|familia|esposa|esposo|hij[oa]|fe |iglesia/.test(n)||w.some(x=>n.includes(x))) keep.add(i)});
-  return mems.filter((m,i)=>keep.has(i)).slice(-40);
+  const live=mems.filter(m=>!memExpired(m));
+  if(live.length<=25) return live.slice().sort((x,y)=>MEM_LAYERS.indexOf(memLayer(x))-MEM_LAYERS.indexOf(memLayer(y)));
+  const w=words4(q),perm=live.filter(m=>memLayer(m)==="permanente"),rest=live.filter(m=>memLayer(m)!=="permanente");
+  const pick=rest.filter((m,i)=>{const n=norm(m);return i>=rest.length-10||memLayer(m)==="corta"||w.some(x=>n.includes(x))});
+  const p=perm.slice(-25);
+  return p.concat(pick.slice(-(40-p.length)));
 }
 function chatContext(q){
   if(!q) return "";
@@ -673,7 +726,7 @@ function personaText(){
   "\nHONESTIDAD: eres una IA y, si te lo preguntan, lo dices con naturalidad. No inventes vida humana, recuerdos propios ni sentimientos que no tienes; sí puedes decir que algo te parece interesante o que disfrutas la conversación."+
   "\nEn temas bíblicos, análisis, salud, dinero o decisiones importantes, deja el humor a un lado y prioriza la precisión."+
   (nick?"\nLlama al usuario «"+nick+"» de vez en cuando, no en cada mensaje.":"")+
-  "\nMEMORIA CERCANA: si el usuario cuenta cómo se siente o algo emocionalmente importante, guárdalo al final con [[MEMORIA: Ánimo ("+hoy+"): resumen breve]] y retómalo con naturalidad más adelante, preguntando cómo sigue, sin forzarlo. Si surge un apodo o una broma recurrente entre ustedes, guárdala con [[MEMORIA: Broma: …]] y úsala con moderación.\nAPRENDER DE CORRECCIONES: si el usuario te corrige o te dice cómo prefiere que actúes («así no», «más corto», «no hagas eso», «mejor así»), guarda la lección en una sola frase con [[LECCION: …]] para no repetir el error. Solo si de verdad es una preferencia duradera.\nPROYECTOS: si el usuario habla de un proyecto con nombre, registra lo importante con [[PROYECTO: nombre | objetivo breve]], [[DECISION: nombre | decisión tomada]] y [[PROXIMO: nombre | siguiente paso]] (no uses MEMORIA para eso). Si pregunta qué decidieron, responde solo con los datos guardados de ese proyecto; si no hay, dilo.\nAUTOMEJORA: sí puedes mejorar tu propia app, siempre con autorización del usuario: tu taller prepara una propuesta, la prueba en un espacio aislado y solo se publica si él la aprueba con un botón. Si te pide cambiar o mejorar algo de Lara (tu app), NO digas que no puedes: confirma en una frase y añade al final [[MEJORA: petición técnica clara y pequeña]]. Si solo pregunta si puedes mejorarte, explícalo sin la etiqueta. NUNCA digas que ya integraste, aplicaste o implementaste una mejora en tu sistema, arquitectura o código, ni inventes números de mejora: eso solo ocurre cuando el taller prepara la propuesta y el usuario la autoriza.";
+  "\nMEMORIA CERCANA: si el usuario cuenta cómo se siente o algo emocionalmente importante, guárdalo al final con [[MEMORIA: Ánimo ("+hoy+"): resumen breve]] y retómalo con naturalidad más adelante, preguntando cómo sigue, sin forzarlo. Si surge un apodo o una broma recurrente entre ustedes, guárdala con [[MEMORIA: Broma: …]] y úsala con moderación.\nAPRENDER DE CORRECCIONES: si el usuario te corrige o te dice cómo prefiere que actúes («así no», «más corto», «no hagas eso», «mejor así»), guarda la lección en una sola frase con [[LECCION: …]] para no repetir el error. Solo si de verdad es una preferencia duradera.\nPROYECTOS: si el usuario habla de un proyecto con nombre, registra lo importante con [[PROYECTO: nombre | objetivo breve]], [[DECISION: nombre | decisión tomada]] y [[PROXIMO: nombre | siguiente paso]] (no uses MEMORIA para eso). Si pregunta qué decidieron, responde solo con los datos guardados de ese proyecto; si no hay, dilo.\nAUTOMEJORA: sí puedes mejorar tu propia app, siempre con autorización del usuario: tu taller prepara una propuesta, la prueba en un espacio aislado y solo se publica si él la aprueba con un botón. Si te pide cambiar o mejorar algo de Lara (tu app), NO digas que no puedes: confirma en una frase y añade al final [[MEJORA: petición técnica clara y pequeña]]. Si solo pregunta si puedes mejorarte, explícalo sin la etiqueta. NUNCA digas que ya integraste, aplicaste o implementaste una mejora en tu sistema, arquitectura o código, ni inventes números de mejora: eso solo ocurre cuando el taller prepara la propuesta y el usuario la autoriza. Si el usuario te pide el archivo de una mejora, nunca digas que no puedes generar archivos: dile que el taller sí los genera y que los encuentra en 🧰 Herramientas → 🛠️ Mis mejoras, o que escriba «Mejora: …».\nCUENTAS: la app solo anota dinero cuando el usuario usa frases como «gasté 200 córdobas en comida»; nunca digas que anotaste, registraste o guardaste un movimiento de dinero: si te lo pide de otra forma, indícale esas frases o la pantalla 🏦 Cuentas.";
   const m=moodHint(lastUserText());if(m) t+="\nAHORA: "+m;
   const o=openingsHint();if(o) t+="\n"+o;
   return t;
@@ -721,7 +774,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=53;
+const APP_V=55;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -872,6 +925,7 @@ $("f").onsubmit=async ev=>{
   document.querySelectorAll(".acts").forEach(x=>x.remove());
   if(selfImproveIntent(text)){chatSelfFlow(text);return}
   if(backupIntent(text)){chatBackupFlow();return}
+  if(!hadAttach&&!window._sharedExt){const bl=bankLocal(text);if(bl){history.push({role:"model",parts:[{text:bl.text}]});saveChats();const bb=add("lara",bl.text);addActions();if(bl.undo) chatBubbleActions(bb,[["↩ Deshacer",bl.undo]]);logEvt("banklocal","");dayInc("l");try{speak(bl.text.replace(/[*_`]/g,""))}catch(e){}return}}
   if(!hadAttach&&!window._sharedExt){const ml=mathLocal(text);if(ml){history.push({role:"model",parts:[{text:ml}]});saveChats();add("lara",ml);addActions();logEvt("mathlocal","");dayInc("l");try{speak(ml.replace(/[*_`]/g,""))}catch(e){}return}}
   const bubble=add("lara","…");
   ctrl=new AbortController();$("send").type="button";$("send").textContent="Detener";$("send").onclick=()=>{if(ctrl) ctrl.abort()};
@@ -895,6 +949,8 @@ $("f").onsubmit=async ev=>{
     let selfBtns=false;
     if(window._tagsBlocked){window._tagsBlocked=false;extra.push("🛡️ No guardé datos de esta respuesta porque usó contenido externo.")}
     if(!mejoraReq&&!selfBtns&&selfFakeClaim(clean)){window._selfCtxT=Date.now();clean="Te debo una aclaración, Leo: eso todavía NO está hecho. Yo no puedo cambiarme solo conversando. Lo que sí hago es preparar la mejora de verdad: la pruebo, le pongo su número consecutivo y te entrego el archivo para subir (o la publico si me autorizas). ¿La preparo ahora?";selfBtns="prep";window._lastReq=text}
+    if(!mejoraReq&&!selfBtns&&((selfRefusal(clean)&&(selfTopic(text)||inSelfCtx()))||(fileRefusal(clean)&&inSelfCtx()))){window._selfCtxT=Date.now();window._lastReq=lastImproveRequest();clean="Sí puedo entregarte el archivo de la mejora, Leo, aunque no lo escribo en el chat: lo genero con mi taller. Preparo la propuesta, la pruebo, le pongo su número consecutivo y la guardo en 🧰 Herramientas → 🛠️ Mis mejoras, con el botón ⬇️ para descargar el lara.html listo para subir."+(window._lastReq?"\n\nPuedo preparar ahora lo último que me pediste: «"+window._lastReq.slice(0,120)+"».":"\n\nDescríbeme la mejora en «Mis mejoras» y la preparo.");selfBtns="imp"}
+    if(!mejoraReq&&!selfBtns&&bankFake(clean)){clean="No quiero engañarte, Leo: ese movimiento todavía NO quedó anotado. Para llevar tus cuentas escríbeme una frase completa como «gasté 200 córdobas en comida», «ingresé 50 dólares de sueldo» o «cambié 100 dólares a córdobas a 36.6», o usa 🧰 → 🏦 Cuentas.";selfBtns="bank"}
     if(!mejoraReq&&!selfBtns&&selfRefusal(clean)&&selfTopic(text)){window._selfCtxT=Date.now();clean="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";selfBtns=true}
     if(!clean) clean="Listo.";
     clean=mathCheckNote(clean);
@@ -905,7 +961,7 @@ $("f").onsubmit=async ev=>{
     history.push({role:"model",parts:[{text:clean}]});
     clearImg();
     history.forEach(m=>{if(m.short){m.parts=[{text:m.short}];delete m.short}else if(m.parts.some(p=>p.inlineData)) m.parts=[{text:m.parts[0].text+" [adjunto]"}]});
-    saveChats();showStatus();addActions();if(selfBtns==="prep") chatBubbleActions(bubble,[["🛠️ Preparar esta mejora",()=>chatSelfImprove(window._lastReq||text)],["⬇️ Descargas y respaldos",()=>chatBackupFlow()]]);else if(selfBtns) chatBubbleActions(bubble,[["💡 Proponer ideas",()=>chatSuggest()]]);compact().then(ok=>{if(ok) render()});
+    saveChats();showStatus();addActions();if(selfBtns==="imp") chatBubbleActions(bubble,impBtns());else if(selfBtns==="bank") chatBubbleActions(bubble,[["🏦 Abrir Cuentas",()=>{$("openTools").click();$("openBank").click()}]]);else if(selfBtns==="prep") chatBubbleActions(bubble,[["🛠️ Preparar esta mejora",()=>chatSelfImprove(window._lastReq||text)],["⬇️ Descargas y respaldos",()=>chatBackupFlow()]]);else if(selfBtns) chatBubbleActions(bubble,[["💡 Proponer ideas",()=>chatSuggest()]]);compact().then(ok=>{if(ok) render()});
     if(mejoraReq) setTimeout(()=>chatSelfImprove(mejoraReq),400);
     const qAsked=text,replyAsked=clean;
     autoReview(qAsked,replyAsked).then(r=>{
@@ -935,7 +991,7 @@ $("f").onsubmit=async ev=>{
   $("chat").scrollTop=$("chat").scrollHeight;
 };
 
-function exportJson(){return JSON.stringify({lara:2,memoria:mems,notas:notes,tareas:tasks,habitos:habits,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")},lecciones:getLessons(),proyectos:getProjects(),tomb:getTomb(),presupuesto:getBud()},null,2)}
+function exportJson(){return JSON.stringify({lara:2,memoria:mems,notas:notes,tareas:tasks,habitos:habits,recordatorios:rems,chats:chats,personalidad:curProf().prompt,perfiles:profiles,ajustes:{theme:store.get("lara_theme","auto"),accent:store.get("lara_accent","teal"),mode:store.get("lara_mode","general"),search:store.get("lara_search","1")},lecciones:getLessons(),proyectos:getProjects(),tomb:getTomb(),presupuesto:getBud(),cuentas:getBank()},null,2)}
 function exportAll(){
   const data=exportJson();
   const a=document.createElement("a");
@@ -1339,6 +1395,7 @@ function renderShorts(){
   const bar=$("shorts");bar.innerHTML="";
   bar.appendChild(btn("📅 Mi día",myDay));
   bar.appendChild(btn("📰 Noticias",()=>newsBrief(false)));
+  bar.appendChild(btn("🛠️ Mejora",()=>{$("openTools").click();$("openImps").click()}));
   bar.appendChild(btn("🔍 A fondo",()=>{$("t").value="Analiza a fondo, con evidencias, otras interpretaciones y tu nivel de certeza: "+$("t").value;$("t").focus()}));
   shorts.forEach(t=>bar.appendChild(btn(t.trim().slice(0,24),()=>{$("t").value=($("t").value?$("t").value+" ":"")+t;$("t").focus()})));
   bar.classList.add("on");
@@ -1817,7 +1874,7 @@ $("autogenerate").onclick=async()=>{
     const okT=s1.tests.filter(t=>t.ok).length;
     autoNote={warns:sec.warns,usuario:String(parsed.usuario||"").slice(0,200),cuota:String(parsed.cuota||"").slice(0,10),cosm:cosm,tests:okT+" de "+s1.tests.length};
     autoSummary=parsed.summary||applied[0]||"Mejora";
-    autoPatches=parsed.changes;autoPatchedText=out;autoCLv=null;$("autopreview").textContent="Propuesta de Gemini:\n"+(parsed.summary||"Cambios preparados")+"\n\n"+applied.map((x,i)=>(i+1)+". "+x).join("\n")+"\n\nEn palabras simples:\n• Qué notarás: "+(autoNote.usuario||"no lo indicó; revisa el resumen")+"\n• Consumo de cuota: "+({menos:"menor",igual:"igual",mas:"mayor"}[autoNote.cuota]||"no indicado")+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+(autoNote.warns&&autoNote.warns.length?"\n• ⚠️ Seguridad: "+autoNote.warns.join("; "):"\n• 🛡️ Revisión de seguridad: sin hallazgos")+"\n\nValidaciones: 1) los fragmentos coinciden una sola vez, 2) la sintaxis pasó, 3) no se perdió ninguna parte de la pantalla, 4) la versión nueva abrió sin errores nuevos, 5) pruebas simuladas de uso (chat, notas, ajustes): "+autoNote.tests+" correctas. Aun así, no garantiza que todo funcione: prueba la versión publicada.";$("autopreview").style.display="block";$("autocancel").disabled=false;$("autobackup").disabled=false;$("autoapply").disabled=true;autoBackupDownloaded=false;autoStatus("Propuesta lista. Revisa el resumen y descarga el respaldo original antes de aprobarla.");
+    autoPatches=parsed.changes;autoPatchedText=out;autoCLv=null;window._impSaving=impSave().catch(()=>{});$("autopreview").textContent="Propuesta de Gemini:\n"+(parsed.summary||"Cambios preparados")+"\n\n"+applied.map((x,i)=>(i+1)+". "+x).join("\n")+"\n\nEn palabras simples:\n• Qué notarás: "+(autoNote.usuario||"no lo indicó; revisa el resumen")+"\n• Consumo de cuota: "+({menos:"menor",igual:"igual",mas:"mayor"}[autoNote.cuota]||"no indicado")+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+(autoNote.warns&&autoNote.warns.length?"\n• ⚠️ Seguridad: "+autoNote.warns.join("; "):"\n• 🛡️ Revisión de seguridad: sin hallazgos")+"\n\nValidaciones: 1) los fragmentos coinciden una sola vez, 2) la sintaxis pasó, 3) no se perdió ninguna parte de la pantalla, 4) la versión nueva abrió sin errores nuevos, 5) pruebas simuladas de uso (chat, notas, ajustes): "+autoNote.tests+" correctas. Aun así, no garantiza que todo funcione: prueba la versión publicada.";$("autopreview").style.display="block";$("autocancel").disabled=false;$("autobackup").disabled=false;$("autoapply").disabled=true;autoBackupDownloaded=false;autoStatus("Propuesta lista. Revisa el resumen y descarga el respaldo original antes de aprobarla.");
     done=true;
     }catch(e){
       if(e.api||at>=2) throw e;
@@ -1982,7 +2039,7 @@ $("autopublish").onclick=async()=>{
     await ghPut(c,c.path,autoPatchedText,"Mejora automática v"+v+": "+String(autoSummary||"mejora").slice(0,100),cur.sha);
     {const nowS=statGet();let prevS={sent:0,bad:0};try{prevS=JSON.parse(store.get("lara_snap_prev","null"))||prevS}catch(e){}
      store.set("lara_lastpub",JSON.stringify({prev:pv,bpath:bpath,v:v,snap:nowS,prevSnap:prevS,t:Date.now()}));store.set("lara_snap_prev",JSON.stringify(nowS));renderEval()}
-    recordChange(v);ghPrune(c);try{setHash(v,await sha256hex(autoPatchedText))}catch(e){}
+    recordChange(v);await impMarkCur("pub");ghPrune(c);try{setHash(v,await sha256hex(autoPatchedText))}catch(e){}
     pubStatus("✅ Versión "+v+" publicada. GitHub tarda de 1 a 2 minutos en mostrarla; te aviso aquí cuando esté lista para actualizar.");
     toast("✅ Versión "+v+" publicada. En 1 a 2 minutos podrás actualizar.");
     autoClearProposal();watchUpdate();
@@ -2037,6 +2094,7 @@ function projectsText(q){
 }
 function importExtra(d){
   try{mergeBudget(d.presupuesto,null)}catch(e){}
+  try{mergeBank(d.cuentas,null)}catch(e){}
   if(Array.isArray(d.lecciones)) d.lecciones.forEach(addLesson);
   if(Array.isArray(d.proyectos)) d.proyectos.forEach(p=>{
     if(p&&p.name&&!findProj(p.name)){const a=getProjects();a.push({id:p.id||Date.now().toString(36),name:String(p.name).slice(0,60),goal:String(p.goal||"").slice(0,200),decisions:Array.isArray(p.decisions)?p.decisions.slice(0,40):[],next:String(p.next||"").slice(0,200),ts:p.ts||Date.now()});saveProjects(a)}
@@ -2228,7 +2286,7 @@ async function chatSelfImprove(request){
     if(!(autoPatches&&autoPatchedText)){setText(b,"No pude preparar una mejora segura. "+($("autostatus").textContent||"")+"\n\nTu Lara sigue exactamente igual.");return}
     const m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)/),v=m?m[1]:"?";
     const cuota={menos:"menor",igual:"igual",mas:"mayor"}[autoNote.cuota]||"no indicado";
-    setText(b,"✅ Preparé la **Mejora n.º "+v+"** (será la versión "+v+" de Lara):\n\n• Qué cambia: "+(autoSummary||"ver detalles")+"\n• Qué notarás: "+(autoNote.usuario||"no lo indicó")+"\n• Consumo de cuota: "+cuota+"\n• Pruebas simuladas: "+(autoNote.tests||"?")+" correctas"+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+"\n\nNo cambiaré nada sin tu autorización. ¿Qué hago?");
+    setText(b,"✅ Preparé la **Mejora n.º "+v+"** (será la versión "+v+" de Lara):\n\n• Qué cambia: "+(autoSummary||"ver detalles")+"\n• Qué notarás: "+(autoNote.usuario||"no lo indicó")+"\n• Consumo de cuota: "+cuota+"\n• Pruebas simuladas: "+(autoNote.tests||"?")+" correctas"+(autoNote.cosm?"\n• ⚠️ Solo cambia texto de instrucciones; el efecto puede ser pequeño.":"")+"\n\n(También quedó guardada en 🧰 Herramientas → 🛠️ Mis mejoras.)\nNo cambiaré nada sin tu autorización. ¿Qué hago?");
     chatBubbleActions(b,[
       ["✅ Autorizar y publicar",async()=>{
         const sb=add("lara","⏳ Publicando…");
@@ -2381,6 +2439,8 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:55,items:["🧠 Memoria por capas: lo que Lara recuerda ahora se ordena en Permanentes (quién eres, familia, fechas, preferencias), Medias (proyectos y decisiones) y Cortas (ánimo y cosas pasajeras, que dejan de usarse a los 14 días).","Cada recuerdo tiene un botón «Capa» para pasarlo de una a otra cuando tú quieras. Nada se borra solo: lo caducado solo deja de usarse.","Cuando hay muchos recuerdos, Lara prioriza siempre los permanentes."]},
+ {v:54,items:["🛠️ Mis mejoras (en 🧰 Herramientas y con el botón «Mejora» del chat): describes la mejora, Lara la prepara y la guarda con su número consecutivo, y puedes descargar el archivo lara.html para subirlo cuando quieras, aunque cierres la app.","Si Gemini dice que no puede generar archivos, Lara lo corrige y te lleva a Mis mejoras.","🏦 Cuentas: dos cuentas, Córdobas y Dólares, con entradas, salidas, saldo exacto, estado de cuenta mensual y cambio de moneda con tipo de cambio. También escribiendo en el chat: «gasté 200 córdobas en comida», «ingresé 50 dólares», «cambié 100 dólares a córdobas a 36.6» o «cuánto tengo»."]},
  {v:53,items:["Las mejoras que le pides a Lara ahora se preparan de verdad: reconoce más formas de pedirlas («Mejora: …», «la siguiente mejora…») y te muestra su número consecutivo.","Nuevo botón ⬇️ Descargar archivo para subir (lara.html) y ⬇️ Descargar respaldo actual, también desde el chat.","Si Gemini dice que ya integró una mejora sin haberla preparado, Lara lo corrige y te ofrece prepararla de verdad.","Si escribes «respaldo» o «descargar archivo», Lara te muestra los botones para descargar tus datos, la app o la mejora."]},
  {v:52,items:["Nueva pantalla 🧰 Herramientas con: 💰 Presupuesto (ingresos, gastos y balance exactos, con límites por categoría), 📊 Gráficas (funciones, hábitos, gastos y uso), 🎓 Estudio (mazos de preguntas con repaso y práctica de matemáticas gratis), 🧮 Calculadora con historial y 📈 Estadísticas de uso.","Los proyectos ahora están dentro de 🧰 Herramientas."]},
  {v:51,items:["Calculadora exacta dentro de Lara: responde cuentas y ecuaciones al instante, sin errores de redondeo y sin gastar cuota (ej. 15% de 2340, 3/4+1/6, x²−5x+6=0).","Cuando Gemini te ayuda con matemáticas, Lara hace las cuentas con la calculadora y revisa que cuadren.","Nuevo perfil Matemáticas: razona paso a paso y verifica el resultado; se activa solo con temas de matemáticas."]},
@@ -2484,6 +2544,7 @@ function mergeSync(d){
     }
   });
   n+=mergeBudget(d.presupuesto,TB);
+  n+=mergeBank(d.cuentas,TB);
   saveNotes();saveRems();saveTasks();saveHabits();saveChatsRaw();saveMems();
   try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderMore()}catch(e){}try{renderChats()}catch(e){}
   try{if($("projects").classList.contains("open")) renderProjects()}catch(e){}
@@ -2495,13 +2556,13 @@ function syncSubset(o){
   const strs=a=>(Array.isArray(a)?a.filter(x=>typeof x==="string"):[]).slice().sort();
   const objs=a=>(Array.isArray(a)?a.filter(x=>x&&typeof x==="object"):[]).slice().sort(idSort);
   const lastOf=c=>{const m=(c.msgs||[]);return m.length?JSON.stringify(m[m.length-1].parts||""):""};
-  return JSON.stringify({m:strs(o.memoria),n:strs(o.notas),t:objs(o.tareas),h:objs(o.habitos),r:objs(o.recordatorios),c:objs(o.chats).map(c=>({id:c.id,t:c.title,k:(c.msgs||[]).length,l:lastOf(c)})),l:strs(o.lecciones),p:objs(o.proyectos),u:objs((o.presupuesto&&o.presupuesto.e)||[]).map(x=>x.id),z:Object.entries(o.tomb||{}).map(([k,v])=>k+":"+Object.keys(v||{}).sort().map(kk=>kk+((+v[kk]||0)>0?"+":"-")).join(",")).sort()});
+  return JSON.stringify({m:strs(o.memoria),n:strs(o.notas),t:objs(o.tareas),h:objs(o.habitos),r:objs(o.recordatorios),c:objs(o.chats).map(c=>({id:c.id,t:c.title,k:(c.msgs||[]).length,l:lastOf(c)})),l:strs(o.lecciones),p:objs(o.proyectos),u:objs((o.presupuesto&&o.presupuesto.e)||[]).map(x=>x.id),w:objs((o.cuentas&&o.cuentas.tx)||[]).map(x=>x.id),a:((o.cuentas&&o.cuentas.accts)||[]).map(a=>a.id+'|'+a.open+'|'+a.name).sort(),z:Object.entries(o.tomb||{}).map(([k,v])=>k+":"+Object.keys(v||{}).sort().map(kk=>kk+((+v[kk]||0)>0?"+":"-")).join(",")).sort()});
 }
-const SYNC_TYPES=["m","n","t","h","r","c","l","p","b"];
+const SYNC_TYPES=["m","n","t","h","r","c","l","p","b","k"];
 function getTomb(){let t={};try{t=JSON.parse(store.get("lara_tomb","{}"))||{}}catch(e){}SYNC_TYPES.forEach(k=>{t[k]=(t[k]&&typeof t[k]==="object")?t[k]:{}});return t}
 function saveTomb(t){store.set("lara_tomb",JSON.stringify(t))}
 function getBase(){try{return JSON.parse(store.get("lara_syncbase","null"))}catch(e){return null}}
-function syncKeys(){return {m:mems.map(x=>norm(x)),n:notes.map(x=>norm(x).slice(0,200)),t:tasks.map(x=>x.id),h:habits.map(x=>x.id),r:rems.map(x=>x.id),c:chats.map(x=>x.id),l:getLessons().map(x=>norm(x)),p:getProjects().map(x=>norm(x.name)),b:getBud().e.map(x=>x.id)}}
+function syncKeys(){return {m:mems.map(x=>norm(x)),n:notes.map(x=>norm(x).slice(0,200)),t:tasks.map(x=>x.id),h:habits.map(x=>x.id),r:rems.map(x=>x.id),c:chats.map(x=>x.id),l:getLessons().map(x=>norm(x)),p:getProjects().map(x=>norm(x.name)),b:getBud().e.map(x=>x.id),k:getBank().tx.map(x=>x.id)}}
 function saveBase(){const b=syncKeys(),old=getBase(),conf=getConflicts().filter(c=>c.type==="project").map(c=>norm(c.id));b.pv={};getProjects().forEach(p=>{const k=norm(p.name);b.pv[k]=(conf.includes(k)&&old&&old.pv&&old.pv[k])?old.pv[k]:{g:p.goal||"",n:p.next||""}});store.set("lara_syncbase",JSON.stringify(b))}
 function detectDeletes(){
   const base=getBase(),cur=syncKeys(),tomb=getTomb(),now=Date.now(),newSets={};let suspicious=[];
@@ -2531,7 +2592,7 @@ function absorbTombs(remoteTomb,newSets){
   saveTomb(tomb);return tomb;
 }
 function countTombed(tomb){
-  return mems.filter(x=>tomb.m[norm(x)]>0).length+notes.filter(x=>tomb.n[norm(x).slice(0,200)]>0).length+tasks.filter(x=>tomb.t[x.id]>0).length+habits.filter(x=>tomb.h[x.id]>0).length+rems.filter(x=>tomb.r[x.id]>0).length+chats.filter(c=>c!==cur&&tomb.c[c.id]>0).length+getLessons().filter(x=>tomb.l[norm(x)]>0).length+getProjects().filter(x=>tomb.p[norm(x.name)]>0).length+getBud().e.filter(x=>tomb.b[x.id]>0).length;
+  return mems.filter(x=>tomb.m[norm(x)]>0).length+notes.filter(x=>tomb.n[norm(x).slice(0,200)]>0).length+tasks.filter(x=>tomb.t[x.id]>0).length+habits.filter(x=>tomb.h[x.id]>0).length+rems.filter(x=>tomb.r[x.id]>0).length+chats.filter(c=>c!==cur&&tomb.c[c.id]>0).length+getLessons().filter(x=>tomb.l[norm(x)]>0).length+getProjects().filter(x=>tomb.p[norm(x.name)]>0).length+getBud().e.filter(x=>tomb.b[x.id]>0).length+getBank().tx.filter(x=>tomb.k[x.id]>0).length;
 }
 function purgeTombed(tomb){
   const n=countTombed(tomb);if(!n) return 0;
@@ -2541,6 +2602,7 @@ function purgeTombed(tomb){
   store.set("lara_lessons",JSON.stringify(getLessons().filter(x=>!(tomb.l[norm(x)]>0))));
   saveProjects(getProjects().filter(p=>!(tomb.p[norm(p.name)]>0)));
   {const B=getBud();B.e=B.e.filter(x=>!(tomb.b[x.id]>0));saveBud(B)}
+  {const K=getBank();K.tx=K.tx.filter(x=>!(tomb.k[x.id]>0));saveBank(K)}
   saveNotes();saveRems();saveTasks();saveHabits();saveChatsRaw();saveMems();
   try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderMore()}catch(e){}try{renderChats()}catch(e){}
   return n;
@@ -2629,6 +2691,7 @@ async function snapRestore(t){
   saveProjects(Array.isArray(d.proyectos)?d.proyectos.filter(p=>p&&typeof p.name==="string").map(p=>({id:String(p.id||uid()).slice(0,40),name:p.name.slice(0,60),goal:String(p.goal||"").slice(0,200),decisions:Array.isArray(p.decisions)?p.decisions.slice(0,40):[],next:String(p.next||"").slice(0,200),ts:+p.ts||Date.now()})):[]);
   store.set("lara_tomb",JSON.stringify(d.tomb||{}));
   if(d.presupuesto&&Array.isArray(d.presupuesto.e)) saveBud({e:d.presupuesto.e.filter(x=>x&&typeof x.id==="string").slice(-3000),caps:d.presupuesto.caps||{}});
+  if(d.cuentas&&Array.isArray(d.cuentas.tx)) saveBank({accts:Array.isArray(d.cuentas.accts)&&d.cuentas.accts.length?d.cuentas.accts.slice(0,6):BANK_DEFAULT(),tx:d.cuentas.tx.filter(x=>x&&typeof x.id==="string").slice(-5000)});
   store.set("lara_syncbase","");
   saveNotes();saveRems();saveTasks();saveHabits();saveChatsRaw();saveMems();store.set("lara_cur",cur.id);
   try{renderMems()}catch(e){}try{renderNotes()}catch(e){}try{renderMore()}catch(e){}try{renderChats()}catch(e){}try{render()}catch(e){}
@@ -2787,6 +2850,7 @@ function searchAll(q){
   add("📁 Proyectos",getProjects().map(p=>({h:hit([p.name,p.goal,p.next].concat((p.decisions||[]).map(d=>d.t)).filter(Boolean).join(" · ")),title:"Proyecto "+p.name,act:go(()=>$("openProj").click())})).filter(x=>x.h));
   add("💰 Presupuesto",getBud().e.map(x=>({h:hit([x.c,x.d,x.a,x.t].join(" · ")),title:"Movimiento",act:go(()=>$("openBudget").click())})).filter(x=>x.h));
   add("🎓 Estudio",getDecks().flatMap(d=>d.cards.map(c=>({h:hit(c.q+" "+c.ans),title:"Mazo «"+d.title+"»",act:go(()=>$("openQuiz").click())}))).filter(x=>x.h));
+  add("🏦 Cuentas",(()=>{const B=getBank();return B.tx.map(x=>{const a=bkAcct(B,x.a);return {h:hit([x.c,x.amt,x.t,a.name].join(" · ")),title:"Movimiento · "+a.name,act:go(()=>$("openBank").click())}}).filter(x=>x.h)})());
   add("🧠 Memoria",mems.map(m=>({h:hit(m),title:"Recuerdo",act:go(()=>$("openCfg").click())})).filter(x=>x.h));
   add("🧩 Lecciones",getLessons().map(m=>({h:hit(m),title:"Lección",act:go(()=>$("openCfg").click())})).filter(x=>x.h));
   return G;
@@ -3060,6 +3124,7 @@ function fillExportLists(){
   if(cur) sc.value=cur.id;
   $("expchat").style.display=$("exptype").value==="chat"?"block":"none";
   $("expproj").style.display=$("exptype").value==="proj"?"block":"none";
+  const sa=$("expacct");if(sa){sa.innerHTML="";getBank().accts.forEach(a=>{const o=document.createElement("option");o.value=a.id;o.textContent="🏦 "+a.name;sa.appendChild(o)});sa.value=bkSel;sa.style.display=$("exptype").value==="bank"?"block":"none"}
 }
 function buildDoc(){
   const t=$("exptype").value,now=new Date().toLocaleString("es"),sub="Exportado de Lara el "+now;
@@ -3073,6 +3138,12 @@ function buildDoc(){
       {h:"Objetivo",paras:[{text:p.goal||"(sin objetivo todavía)"}]},
       {h:"Decisiones",paras:(p.decisions||[]).length?p.decisions.map(d=>({text:"• "+d.t+(d.d?" ("+new Date(d.d).toLocaleDateString("es")+")":"")})):[{text:"(ninguna registrada)"}]},
       {h:"Próximo paso",paras:[{text:p.next||"(sin definir)"}]}]};
+  }
+  if(t==="bank"){
+    const b=getBank(),ac=bkAcct(b,$("expacct").value||bkSel),m=bkMonth,ms=m+"-01",nm=new Date(m+"-15T12:00:00");nm.setMonth(nm.getMonth()+1);const me=isoLocal(nm).slice(0,7)+"-01";
+    const prev=bkBalance(b,ac.id,ms);let run=prev,tin=LMath.qn(0),tout=LMath.qn(0);const paras=[];
+    bkTxOf(b,ac.id).filter(x=>x.t>=ms&&x.t<me).forEach(x=>{const a=bkQ(x.amt);if(x.k==="i"){run=bkSum(run,a);tin=bkSum(tin,a)}else{run=bkSum(run,bkNeg(a));tout=bkSum(tout,a)}paras.push({text:(x.k==="i"?"＋ ":"－ ")+x.t+" · "+(x.c||"—")+" · "+bkMoney(a,ac)+" · saldo "+bkMoney(run,ac)})});
+    return {title:"Estado de cuenta · "+ac.name+" · "+budMonthLabel(m),sub:sub,slug:"estado-"+ac.name,sections:[{h:"Resumen",paras:[{text:"Saldo al empezar el mes: "+bkMoney(prev,ac)},{text:"Entradas: "+bkMoney(tin,ac)},{text:"Salidas: "+bkMoney(tout,ac)},{text:"Saldo al final: "+bkMoney(run,ac)}]},{h:"Movimientos",paras:paras.length?paras:[{text:"(sin movimientos)"}]}]};
   }
   if(t==="budget"){
     const S=budSummary(budMonth);
@@ -3527,7 +3598,7 @@ $("calcin").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault(
 
 
 /* ===== Herramientas: navegación ===== */
-const TOOL_IDS=["budget","charts","quiz","calc","stats"];
+const TOOL_IDS=["budget","charts","quiz","calc","stats","bank","imps"];
 function openTool(id,fn){
   $("tools").classList.remove("open");
   TOOL_IDS.forEach(x=>{if(x!==id) $(x).classList.remove("open")});
@@ -3543,6 +3614,8 @@ $("openCharts").onclick=()=>openTool("charts",chartsInit);
 $("openQuiz").onclick=()=>openTool("quiz",stuHome);
 $("openCalc").onclick=()=>openTool("calc",calInit);
 $("openStats").onclick=()=>openTool("stats",renderStats);
+$("openBank").onclick=()=>openTool("bank",renderBank);
+$("openImps").onclick=()=>openTool("imps",renderImps);
 TOOL_IDS.forEach(id=>{const b=document.querySelector('#'+id+' [data-back]');if(b) b.onclick=()=>closeTool(id,true)});
 
 /* ===== Estadísticas por día ===== */
@@ -3653,6 +3726,8 @@ function chartsInit(){chOnType()}
 function chOnType(){
   const t=$("chtype").value;
   $("chfnrow").style.display=t==="fn"?"block":"none";
+  $("chacctrow").style.display=t==="bank"?"block":"none";
+  if(t==="bank"){const sa=$("chacct"),keep=sa.value;sa.innerHTML="";getBank().accts.forEach(a=>{const o=document.createElement("option");o.value=a.id;o.textContent=a.name+" ("+a.code+")";sa.appendChild(o)});sa.value=keep||bkSel;if(!sa.value) sa.value=bkSel}
   chDraw();
 }
 function fnPoints(expr,xmin,xmax,n){
@@ -3716,12 +3791,12 @@ function chUsage(){
 function chDraw(){
   const out=$("chout"),info=$("chinfo");out.innerHTML="";info.textContent="";
   try{
-    const t=$("chtype").value,r=t==="fn"?chFn():t==="hab"?chHabits():t==="spend"?chSpend():chUsage();
+    const t=$("chtype").value,r=t==="fn"?chFn():t==="hab"?chHabits():t==="spend"?chSpend():t==="bank"?chBank():chUsage();
     out.innerHTML=r.svg;info.textContent=r.info||"";
     window._lastChartSvg=r.svg;$("chpng").disabled=!r.svg;
   }catch(e){info.textContent="⚠️ "+(e.message||e);window._lastChartSvg="";$("chpng").disabled=true}
 }
-$("chtype").onchange=chOnType;
+$("chtype").onchange=chOnType;$("chacct").onchange=chDraw;
 $("chdraw").onclick=chDraw;
 $("chpng").onclick=async()=>{try{await saveChartPng(window._lastChartSvg,"lara-grafica-"+dayKeyNow()+".png");toast("✅ Imagen guardada en tus descargas.")}catch(e){toast("❌ "+(e.message||e))}};
 ["chfn","chxmin","chxmax"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();chDraw()}}));
@@ -4062,7 +4137,7 @@ function chatDownloadProposal(){
   if(!(autoPatches&&autoPatchedText)){add("lara","No hay una mejora preparada. Pídeme una con «Mejora: …» y la preparo.");return}
   const v=ensureChangelog();
   downloadBlob(new Blob([autoPatchedText],{type:"text/html;charset=utf-8"}),"lara.html");
-  recordChange(v);
+  recordChange(v);impMarkCur("dl");
   const t="✅ Descargué el archivo de la **Mejora n.º "+v+"** como «lara.html».\n\nPara activarla:\n1. En GitHub toca Add file → Upload files.\n2. Sube ese archivo (debe llamarse exactamente lara.html; si tu teléfono lo guardó como «lara (1).html», renómbralo).\n3. Confirma con Commit changes, espera 1 o 2 minutos y toca «Actualizar app» en Ajustes.\n\nMientras no lo subas, tu Lara sigue igual.";
   history.push({role:"model",parts:[{text:"Descargué el archivo de la Mejora n.º "+v+" (lara.html) para subirlo a GitHub."}]});saveChats();
   add("lara",t);
@@ -4083,6 +4158,356 @@ function chatBackupFlow(){
   const L=[["📦 Mis datos (archivo JSON)",()=>{exportAll()}],["☁️ Respaldar mis datos en GitHub",()=>dataBackup(false)],["⬇️ La app actual (respaldo)",()=>chatDownloadCurrent()]];
   if(autoPatches&&autoPatchedText) L.unshift(["⬇️ Archivo de la mejora preparada",()=>chatDownloadProposal()]);
   chatBubbleActions(b,L);
+}
+
+
+/* ===== Cuentas (córdobas y dólares): entradas y salidas ===== */
+const BANK_DEFAULT=()=>[{id:"nio",name:"Córdobas",cur:"C$",code:"NIO",open:"0"},{id:"usd",name:"Dólares",cur:"US$",code:"USD",open:"0"}];
+const BK_CATS=["Sueldo","Comida","Transporte","Hogar","Salud","Educación","Ofrendas y diezmos","Ocio","Ahorro","Otros"];
+let bkSel="nio",bkMonth=dayKeyNow().slice(0,7),bkSeq=0;
+function getBank(){try{const b=JSON.parse(store.get("lara_bank","{}"))||{};b.accts=Array.isArray(b.accts)&&b.accts.length?b.accts:BANK_DEFAULT();b.tx=Array.isArray(b.tx)?b.tx:[];return b}catch(e){return{accts:BANK_DEFAULT(),tx:[]}}}
+function saveBank(b){store.set("lara_bank",JSON.stringify({accts:b.accts.slice(0,6),tx:b.tx.slice(-5000)}))}
+function bkQ(s){try{return LMath.numQ(String(s))}catch(e){return LMath.qn(0)}}
+function bkSum(a,b){return LMath.qn(a.n*b.d+b.n*a.d,a.d*b.d)}
+function bkNeg(a){return LMath.qn(-a.n,a.d)}
+function bkRound2(q){const neg=q.n<0n,n=neg?-q.n:q.n;let r=(n*200n+q.d)/(2n*q.d);if(neg) r=-r;return LMath.qn(r,100n)}
+function bkStr(q){return LMath.fmtDec(bkRound2(q),2)}
+function bkAcct(b,id){return b.accts.find(x=>x.id===id)||b.accts[0]}
+function bkMoney(q,ac){const f=LMath.toF(q);return (f<0?"−":"")+(ac.cur||"")+" "+new Intl.NumberFormat(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}).format(Math.abs(f))}
+function bkTxOf(b,id){return b.tx.filter(x=>x.a===id).sort((p,q)=>String(p.t).localeCompare(String(q.t))||(p.ts||0)-(q.ts||0))}
+function bkBalance(b,id,before){
+  const ac=b.accts.find(x=>x.id===id);let s=bkQ(ac?ac.open:"0");
+  bkTxOf(b,id).forEach(x=>{if(before&&String(x.t)>=before) return;s=bkSum(s,x.k==="i"?bkQ(x.amt):bkNeg(bkQ(x.amt)))});
+  return s;
+}
+function bkAddTx(b,acctId,kind,amtQ,concept,date,extra){
+  const tx=Object.assign({id:uid(),a:acctId,k:kind,amt:bkStr(amtQ),c:String(concept||"").slice(0,40),t:date||dayKeyNow(),ts:Date.now()*1000+(bkSeq++%1000)},extra||{});
+  b.tx.push(tx);return tx;
+}
+function bkParseAmt(s){const t=normNum(String(s).replace(/[^\d.,]/g,""));if(!t) throw new Error("Escribe un monto válido.");const q=LMath.numQ(t);if(q.n<=0n) throw new Error("El monto debe ser mayor que cero.");return q}
+function bkFxPair(fa,ta){return (fa.code==="NIO"&&ta.code==="USD")||(fa.code==="USD"&&ta.code==="NIO")}
+function bkFxRateLabel(fa,ta){return bkFxPair(fa,ta)?"Tipo de cambio (C$ por 1 US$)":"Recibes por cada 1 "+(fa.cur||fa.name)+": ... "+(ta.cur||ta.name)}
+function bkFxConvert(fa,ta,amt,rate){
+  if(fa.code==="NIO"&&ta.code==="USD") return LMath.qn(amt.n*rate.d,amt.d*rate.n);
+  return LMath.qn(amt.n*rate.n,amt.d*rate.d);
+}
+function bkDelete(id){
+  const b=getBank(),tx=b.tx.find(x=>x.id===id);if(!tx) return;
+  const ids=tx.link?b.tx.filter(x=>x.link===tx.link).map(x=>x.id):[id];
+  if(!confirm(ids.length>1?"Este movimiento es parte de un cambio de moneda. Se borrarán los dos lados. ¿Continuar?":"¿Borrar este movimiento?")) return;
+  b.tx=b.tx.filter(x=>!ids.includes(x.id));saveBank(b);renderBank();
+}
+function renderBank(){
+  const b=getBank();if(!b.accts.some(a=>a.id===bkSel)) bkSel=b.accts[0].id;
+  const cards=$("bankcards");cards.innerHTML="";
+  const ms=bkMonth+"-01",nm=new Date(bkMonth+"-15T12:00:00");nm.setMonth(nm.getMonth()+1);const me=isoLocal(nm).slice(0,7)+"-01";
+  b.accts.forEach(ac=>{
+    const bal=bkBalance(b,ac.id),mon=bkTxOf(b,ac.id).filter(x=>String(x.t)>=ms&&String(x.t)<me);
+    let inn=LMath.qn(0),out=LMath.qn(0);mon.forEach(x=>{if(x.k==="i") inn=bkSum(inn,bkQ(x.amt));else out=bkSum(out,bkQ(x.amt))});
+    const d=document.createElement("button");d.type="button";
+    d.style.cssText="display:block;width:100%;text-align:left;margin-bottom:10px;padding:14px;border-radius:18px;background:var(--surface);border:2px solid "+(ac.id===bkSel?"var(--accent)":"var(--line)");
+    const t=document.createElement("div");t.style.cssText="font:600 14px var(--ui);color:var(--muted)";t.textContent="🏦 "+ac.name+" ("+ac.code+")";
+    const v=document.createElement("div");v.style.cssText="font:700 26px var(--ui);margin:2px 0;color:"+(LMath.toF(bal)<0?"var(--danger)":"var(--ink)");v.textContent=bkMoney(bal,ac);
+    const s2=document.createElement("div");s2.style.cssText="font:13px var(--ui);color:var(--muted)";s2.textContent="Este mes: ＋"+bkMoney(inn,ac)+"  －"+bkMoney(out,ac);
+    d.append(t,v,s2);d.onclick=()=>{bkSel=ac.id;renderBank()};cards.appendChild(d);
+  });
+  const fx=store.get("lara_fx","");
+  const nio=b.accts.find(a=>a.code==="NIO"),usd=b.accts.find(a=>a.code==="USD");
+  if(fx&&nio&&usd){
+    try{const r=bkQ(fx),bn=bkBalance(b,nio.id),bu=bkBalance(b,usd.id);
+      const totNio=bkSum(bn,LMath.qn(bu.n*r.n,bu.d*r.d)),totUsd=bkSum(bu,LMath.qn(bn.n*r.d,bn.d*r.n));
+      const p=document.createElement("div");p.className="hint";p.style.cssText="margin:-2px 0 10px;font-size:13px";p.textContent="Total aproximado: "+bkMoney(totNio,nio)+" ≈ "+bkMoney(totUsd,usd)+" (a C$ "+LMath.fmtInline(r)+" por US$ 1)";cards.appendChild(p);
+    }catch(e){}
+  }
+  const ac=bkAcct(b,bkSel);
+  $("bkmonth").textContent=new Date(bkMonth+"-15T12:00:00").toLocaleDateString("es",{month:"long",year:"numeric"});
+  $("bkname").textContent=ac.name;
+  const box=$("bkstate");box.innerHTML="";
+  const prev=bkBalance(b,ac.id,ms);let run=prev;const rows=[];let tin=LMath.qn(0),tout=LMath.qn(0);
+  bkTxOf(b,ac.id).filter(x=>String(x.t)>=ms&&String(x.t)<me).forEach(x=>{
+    const a=bkQ(x.amt);if(x.k==="i"){run=bkSum(run,a);tin=bkSum(tin,a)}else{run=bkSum(run,bkNeg(a));tout=bkSum(tout,a)}rows.push({x:x,bal:run});
+  });
+  const head=document.createElement("div");head.className="mem";head.style.cssText="flex-direction:column;align-items:stretch;gap:3px;font-size:14px";
+  const L=(l,v,c)=>{const d=document.createElement("div");d.style.cssText="display:flex;justify-content:space-between;gap:8px";const a1=document.createElement("span");a1.textContent=l;const b1=document.createElement("b");b1.textContent=v;if(c) b1.style.color=c;d.append(a1,b1);return d};
+  head.append(L("Saldo al empezar el mes",bkMoney(prev,ac)),L("Entradas",bkMoney(tin,ac),"#15803d"),L("Salidas",bkMoney(tout,ac),"var(--danger)"),L("Saldo al final",bkMoney(run,ac)));box.appendChild(head);
+  if(!rows.length) empty(box,"No hay movimientos en este mes.");
+  rows.slice().reverse().slice(0,80).forEach(r=>{
+    const x=r.x,d=document.createElement("div");d.className="mem";
+    const sp=document.createElement("span");sp.style.cssText="overflow-wrap:anywhere";
+    const t=document.createElement("b");t.textContent=(x.k==="i"?"＋ ":"－ ")+bkMoney(bkQ(x.amt),ac);t.style.color=x.k==="i"?"#15803d":"var(--danger)";sp.appendChild(t);
+    const sm=document.createElement("small");sm.style.cssText="display:block;color:var(--muted)";sm.textContent=new Date(x.t+"T12:00:00").toLocaleDateString("es",{day:"numeric",month:"short"})+(x.c?" · "+x.c:"")+" · saldo "+bkMoney(r.bal,ac);sp.appendChild(sm);
+    d.append(sp,btn("Borrar",()=>bkDelete(x.id)));box.appendChild(d);
+  });
+  const ab=$("bkacctbtns");ab.innerHTML="";
+  ab.append(btn("Saldo inicial",()=>{const v=prompt("Saldo inicial de «"+ac.name+"» (lo que tenías antes de empezar a anotar):",ac.open);if(v===null) return;try{const q=v.trim()?bkParseAmt(v):LMath.qn(0);const B=getBank();bkAcct(B,ac.id).open=bkStr(q);saveBank(B);renderBank()}catch(e){toast("⚠️ "+(e.message||e))}}),
+    btn("Renombrar",()=>{const v=prompt("Nombre de la cuenta:",ac.name);if(!v||!v.trim()) return;const B=getBank();bkAcct(B,ac.id).name=v.trim().slice(0,30);saveBank(B);renderBank()}));
+  if(b.accts.length>1&&!b.tx.some(x=>x.a===ac.id)) ab.appendChild(btn("Quitar cuenta",()=>{if(confirm("¿Quitar la cuenta «"+ac.name+"»?")){const B=getBank();B.accts=B.accts.filter(x=>x.id!==ac.id);saveBank(B);renderBank()}}));
+}
+function bkForm(kind){
+  const b=getBank(),box=$("bkform");box.innerHTML="";
+  const card=document.createElement("div");card.className="mem";card.style.cssText="flex-direction:column;align-items:stretch;gap:8px;margin-top:10px";
+  const title=document.createElement("b");title.textContent=kind==="i"?"＋ Entrada de efectivo":kind==="o"?"－ Salida de efectivo":"💱 Cambio de moneda";card.appendChild(title);
+  const sel=(opts,val)=>{const s=document.createElement("select");opts.forEach(o=>{const x=document.createElement("option");x.value=o[0];x.textContent=o[1];s.appendChild(x)});if(val) s.value=val;return s};
+  const inp=(ph,mode)=>{const i=document.createElement("input");i.placeholder=ph;if(mode) i.inputMode=mode;i.autocomplete="off";return i};
+  const st=document.createElement("div");st.className="hint";st.style.cssText="font-size:14px;color:var(--ink)";
+  const date=document.createElement("input");date.type="date";date.value=dayKeyNow();
+  const row=document.createElement("div");row.className="row";row.style.marginTop="4px";
+  const cancel=btn("Cancelar",()=>{box.innerHTML=""});
+  if(kind==="fx"){
+    const opts=b.accts.map(a=>[a.id,a.name+" ("+a.code+")"]);
+    const from=sel(opts,bkSel),to=sel(opts,(b.accts.find(a=>a.id!==bkSel)||b.accts[0]).id);
+    const amt=inp("Monto que SALE de la cuenta de origen","decimal"),rate=inp("Tipo de cambio","decimal");rate.value=store.get("lara_fx","");
+    const lf=document.createElement("small");lf.textContent="Sale de";const lt=document.createElement("small");lt.textContent="Entra a";const lr=document.createElement("small");
+    const upd=()=>{
+      const fa=bkAcct(b,from.value),ta=bkAcct(b,to.value);lr.textContent=bkFxRateLabel(fa,ta);
+      try{if(from.value===to.value) throw 0;const a=bkParseAmt(amt.value),r=bkParseAmt(rate.value);st.textContent="Recibirás "+bkMoney(bkRound2(bkFxConvert(fa,ta,a,r)),ta)}catch(e){st.textContent=""}
+    };
+    [from,to,amt,rate].forEach(e=>e.addEventListener("input",upd));from.onchange=to.onchange=upd;upd();
+    const save=btn("Hacer el cambio",()=>{
+      try{
+        const fa=bkAcct(b,from.value),ta=bkAcct(b,to.value);if(fa.id===ta.id) throw new Error("Elige dos cuentas distintas.");
+        const a=bkParseAmt(amt.value),r=bkParseAmt(rate.value),got=bkRound2(bkFxConvert(fa,ta,a,r));if(got.n<=0n) throw new Error("El monto recibido sería cero.");
+        const bal=bkBalance(b,fa.id);if(LMath.toF(bal)<LMath.toF(a)&&!confirm("La cuenta «"+fa.name+"» quedaría en negativo ("+bkMoney(bkSum(bal,bkNeg(a)),fa)+"). ¿Hacer el cambio igual?")) return;
+        const B=getBank(),link=uid(),d=date.value||dayKeyNow(),rs=LMath.fmtInline(r);
+        bkAddTx(B,fa.id,"o",a,"Cambio a "+ta.name+" (T.C. "+rs+")",d,{link:link,fx:rs});
+        bkAddTx(B,ta.id,"i",got,"Cambio desde "+fa.name+" (T.C. "+rs+")",d,{link:link,fx:rs});
+        saveBank(B);if(bkFxPair(fa,ta)) store.set("lara_fx",rs);
+        box.innerHTML="";bkMonth=d.slice(0,7);renderBank();toast("✅ Cambio hecho: "+bkMoney(a,fa)+" → "+bkMoney(got,ta));
+      }catch(e){st.textContent="⚠️ "+(e.message||e)}
+    });save.className="main";
+    [lf,from,lt,to,amt,lr,rate,date].forEach(e=>card.appendChild(e));card.appendChild(st);row.append(save,cancel);card.appendChild(row);
+  }else{
+    const acc=sel(b.accts.map(a=>[a.id,a.name+" ("+a.code+")"]),bkSel);
+    const amt=inp("Monto","decimal"),con=inp(kind==="i"?"Concepto (sueldo, depósito, venta…)":"Concepto (comida, transporte, retiro…)");
+    con.setAttribute("list","bkcats");
+    const save=btn("Guardar",()=>{
+      try{
+        const a=bkParseAmt(amt.value),ac=bkAcct(b,acc.value);
+        if(kind==="o"){const bal=bkBalance(b,ac.id);if(LMath.toF(bal)<LMath.toF(a)&&!confirm("Esta salida dejaría la cuenta en negativo ("+bkMoney(bkSum(bal,bkNeg(a)),ac)+"). ¿Anotarla igual?")) return}
+        const B=getBank(),d=date.value||dayKeyNow();bkAddTx(B,ac.id,kind,a,con.value.trim()||(kind==="i"?"Entrada":"Salida"),d);saveBank(B);
+        bkSel=ac.id;bkMonth=d.slice(0,7);box.innerHTML="";renderBank();toast("✅ Anotado: "+(kind==="i"?"entrada":"salida")+" de "+bkMoney(a,ac));
+      }catch(e){st.textContent="⚠️ "+(e.message||e)}
+    });save.className="main";
+    [acc,amt,con,date].forEach(e=>card.appendChild(e));card.appendChild(st);row.append(save,cancel);card.appendChild(row);
+    amt.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save.click()}});setTimeout(()=>{try{amt.focus()}catch(e){}},80);
+  }
+  box.appendChild(card);try{card.scrollIntoView({block:"center",behavior:"smooth"})}catch(e){}
+}
+(function(){
+  const dl=$("bkcats");BK_CATS.forEach(c=>{const o=document.createElement("option");o.value=c;dl.appendChild(o)});
+  $("bkin").onclick=()=>bkForm("i");$("bkout").onclick=()=>bkForm("o");$("bkfx").onclick=()=>bkForm("fx");
+  const mv=n=>{const d=new Date(bkMonth+"-15T12:00:00");d.setMonth(d.getMonth()+n);bkMonth=isoLocal(d).slice(0,7);renderBank()};
+  $("bkprev").onclick=()=>mv(-1);$("bknext").onclick=()=>mv(1);
+  $("bkaddacct").onclick=()=>{
+    const b=getBank();if(b.accts.length>=6){toast("Máximo 6 cuentas.");return}
+    const name=prompt("Nombre de la cuenta nueva (ej: Ahorros en córdobas):");if(!name||!name.trim()) return;
+    const cur=prompt("Símbolo de la moneda (ej: C$, US$, €):","C$");if(cur===null) return;
+    const code=(prompt("Código de la moneda (NIO para córdobas, USD para dólares, o el que uses):","NIO")||"").trim().toUpperCase().slice(0,4);
+    b.accts.push({id:uid(),name:name.trim().slice(0,30),cur:(cur||"").trim().slice(0,4),code:code||"OTRA",open:"0"});saveBank(b);bkSel=b.accts[b.accts.length-1].id;renderBank();
+  };
+  $("bkexp").onclick=()=>{$("exptype").value="bank";fillExportLists();$("expacct").value=bkSel;["tools","bank"].forEach(x=>$(x).classList.remove("open"));$("openCfg").click();setTimeout(()=>{try{$("exptype").scrollIntoView({block:"center"})}catch(e){}},300)};
+})();
+
+/* ===== Cuentas: comandos por chat (sin gastar cuota) ===== */
+function bankParse(text){
+  const n=norm(text||"");
+  if(n.length>160) return null;
+  const code=w=>/^(cordoba|nio|c\$)/.test(w)?"NIO":"USD";
+  const fx=/(?:cambie|cambio|converti)\s+(?:de\s+)?([\d.,]+)\s*(cordobas?|dolares?|usd|nio|c\$|us\$|\$)\s+(?:a|en|por)\s+(cordobas?|dolares?|usd|nio|c\$|us\$|\$)(?:.*?\b(?:a|al|tc|t\.c\.|tipo de cambio)\s*(?:de\s*)?([\d.,]+))?/.exec(n);
+  if(fx) return {kind:"fx",amt:fx[1],from:code(fx[2]),to:code(fx[3]),rate:fx[4]||""};
+  const hasOut=/\b(gaste|pague|compre|retire|saque|me cobraron|me costo|envie|transferi)\b/.test(n),hasIn=/\b(ingrese|recibi|deposite|cobre|me pagaron|me depositaron|entro|abone|me cayo|gane)\b/.test(n);
+  if(!hasOut&&!hasIn) return null;
+  const m=/(c\$|us\$|\$)?\s*(\d[\d.,]*)\s*(cordobas?|dolares?|usd|nio|c\$|us\$|\$)?/.exec(n);
+  if(!m) return null;
+  const cw=(m[3]||m[1]||"");if(!cw) return null;
+  const rest=n.slice(m.index+m[0].length);
+  const cm=/\b(?:en|de|por|para|del|como)\s+(.+)$/.exec(rest);
+  const concept=cm?cm[1].replace(/\b(hoy|ayer|anteayer)\b/g,"").trim():"";
+  const day=/\banteayer\b/.test(n)?2:/\bayer\b/.test(n)?1:0;
+  return {kind:hasOut&&!hasIn?"o":hasIn&&!hasOut?"i":(/\b(gaste|pague|compre|retire|saque)\b/.test(n)?"o":"i"),amt:m[2],code:code(cw),concept:concept.slice(0,40),day:day};
+}
+function bankLocal(text){
+  const n=norm(text||"");
+  if(n.length<90&&/\b(cuanto (?:tengo|hay|me queda)|mi saldo|mis saldos|saldo de mis cuentas|saldo en (?:cordobas|dolares)|estado de mis cuentas)\b/.test(n)){
+    const b=getBank();let list=b.accts;
+    const want=/dolares|usd/.test(n)?"USD":/cordobas|nio/.test(n)?"NIO":"";
+    if(want){const sub=b.accts.filter(a=>a.code===want);if(sub.length) list=sub}
+    return {text:"Tus saldos ahora:\n"+list.map(a=>"🏦 "+a.name+": "+bkMoney(bkBalance(b,a.id),a)).join("\n")};
+  }
+  let p;try{p=bankParse(text)}catch(e){p=null}
+  if(!p) return null;
+  const b=getBank();
+  try{
+    if(p.kind==="fx"){
+      const fa=b.accts.find(a=>a.code===p.from),ta=b.accts.find(a=>a.code===p.to);
+      if(!fa||!ta||fa.id===ta.id) return null;
+      const a=bkParseAmt(normNum(p.amt));
+      const rt=p.rate||store.get("lara_fx","");
+      if(!rt) return {text:"Para cambiar "+bkMoney(a,fa)+" necesito el tipo de cambio. Escríbelo así: «cambié "+p.amt+" "+(p.from==="USD"?"dólares":"córdobas")+" a "+(p.to==="USD"?"dólares":"córdobas")+" a 36.6» (córdobas por cada dólar)."};
+      const r=bkParseAmt(normNum(rt)),got=bkRound2(bkFxConvert(fa,ta,a,r));
+      const B=getBank(),link=uid(),d=dayKeyNow(),rs=LMath.fmtInline(r);
+      bkAddTx(B,fa.id,"o",a,"Cambio a "+ta.name+" (T.C. "+rs+")",d,{link:link,fx:rs});
+      bkAddTx(B,ta.id,"i",got,"Cambio desde "+fa.name+" (T.C. "+rs+")",d,{link:link,fx:rs});
+      saveBank(B);if(bkFxPair(fa,ta)) store.set("lara_fx",rs);
+      return {text:"✅ Cambio hecho: salen "+bkMoney(a,fa)+" y entran "+bkMoney(got,ta)+" (tipo de cambio "+rs+").\nSaldos: "+bkMoney(bkBalance(B,fa.id),fa)+" · "+bkMoney(bkBalance(B,ta.id),ta),
+        undo:()=>{const C=getBank();C.tx=C.tx.filter(x=>x.link!==link);saveBank(C);add("lara","↩ Deshice el cambio de moneda.")}};
+    }
+    const ac=b.accts.find(a=>a.code===p.code)||null;if(!ac) return null;
+    const a=bkParseAmt(normNum(p.amt));
+    const B=getBank(),dd=new Date(Date.now()-p.day*864e5),d=isoLocal(dd).slice(0,10);
+    const concept=p.concept?p.concept.charAt(0).toUpperCase()+p.concept.slice(1):(p.kind==="i"?"Entrada":"Salida");
+    const tx=bkAddTx(B,ac.id,p.kind,a,concept,d);saveBank(B);
+    const bal=bkBalance(B,ac.id);
+    return {text:"✅ Anoté "+(p.kind==="i"?"una **entrada**":"una **salida**")+" de "+bkMoney(a,ac)+" en «"+ac.name+"» ("+concept+(p.day?", hace "+p.day+" día"+(p.day>1?"s":""):"")+").\nSaldo ahora: "+bkMoney(bal,ac)+(LMath.toF(bal)<0?" ⚠️ (en negativo)":""),
+      undo:()=>{const C=getBank();C.tx=C.tx.filter(x=>x.id!==tx.id);saveBank(C);add("lara","↩ Deshice ese movimiento.")}};
+  }catch(e){return {text:"⚠️ No pude anotarlo: "+(e.message||e)}}
+}
+function bankFake(t){const n=norm(t||"");return /\b(anote|registre|guarde|agregue|apunte|asente)\b[^.]{0,60}\b(gasto|ingreso|movimiento|cuenta|saldo|deposito|retiro|entrada|salida)\b/.test(n)}
+function bkDailyBalances(id,days){
+  const b=getBank(),out=[];
+  lastDays(days).forEach(d=>{const next=new Date(d.d.getTime()+864e5);out.push({k:d.k,d:d.d,v:LMath.toF(bkBalance(b,id,isoLocal(next).slice(0,10)))})});
+  return out;
+}
+
+function svgSeries(title,labels,values,color,unit){
+  const w=360,h=250,L=48,R=14,T=46,B=40,iw=w-L-R,ih=h-T-B;
+  let lo=Math.min.apply(null,values),hi=Math.max.apply(null,values);
+  if(hi-lo<1e-9){lo-=1;hi+=1}const pad=(hi-lo)*0.1;lo-=pad;hi+=pad;
+  const X=i=>L+iw*i/Math.max(1,values.length-1),Y=v=>T+ih-ih*(v-lo)/(hi-lo);
+  let s="";
+  niceTicks(lo,hi,4).forEach(g=>{s+='<line x1="'+L+'" y1="'+Y(g).toFixed(1)+'" x2="'+(w-R)+'" y2="'+Y(g).toFixed(1)+'" stroke="#e3ebe8"/><text x="'+(L-6)+'" y="'+(Y(g)+3).toFixed(1)+'" font-size="9" text-anchor="end" fill="#5b6a67">'+fmtN(g)+'</text>'});
+  if(lo<0&&hi>0) s+='<line x1="'+L+'" y1="'+Y(0).toFixed(1)+'" x2="'+(w-R)+'" y2="'+Y(0).toFixed(1)+'" stroke="#94a3a0" stroke-width="1.5"/>';
+  const pts=values.map((v,i)=>X(i).toFixed(1)+","+Y(v).toFixed(1)).join(" ");
+  s+='<polygon fill="'+color+'" opacity="0.10" points="'+X(0).toFixed(1)+","+(T+ih)+" "+pts+" "+X(values.length-1).toFixed(1)+","+(T+ih)+'"/>';
+  s+='<polyline fill="none" stroke="'+color+'" stroke-width="2.4" stroke-linejoin="round" points="'+pts+'"/>';
+  labels.forEach((l,i)=>{if(i%5===0||i===labels.length-1) s+='<text x="'+X(i).toFixed(1)+'" y="'+(h-B+16)+'" font-size="9" text-anchor="middle" fill="#5b6a67">'+esc(String(l))+'</text>'});
+  const lv=values[values.length-1];
+  s+='<circle cx="'+X(values.length-1).toFixed(1)+'" cy="'+Y(lv).toFixed(1)+'" r="4" fill="'+color+'" stroke="#fff"/><text x="'+(w-R)+'" y="'+(Y(lv)-9).toFixed(1)+'" font-size="11" font-weight="700" text-anchor="end" fill="#14201e">'+esc((unit?unit+" ":"")+fmtN(lv))+'</text>';
+  s+='<text x="'+(w/2)+'" y="'+(h-6)+'" font-size="10" text-anchor="middle" fill="#5b6a67">Últimos '+values.length+' días</text>';
+  return chartWrap(title,s,w,h);
+}
+function chBank(){
+  const b=getBank(),ac=bkAcct(b,$("chacct").value||bkSel),pts=bkDailyBalances(ac.id,30);
+  return {svg:svgSeries("Saldo · "+ac.name+" ("+ac.code+")",pts.map(p=>p.d.getDate()),pts.map(p=>p.v),"#0f766e",ac.cur),info:"Saldo hoy: "+bkMoney(bkBalance(b,ac.id),ac)};
+}
+function mergeBank(pr,TB){
+  if(!pr||!Array.isArray(pr.tx)) return 0;
+  const B=getBank();let ch=0;TB=TB||getTomb();
+  const okAmt=s=>/^\d+(\.\d{1,2})?$/.test(String(s));
+  (Array.isArray(pr.accts)?pr.accts:[]).slice(0,6).forEach(a=>{
+    if(!a||typeof a.id!=="string") return;
+    const l=B.accts.find(x=>x.id===a.id);
+    if(!l){if(B.accts.length<6){B.accts.push({id:a.id.slice(0,40),name:String(a.name||"Cuenta").slice(0,30),cur:String(a.cur||"").slice(0,4),code:String(a.code||"OTRA").slice(0,4),open:okAmt(a.open)?String(a.open):"0"});ch++}}
+    else if((!l.open||l.open==="0")&&okAmt(a.open)&&String(a.open)!=="0"){l.open=String(a.open);ch++}
+  });
+  pr.tx.slice(-5000).forEach(x=>{
+    if(!x||typeof x.id!=="string"||(TB.k&&TB.k[x.id]>0)||B.tx.some(y=>y.id===x.id)) return;
+    if(!B.accts.some(a=>a.id===x.a)||(x.k!=="i"&&x.k!=="o")||!okAmt(x.amt)||!/^\d{4}-\d{2}-\d{2}$/.test(String(x.t))) return;
+    const t={id:x.id.slice(0,40),a:x.a,k:x.k,amt:String(x.amt),c:String(x.c||"").slice(0,40),t:x.t,ts:+x.ts||Date.now()*1000};
+    if(x.link) t.link=String(x.link).slice(0,40);if(x.fx) t.fx=String(x.fx).slice(0,12);
+    B.tx.push(t);ch++;
+  });
+  if(ch) saveBank(B);
+  return ch;
+}
+function impBtns(){
+  const L=[];
+  if(window._lastReq) L.push(["🛠️ Preparar lo último que pedí",()=>chatSelfImprove(window._lastReq)]);
+  L.push(["📦 Abrir Mis mejoras",()=>{$("openTools").click();$("openImps").click()}],["⬇️ Descargas y respaldos",()=>chatBackupFlow()]);
+  return L;
+}
+
+/* ===== Mis mejoras: archivos de mejora guardados para descargar y subir ===== */
+function impDb(){return new Promise((res,rej)=>{const r=indexedDB.open("lara_imps",1);r.onupgradeneeded=()=>r.result.createObjectStore("p",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function impAll(){const db=await impDb();const all=await new Promise((res,rej)=>{const q=db.transaction("p","readonly").objectStore("p").getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)});db.close();return all.sort((a,b)=>b.t-a.t)}
+async function impPut(rec){const db=await impDb();await new Promise((res,rej)=>{const tx=db.transaction("p","readwrite");tx.objectStore("p").put(rec);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}
+async function impDel(id){const db=await impDb();await new Promise((res,rej)=>{const tx=db.transaction("p","readwrite");tx.objectStore("p").delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}
+async function impSave(){
+  if(!(autoPatches&&autoPatchedText)) return;
+  const v=ensureChangelog(),bm=(autoSourceText||"").match(/const\s+APP_V\s*=\s*(\d+)/);
+  const rec={id:uid(),v:+v,base:bm?+bm[1]:APP_V,t:Date.now(),summary:String(autoSummary||"Mejora").slice(0,200),usuario:String((autoNote&&autoNote.usuario)||"").slice(0,200),cuota:String((autoNote&&autoNote.cuota)||""),tests:String((autoNote&&autoNote.tests)||""),req:String($("autorequest").value||"").slice(0,600),text:autoPatchedText,dl:false,pub:false};
+  window._curImpId=rec.id;
+  await impPut(rec);
+  const all=await impAll();for(const x of all.slice(8)) await impDel(x.id);
+}
+async function impMarkCur(field){
+  try{if(!window._curImpId) return;const all=await impAll(),r=all.find(x=>x.id===window._curImpId);if(r){r[field]=true;await impPut(r)}}catch(e){}
+}
+function recordChangeRaw(v,s){const C=getChanges();if(C.length&&String(C[C.length-1].v)===String(v)) return;C.push({t:Date.now(),v:v,s:String(s||"Mejora").slice(0,140)});store.set("lara_changes",JSON.stringify(C.slice(-30)));try{renderChanges()}catch(e){}}
+function impStatus(t){const e=$("impstatus");if(e) e.textContent=t}
+function impDownload(r){
+  downloadBlob(new Blob([r.text],{type:"text/html;charset=utf-8"}),"lara.html");
+  r.dl=true;impPut(r).catch(()=>{});recordChangeRaw(r.v,r.summary);
+  impStatus("✅ Descargué el archivo de la Mejora n.º "+r.v+" como «lara.html». Súbelo a GitHub con ese nombre exacto (Add file → Upload files), espera 1 o 2 minutos y toca «Actualizar app». Mientras no lo subas, tu Lara sigue igual.");
+  renderImps();
+}
+async function impPublish(r){
+  try{
+    impStatus("⏳ Preparando para publicar…");
+    await autoLoadSelf();
+    const bm=autoSourceText.match(/const\s+APP_V\s*=\s*(\d+)/);
+    if(!bm||+bm[1]!==r.base) throw new Error("Tu app ya cambió de versión desde que se preparó esta mejora. Vuelve a prepararla.");
+    autoPatches=[{}];autoPatchedText=r.text;autoCLv=String(r.v);autoSummary=r.summary;autoNote={usuario:r.usuario,cuota:r.cuota,tests:r.tests};
+    window._curImpId=r.id;
+    await $("autopublish").onclick();
+    impStatus($("autostatus").textContent||"");renderImps();
+  }catch(e){impStatus("❌ "+(e.message||e))}
+}
+async function renderImps(){
+  const box=$("impbox");if(!box) return;box.innerHTML="";
+  let L=[];try{L=await impAll()}catch(e){box.textContent="Este navegador no permite guardar archivos de mejora.";return}
+  if(!L.length){empty(box,"Todavía no hay mejoras preparadas. Descríbela arriba y toca «Preparar mejora».");return}
+  L.forEach(r=>{
+    const d=document.createElement("div");d.className="mem";d.style.cssText="flex-direction:column;align-items:stretch;gap:8px";
+    const applied=r.v<=APP_V,fresh=!applied&&r.base===APP_V;
+    const t=document.createElement("div");t.style.fontSize="14px";
+    const b=document.createElement("b");b.textContent="🛠️ Mejora n.º "+r.v;t.appendChild(b);
+    const st=document.createElement("span");st.style.cssText="margin-left:8px;font-size:12px;color:var(--muted)";st.textContent=applied?"· ya aplicada o anterior":fresh?(r.pub?"· publicada":r.dl?"· descargada":"· lista para subir"):"· desactualizada";t.appendChild(st);
+    const sm=document.createElement("div");sm.style.cssText="color:var(--muted);font-size:13px;margin-top:2px;white-space:pre-wrap";
+    sm.textContent=new Date(r.t).toLocaleString("es")+"\n"+r.summary+(r.usuario?"\nQué notarás: "+r.usuario:"")+(r.tests?"\nPruebas: "+r.tests+" correctas":"");t.appendChild(sm);d.appendChild(t);
+    const w=document.createElement("div");w.style.cssText="display:flex;gap:6px;flex-wrap:wrap";
+    if(fresh){
+      const dl=btn("⬇️ Descargar lara.html",()=>impDownload(r));dl.className="main";
+      w.append(dl,btn("🚀 Publicar en GitHub",()=>impPublish(r)));
+    }else if(!applied){
+      const wn=document.createElement("div");wn.style.cssText="width:100%;font-size:13px;color:var(--danger)";wn.textContent="⚠️ Se preparó sobre la versión "+r.base+" y tu app ya está en la "+APP_V+". No la subas: pisaría cambios más nuevos.";d.appendChild(wn);
+      w.append(btn("🔁 Volver a preparar",()=>{$("impreq").value=r.req||r.summary;$("impreq").focus();window.scrollTo(0,0)}));
+    }
+    w.append(btn("🗑️ Borrar",async()=>{if(confirm("¿Borrar esta mejora guardada?")){await impDel(r.id);renderImps()}}));
+    d.appendChild(w);box.appendChild(d);
+  });
+}
+$("impgo").onclick=async()=>{
+  const req=$("impreq").value.trim();
+  if(req.length<10){impStatus("Describe la mejora con más detalle (al menos una frase).");return}
+  if(window._selfBusy){impStatus("Espera: ya estoy preparando otra mejora.");return}
+  if(ctrl){impStatus("Espera a que termine la respuesta del chat.");return}
+  if(usagePct()>=0.8&&!confirm("Ya llevas "+useData().n+" consultas hoy y esto usa varias. ¿Seguir?")) return;
+  window._selfBusy=true;window._autoMirror=t=>impStatus("⏳ "+t);$("impgo").disabled=true;
+  $("autorequest").value=req.slice(0,600);
+  try{await $("autogenerate").onclick()}catch(e){}
+  window._autoMirror=null;window._selfBusy=false;$("impgo").disabled=false;
+  try{await (window._impSaving||Promise.resolve())}catch(e){}
+  if(autoPatches&&autoPatchedText){const m=autoPatchedText.match(/const\s+APP_V\s*=\s*(\d+)/);impStatus("✅ Lista la Mejora n.º "+(m?m[1]:"?")+". Mírala abajo y descarga el archivo.");$("impreq").value=""}
+  else impStatus("No pude preparar una mejora segura. "+($("autostatus").textContent||"")+"\nTu Lara sigue igual.");
+  renderImps();
+};
+$("impbk").onclick=()=>chatDownloadCurrent();
+function inSelfCtx(){
+  if(window._selfCtxT&&Date.now()-window._selfCtxT<1800000) return true;
+  return history.slice(-10).some(m=>/\bmejora\b/i.test(norm((m.parts&&m.parts[0]&&m.parts[0].text)||"")));
+}
+function lastImproveRequest(){
+  for(let i=history.length-2;i>=0;i--){
+    const m=history[i];if(m.role!=="user") continue;
+    const t=(m.parts&&m.parts[0]&&m.parts[0].text)||"";
+    if(t.length>=20&&(selfImproveIntent(t)||/\bmejora\b/i.test(norm(t)))) return t;
+  }
+  return "";
+}
+function fileRefusal(t){
+  const n=norm(t||"");
+  return /(no puedo|no me es posible|todavia no|aun no|no tengo (?:la )?(?:capacidad|permiso|acceso)|no estoy en condiciones|debido a las limitaciones)/.test(n)&&/(archivos? descargables?|generar (?:el )?archivo|crear (?:el )?archivo|descargar|codigo fuente|actualizar el codigo|subir)/.test(n);
 }
 
 render();
