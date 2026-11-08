@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v58</title>
+<title>Lara v59</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -298,7 +298,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 58. Incluye Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 59. Incluye mejoras del bloque 3 a la 8: Excel completo (exportar e importar), hábitos avanzados con dificultad y puntos, memoria por capas, herramientas optimizadas (presupuesto, gráficas, estudio, calculadora exacta y estadísticas), cuentas en córdobas y dólares, y sincronización segura entre teléfonos.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -784,7 +784,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=58;
+const APP_V=59;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -2456,6 +2456,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:59,items:["Lara ahora cuenta con mejores herramientas de estudio, hábitos con dificultad y soporte completo para Excel y cuentas.","Implementación de las mejoras de la 3 a la 8 para optimizar las herramientas de Lara (gestión de hábitos avanzados, soporte mejorado para cuentas y exportación/"]},
  {v:58,items:["Podrás exportar y respaldar tus datos en un archivo Excel (xlsx) y volver a importarlos cuando lo necesites.","Agregué la funcionalidad para exportar tareas, hábitos, recordatorios, memoria, notas y cuentas a un archivo .xlsx y para importarlo desde Excel, permitiendo re"]},
  {v:57,items:["📊 Excel: en Ajustes puedes exportar tareas, hábitos, recordatorios, memoria, notas y cuentas a un archivo .xlsx, y también importar un Excel con esas hojas. Importar solo agrega lo nuevo; no borra nada. Funciona sin internet.","🔢 Lara ahora conoce el número real de la versión instalada y de la siguiente mejora, y ya no inventa ni confunde la numeración. El número lo asigna el taller.","En el chat, «exporta a Excel» o «importar Excel» te muestra los botones."]},
  {v:56,items:["🔁 Hábitos con dificultad (fácil, media, difícil): cada día cumplido suma 1, 2 o 3 puntos al mes.","🏆 Ahora cada hábito muestra su mejor racha, el porcentaje de los últimos 30 días y los puntos del mes. Cambia la dificultad con el botón «Dificultad».","📋 Mejora n.º 56 aparece en el historial de mejoras (Ajustes → Automejora)."]},
