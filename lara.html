@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v55</title>
+<title>Lara v56</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -149,7 +149,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div class="row"><input id="newtask" placeholder="Nueva tarea"><button id="addtask" type="button">Añadir</button></div>
   <label>Hábitos</label>
   <div id="hlist"></div>
-  <div class="row"><input id="newhabit" placeholder="Nuevo hábito, ej: Leer 10 minutos"><button id="addhabit" type="button">Añadir</button></div>
+  <div class="row"><input id="newhabit" placeholder="Nuevo hábito, ej: Leer 10 minutos"><select id="newhabitlvl" aria-label="Dificultad" style="width:auto"><option value="facil">Fácil</option><option value="media" selected>Media</option><option value="dificil">Difícil</option></select><button id="addhabit" type="button">Añadir</button></div>
   <label>Biblioteca</label>
   <p class="hint">Archivos de texto que Lara consulta al responder (.txt, .md, .csv, .json). Máximo 5. Los fragmentos relevantes se envían a Google.</p>
   <div id="dlist"></div>
@@ -298,7 +298,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 55. Incluye Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 56. Incluye Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -663,7 +663,7 @@ function agendaText(){
     const pr=rems.filter(r=>!r.done).sort((a,b)=>a.at<b.at?-1:1).slice(0,10).map(r=>"- "+new Date(r.at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"})+" "+r.text+(r.rep?" (se repite: "+r.rep+")":""));
     if(pr.length) out.push("Recordatorios próximos:\n"+pr.join("\n"));
     const today=dkey(new Date());
-    const hb=habits.slice(0,10).map(h=>"- "+h.name+": "+(h.days.includes(today)?"hecho hoy":"pendiente hoy")+", racha "+streak(h));
+    const hb=habits.slice(0,10).map(h=>"- "+h.name+": "+(h.days.includes(today)?"hecho hoy":"pendiente hoy")+", racha "+streak(h)+", mejor racha "+bestStreak(h)+", dificultad "+HAB_LVL[habLvl(h)].t.toLowerCase());
     if(hb.length) out.push("Hábitos:\n"+hb.join("\n"));
   }catch(e){}
   return out.length?"\n\nAgenda del usuario (úsala para avisar de choques, pendientes y prioridades cuando venga al caso):\n"+out.join("\n\n"):"";
@@ -775,7 +775,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=55;
+const APP_V=56;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1580,6 +1580,11 @@ function saveDocs(){try{localStorage.setItem("lara_docs",JSON.stringify(docs));r
 function addTask(t){t=(t||"").trim().slice(0,200);if(!t) return;tasks.push({id:uid(),text:t,done:false});saveTasks()}
 const dkey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 function streak(h){let n=0;const d=new Date();if(!h.days.includes(dkey(d))) d.setDate(d.getDate()-1);while(h.days.includes(dkey(d))){n++;d.setDate(d.getDate()-1)}return n}
+function bestStreak(h){const s=[...new Set(h.days||[])].sort();let best=0,run=0,prev=null;s.forEach(k=>{const p=k.split("-").map(Number),t=Date.UTC(p[0],p[1]-1,p[2]);run=(prev!==null&&t-prev===864e5)?run+1:1;prev=t;if(run>best) best=run});return best}
+const HAB_LVL={facil:{t:"Fácil",p:1},media:{t:"Media",p:2},dificil:{t:"Difícil",p:3}},HAB_ORD=["facil","media","dificil"];
+function habLvl(h){return HAB_LVL[h.lvl]?h.lvl:"media"}
+function habPoints(h){const pre=dkey(new Date()).slice(0,7);return (h.days||[]).filter(k=>String(k).slice(0,7)===pre).length*HAB_LVL[habLvl(h)].p}
+function hab30(h){const d=new Date();let c=0;for(let i=0;i<30;i++){if((h.days||[]).includes(dkey(d))) c++;d.setDate(d.getDate()-1)}return Math.round(c/30*100)}
 function renderMore(){
   const tl=$("tlist");tl.innerHTML="";
   if(!tasks.length) empty(tl,"Sin tareas.");
@@ -1593,8 +1598,9 @@ function renderMore(){
   if(!habits.length) empty(hl,"Sin hábitos.");
   habits.forEach((h,i)=>{
     const today=dkey(new Date()),done=h.days.includes(today);
-    hl.appendChild(row(h.name+"\n🔥 Racha: "+streak(h)+" días",[
+    hl.appendChild(row(h.name+"\n🔥 Racha: "+streak(h)+" días · 🏆 Mejor: "+bestStreak(h)+"\n🎯 "+HAB_LVL[habLvl(h)].t+" · "+hab30(h)+"% en 30 días · ⭐ "+habPoints(h)+" pts este mes",[
       btn(done?"Hecho ✓":"Hoy",()=>{h.days=done?h.days.filter(x=>x!==today):h.days.concat(today);h.days=h.days.slice(-400);saveHabits();renderMore()}),
+      btn("Dificultad",()=>{h.lvl=HAB_ORD[(HAB_ORD.indexOf(habLvl(h))+1)%3];saveHabits();renderMore();toast("Dificultad: "+HAB_LVL[h.lvl].t.toLowerCase()+".")}),
       btn("Borrar",()=>{habits.splice(i,1);saveHabits();renderMore()})]));
   });
   const dl=$("dlist");dl.innerHTML="";
@@ -1602,7 +1608,7 @@ function renderMore(){
   docs.forEach((d,i)=>dl.appendChild(row(d.name+"\n"+d.text.length.toLocaleString("es")+" caracteres",[btn("Borrar",()=>{docs.splice(i,1);saveDocs();renderMore()})])));
 }
 $("addtask").onclick=()=>{addTask($("newtask").value);$("newtask").value="";renderMore()};
-$("addhabit").onclick=()=>{const v=$("newhabit").value.trim().slice(0,80);if(!v) return;habits.push({id:uid(),name:v,days:[]});saveHabits();$("newhabit").value="";renderMore()};
+$("addhabit").onclick=()=>{const v=$("newhabit").value.trim().slice(0,80);if(!v) return;habits.push({id:uid(),name:v,days:[],lvl:($("newhabitlvl")&&$("newhabitlvl").value)||"media"});saveHabits();$("newhabit").value="";renderMore()};
 function norm(t){return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
 function libContext(q){
   if(!docs.length||!q) return "";
@@ -2441,6 +2447,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:56,items:["🔁 Hábitos con dificultad (fácil, media, difícil): cada día cumplido suma 1, 2 o 3 puntos al mes.","🏆 Ahora cada hábito muestra su mejor racha, el porcentaje de los últimos 30 días y los puntos del mes. Cambia la dificultad con el botón «Dificultad».","📋 Mejora n.º 56 aparece en el historial de mejoras (Ajustes → Automejora)."]},
  {v:55,items:["🧠 Memoria por capas: lo que Lara recuerda ahora se ordena en Permanentes (quién eres, familia, fechas, preferencias), Medias (proyectos y decisiones) y Cortas (ánimo y cosas pasajeras, que dejan de usarse a los 14 días).","Cada recuerdo tiene un botón «Capa» para pasarlo de una a otra cuando tú quieras. Nada se borra solo: lo caducado solo deja de usarse.","Cuando hay muchos recuerdos, Lara prioriza siempre los permanentes.","⬇️ Botón «Archivo» en el chat: muestra la mejora preparada con su número consecutivo para descargarla (lara.html) o guardar una copia lara-mejora-N.html. Si le preguntas dónde está el archivo, Lara te muestra los botones en vez de decir que no puede.","🔎 En Mis mejoras, «Reconocer un archivo» te dice qué número de mejora es un archivo y si conviene subirlo."]},
  {v:54,items:["🛠️ Mis mejoras (en 🧰 Herramientas y con el botón «Mejora» del chat): describes la mejora, Lara la prepara y la guarda con su número consecutivo, y puedes descargar el archivo lara.html para subirlo cuando quieras, aunque cierres la app.","Si Gemini dice que no puede generar archivos, Lara lo corrige y te lleva a Mis mejoras.","🏦 Cuentas: dos cuentas, Córdobas y Dólares, con entradas, salidas, saldo exacto, estado de cuenta mensual y cambio de moneda con tipo de cambio. También escribiendo en el chat: «gasté 200 córdobas en comida», «ingresé 50 dólares», «cambié 100 dólares a córdobas a 36.6» o «cuánto tengo»."]},
  {v:53,items:["Las mejoras que le pides a Lara ahora se preparan de verdad: reconoce más formas de pedirlas («Mejora: …», «la siguiente mejora…») y te muestra su número consecutivo.","Nuevo botón ⬇️ Descargar archivo para subir (lara.html) y ⬇️ Descargar respaldo actual, también desde el chat.","Si Gemini dice que ya integró una mejora sin haberla preparado, Lara lo corrige y te ofrece prepararla de verdad.","Si escribes «respaldo» o «descargar archivo», Lara te muestra los botones para descargar tus datos, la app o la mejora."]},
@@ -4544,6 +4551,10 @@ function fileRefusal(t){
   return /(no puedo|no me es posible|todavia no|aun no|no tengo (?:la )?(?:capacidad|permiso|acceso)|no estoy en condiciones|debido a las limitaciones|no cuenta con|no dispone|no existe (?:un )?boton|no hay (?:un )?boton)/.test(n)&&/(archivos? descargables?|generar (?:un |el )?archivo|crear (?:un |el )?archivo|descarg\w*|enlace de descarga|archivo fisico|archivo adjunto|funcion de generar|boton (?:nativo )?(?:para )?(?:generar|descargar)|codigo fuente|actualizar el codigo|subir)/.test(n);
 }
 
+try{
+  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos"};
+  Object.keys(NOTES).map(Number).filter(v=>v<=APP_V&&!getChanges().some(c=>+c.v===v)).forEach(v=>recordChangeRaw(v,NOTES[v]));
+}catch(e){}
 render();
 </script>
 </body>
