@@ -251,6 +251,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <p class="hint">Aquí Lara prepara las mejoras y te entrega el archivo para subir. Describe qué quieres cambiar: Lara la prueba, le pone su número consecutivo y la guarda aquí para que la descargues cuando quieras. Nada cambia hasta que subas el archivo o la publiques tú.</p>
   <textarea id="impreq" rows="3" placeholder="Ej: Agregar en Ajustes un botón que muestre cuánto espacio ocupan mis datos"></textarea>
   <div class="row"><button class="main" id="impgo" type="button">🛠️ Preparar mejora</button><button id="impbk" type="button">⬇️ Respaldo de la app actual</button></div>
+  <div class="row"><button id="imprec" type="button">🔎 Reconocer un archivo antes de subirlo</button><input type="file" id="imprecf" accept=".html,text/html" hidden></div>
   <div id="impstatus" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
   <label>Mejoras preparadas</label>
   <div id="impbox"></div>
@@ -297,7 +298,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 55. Incluye Memoria por capas (permanente, media y corta), Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 55. Incluye Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -949,7 +950,7 @@ $("f").onsubmit=async ev=>{
     let selfBtns=false;
     if(window._tagsBlocked){window._tagsBlocked=false;extra.push("🛡️ No guardé datos de esta respuesta porque usó contenido externo.")}
     if(!mejoraReq&&!selfBtns&&selfFakeClaim(clean)){window._selfCtxT=Date.now();clean="Te debo una aclaración, Leo: eso todavía NO está hecho. Yo no puedo cambiarme solo conversando. Lo que sí hago es preparar la mejora de verdad: la pruebo, le pongo su número consecutivo y te entrego el archivo para subir (o la publico si me autorizas). ¿La preparo ahora?";selfBtns="prep";window._lastReq=text}
-    if(!mejoraReq&&!selfBtns&&((selfRefusal(clean)&&(selfTopic(text)||inSelfCtx()))||(fileRefusal(clean)&&inSelfCtx()))){window._selfCtxT=Date.now();window._lastReq=lastImproveRequest();clean="Sí puedo entregarte el archivo de la mejora, Leo, aunque no lo escribo en el chat: lo genero con mi taller. Preparo la propuesta, la pruebo, le pongo su número consecutivo y la guardo en 🧰 Herramientas → 🛠️ Mis mejoras, con el botón ⬇️ para descargar el lara.html listo para subir."+(window._lastReq?"\n\nPuedo preparar ahora lo último que me pediste: «"+window._lastReq.slice(0,120)+"».":"\n\nDescríbeme la mejora en «Mis mejoras» y la preparo.");selfBtns="imp"}
+    if(!mejoraReq&&!selfBtns&&((selfRefusal(clean)&&(selfTopic(text)||inSelfCtx()))||(fileRefusal(clean)&&(inSelfCtx()||backupIntent(text))))){window._selfCtxT=Date.now();window._lastReq=lastImproveRequest();clean="Sí puedo entregarte el archivo de la mejora, Leo, aunque no lo escribo en el chat: lo genero con mi taller. Preparo la propuesta, la pruebo, le pongo su número consecutivo y la guardo en 🧰 Herramientas → 🛠️ Mis mejoras, con el botón ⬇️ para descargar el lara.html listo para subir."+(window._lastReq?"\n\nPuedo preparar ahora lo último que me pediste: «"+window._lastReq.slice(0,120)+"».":"\n\nDescríbeme la mejora en «Mis mejoras» y la preparo.");selfBtns="imp"}
     if(!mejoraReq&&!selfBtns&&bankFake(clean)){clean="No quiero engañarte, Leo: ese movimiento todavía NO quedó anotado. Para llevar tus cuentas escríbeme una frase completa como «gasté 200 córdobas en comida», «ingresé 50 dólares de sueldo» o «cambié 100 dólares a córdobas a 36.6», o usa 🧰 → 🏦 Cuentas.";selfBtns="bank"}
     if(!mejoraReq&&!selfBtns&&selfRefusal(clean)&&selfTopic(text)){window._selfCtxT=Date.now();clean="Sí puedo mejorarme, pero siempre con tu autorización: preparo una propuesta, la pruebo en un espacio aislado y solo se publica si tú la apruebas con un botón. ¿Quieres que te proponga ideas según cómo me usas, o prefieres decirme qué cambiar?";selfBtns=true}
     if(!clean) clean="Listo.";
@@ -1396,6 +1397,7 @@ function renderShorts(){
   bar.appendChild(btn("📅 Mi día",myDay));
   bar.appendChild(btn("📰 Noticias",()=>newsBrief(false)));
   bar.appendChild(btn("🛠️ Mejora",()=>{$("openTools").click();$("openImps").click()}));
+  bar.appendChild(btn("⬇️ Archivo",()=>chatBackupFlow()));
   bar.appendChild(btn("🔍 A fondo",()=>{$("t").value="Analiza a fondo, con evidencias, otras interpretaciones y tu nivel de certeza: "+$("t").value;$("t").focus()}));
   shorts.forEach(t=>bar.appendChild(btn(t.trim().slice(0,24),()=>{$("t").value=($("t").value?$("t").value+" ":"")+t;$("t").focus()})));
   bar.classList.add("on");
@@ -2214,7 +2216,7 @@ function selfRefusal(t){
 }
 const FAKE_RE=/(?:ya\s+(?:quedo|esta|fue|lo\s+(?:integre|implemente))\s*(?:integrad|implementad|incorporad|aplicad|activ)?)|(?:\b(?:integre|incorpore|implemente|aplique|actualice|agregue)\b[^.]{0,80}\b(?:mi\s+(?:arquitectura|sistema|codigo|programacion|nucleo|algoritmo|memoria)|mis\s+funciones)\b)|(?:\bmejora\s*(?:numero|n[.º°]|#)?\s*\d+\b[^.]{0,50}(?:integrad|implementad|aplicad|activ|lista))|(?:\b(?:integrad|implementad|incorporad)[ao]s?\s+(?:en|a)\s+mi\b)/;
 function selfFakeClaim(t){const n=norm(t||"");return FAKE_RE.test(n)&&/(mejora|integr|implement|arquitectura|mi sistema|mi codigo|mis funciones)/.test(n)}
-function backupIntent(t){const n=norm(t||"");return n.length<140&&/\b(respaldo|copia de seguridad|backup|descargar? (?:el )?archivo|archivo de (?:la )?mejora|exportar (?:mis )?datos)\b/.test(n)}
+function backupIntent(t){const n=norm(t||"");return n.length<140&&/\b(respaldo|copia de seguridad|backup|descargar? (?:el )?archivo|archivo de (?:la )?mejora|exportar (?:mis )?datos)\b/.test(n)||(n.length<160&&/(donde (esta|queda|descargo|encuentro)[^.?]{0,40}(archivo|mejora|descarg)|archivo[^.?]{0,30}(generado|para descargar|para subir)|(boton|enlace|link) (para |de )?descarg|descargar (la |el |esa |ese )?(mejora|archivo)|archivo (de|con) (la )?mejora)/.test(n))||(n.length<160&&/\b(genera|generame|generar|crea|creame|crear|prepara|preparame|dame|dime|entrega|entregame|manda|mandame|enviame|quiero|necesito)\b[^.?]{0,25}\barchivo\b/.test(n)&&(/(lara|mejora|\bapp\b|sistema|html|actualiz|descarg)/.test(n)||inSelfCtx()))}
 function selfTopic(u){return /(mejor|auto|funcion|codigo|propuesta|evolu|actualiz|modific|agreg|anad|ti misma|tu app)/.test(norm(u||""))}
 const FEAT_RE=/\b(agreg|anad|incorpor|instal|pong|suma)\w* ?(te |a ti |a lara |tu )?(nuevas? |mas |otras |algunas |unas |una |un |ciertas )?(funcion|herramienta|capacidad|modulo)\w*/;
 const MORE_RE=/\b(otras|mas|nuevas|mejores|distintas) ?(propuestas|ideas|mejoras|opciones)\b/;
@@ -2439,7 +2441,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
- {v:55,items:["🧠 Memoria por capas: lo que Lara recuerda ahora se ordena en Permanentes (quién eres, familia, fechas, preferencias), Medias (proyectos y decisiones) y Cortas (ánimo y cosas pasajeras, que dejan de usarse a los 14 días).","Cada recuerdo tiene un botón «Capa» para pasarlo de una a otra cuando tú quieras. Nada se borra solo: lo caducado solo deja de usarse.","Cuando hay muchos recuerdos, Lara prioriza siempre los permanentes."]},
+ {v:55,items:["🧠 Memoria por capas: lo que Lara recuerda ahora se ordena en Permanentes (quién eres, familia, fechas, preferencias), Medias (proyectos y decisiones) y Cortas (ánimo y cosas pasajeras, que dejan de usarse a los 14 días).","Cada recuerdo tiene un botón «Capa» para pasarlo de una a otra cuando tú quieras. Nada se borra solo: lo caducado solo deja de usarse.","Cuando hay muchos recuerdos, Lara prioriza siempre los permanentes.","⬇️ Botón «Archivo» en el chat: muestra la mejora preparada con su número consecutivo para descargarla (lara.html) o guardar una copia lara-mejora-N.html. Si le preguntas dónde está el archivo, Lara te muestra los botones en vez de decir que no puede.","🔎 En Mis mejoras, «Reconocer un archivo» te dice qué número de mejora es un archivo y si conviene subirlo."]},
  {v:54,items:["🛠️ Mis mejoras (en 🧰 Herramientas y con el botón «Mejora» del chat): describes la mejora, Lara la prepara y la guarda con su número consecutivo, y puedes descargar el archivo lara.html para subirlo cuando quieras, aunque cierres la app.","Si Gemini dice que no puede generar archivos, Lara lo corrige y te lleva a Mis mejoras.","🏦 Cuentas: dos cuentas, Córdobas y Dólares, con entradas, salidas, saldo exacto, estado de cuenta mensual y cambio de moneda con tipo de cambio. También escribiendo en el chat: «gasté 200 córdobas en comida», «ingresé 50 dólares», «cambié 100 dólares a córdobas a 36.6» o «cuánto tengo»."]},
  {v:53,items:["Las mejoras que le pides a Lara ahora se preparan de verdad: reconoce más formas de pedirlas («Mejora: …», «la siguiente mejora…») y te muestra su número consecutivo.","Nuevo botón ⬇️ Descargar archivo para subir (lara.html) y ⬇️ Descargar respaldo actual, también desde el chat.","Si Gemini dice que ya integró una mejora sin haberla preparado, Lara lo corrige y te ofrece prepararla de verdad.","Si escribes «respaldo» o «descargar archivo», Lara te muestra los botones para descargar tus datos, la app o la mejora."]},
  {v:52,items:["Nueva pantalla 🧰 Herramientas con: 💰 Presupuesto (ingresos, gastos y balance exactos, con límites por categoría), 📊 Gráficas (funciones, hábitos, gastos y uso), 🎓 Estudio (mazos de preguntas con repaso y práctica de matemáticas gratis), 🧮 Calculadora con historial y 📈 Estadísticas de uso.","Los proyectos ahora están dentro de 🧰 Herramientas."]},
@@ -4151,12 +4153,19 @@ async function chatDownloadCurrent(){
     add("lara","✅ Descargué el respaldo de la versión actual como «lara-respaldo-v"+(m?m[1]:APP_V)+".html». Guárdalo por si necesitas volver atrás.");
   }catch(e){add("err","No pude descargar el respaldo: "+(e.message||e))}
 }
-function chatBackupFlow(){
-  const msg="Estas son las descargas y respaldos que sí puedo darte ahora mismo. Toca el que necesites:";
+async function chatBackupFlow(){
+  const msg="Sí puedo darte el archivo, Leo, pero lo genera mi taller y se descarga con estos botones, no desde el texto del chat. Si hay una mejora preparada aparece con su número consecutivo; si no, toca «Preparar la mejora que pedí» o abre Mis mejoras.";
   history.push({role:"model",parts:[{text:msg}]});saveChats();
   const b=add("lara",msg);
   const L=[["📦 Mis datos (archivo JSON)",()=>{exportAll()}],["☁️ Respaldar mis datos en GitHub",()=>dataBackup(false)],["⬇️ La app actual (respaldo)",()=>chatDownloadCurrent()]];
-  if(autoPatches&&autoPatchedText) L.unshift(["⬇️ Archivo de la mejora preparada",()=>chatDownloadProposal()]);
+  let shown=false;
+  try{
+    const all=await impAll(),r=all.find(x=>x.v>APP_V&&x.base===APP_V);
+    if(r){shown=true;L.unshift(["🗂️ Copia lara-mejora-"+r.v+".html",()=>impDownloadNumbered(r)]);L.unshift(["⬇️ Mejora n.º "+r.v+" (lara.html para subir)",()=>impDownload(r)])}
+  }catch(e){}
+  if(!shown&&autoPatches&&autoPatchedText){shown=true;L.unshift(["⬇️ Archivo de la mejora preparada",()=>chatDownloadProposal()])}
+  if(!shown){const lr=window._lastReq||lastImproveRequest();if(lr) L.unshift(["🛠️ Preparar la mejora que pedí",()=>chatSelfImprove(lr)])}
+  L.push(["🛠️ Abrir Mis mejoras",()=>{$("openTools").click();$("openImps").click()}]);
   chatBubbleActions(b,L);
 }
 
@@ -4438,8 +4447,14 @@ function impStatus(t){const e=$("impstatus");if(e) e.textContent=t}
 function impDownload(r){
   downloadBlob(new Blob([r.text],{type:"text/html;charset=utf-8"}),"lara.html");
   r.dl=true;impPut(r).catch(()=>{});recordChangeRaw(r.v,r.summary);
+  try{toast("⬇️ Descargué lara.html (Mejora n.º "+r.v+"). Súbelo a GitHub con ese nombre.")}catch(e){}
   impStatus("✅ Descargué el archivo de la Mejora n.º "+r.v+" como «lara.html». Súbelo a GitHub con ese nombre exacto (Add file → Upload files), espera 1 o 2 minutos y toca «Actualizar app». Mientras no lo subas, tu Lara sigue igual.");
   renderImps();
+}
+function impDownloadNumbered(r){
+  downloadBlob(new Blob([r.text],{type:"text/html;charset=utf-8"}),"lara-mejora-"+r.v+".html");
+  try{toast("🗂️ Guardé la copia lara-mejora-"+r.v+".html. Para publicar usa el archivo llamado lara.html.")}catch(e){}
+  impStatus("🗂️ Copia numerada «lara-mejora-"+r.v+".html» descargada como archivo de respaldo. Para publicar, sube el archivo llamado exactamente lara.html.");
 }
 async function impPublish(r){
   try{
@@ -4473,6 +4488,7 @@ async function renderImps(){
       const wn=document.createElement("div");wn.style.cssText="width:100%;font-size:13px;color:var(--danger)";wn.textContent="⚠️ Se preparó sobre la versión "+r.base+" y tu app ya está en la "+APP_V+". No la subas: pisaría cambios más nuevos.";d.appendChild(wn);
       w.append(btn("🔁 Volver a preparar",()=>{$("impreq").value=r.req||r.summary;$("impreq").focus();window.scrollTo(0,0)}));
     }
+    w.append(btn("🗂️ Copia n.º "+r.v,()=>impDownloadNumbered(r)));
     w.append(btn("🗑️ Borrar",async()=>{if(confirm("¿Borrar esta mejora guardada?")){await impDel(r.id);renderImps()}}));
     d.appendChild(w);box.appendChild(d);
   });
@@ -4493,6 +4509,24 @@ $("impgo").onclick=async()=>{
   renderImps();
 };
 $("impbk").onclick=()=>chatDownloadCurrent();
+$("imprec").onclick=()=>$("imprecf").click();
+$("imprecf").onchange=async e=>{
+  const f=e.target.files&&e.target.files[0];e.target.value="";if(!f) return;
+  try{
+    const txt=await f.text(),m=txt.match(/const\s+APP_V\s*=\s*(\d+)/);
+    if(!m||!/<title>Lara/i.test(txt)){impStatus("❌ «"+f.name+"» no parece ser un archivo de Lara.");return}
+    const v=+m[1],all=await impAll(),r=all.find(x=>x.v===v);
+    let s="🔎 «"+f.name+"» es la Mejora n.º "+v+" de Lara.";
+    if(v<APP_V) s+=" Es anterior a tu versión actual ("+APP_V+"): no la subas.";
+    else if(v===APP_V) s+=" Es la misma versión que ya tienes ("+APP_V+").";
+    else if(v===APP_V+1) s+=" Es la siguiente a tu versión ("+APP_V+"): puedes subirla.";
+    else s+=" Salta de la "+APP_V+" a la "+v+": súbela solo si sabes que incluye lo intermedio.";
+    if(r) s+=r.text===txt?" Coincide con la guardada en Mis mejoras.":" ⚠️ No es idéntica a la que guardé con ese número.";
+    else if(v>APP_V) s+=" No está guardada en Mis mejoras (viene de otra fuente).";
+    if(f.name!=="lara.html") s+="\n⚠️ Para publicarla debe llamarse exactamente lara.html (ahora: «"+f.name+"»).";
+    impStatus(s);
+  }catch(err){impStatus("❌ No pude leer el archivo: "+(err.message||err))}
+};
 function inSelfCtx(){
   if(window._selfCtxT&&Date.now()-window._selfCtxT<1800000) return true;
   return history.slice(-10).some(m=>/\bmejora\b/i.test(norm((m.parts&&m.parts[0]&&m.parts[0].text)||"")));
@@ -4507,7 +4541,7 @@ function lastImproveRequest(){
 }
 function fileRefusal(t){
   const n=norm(t||"");
-  return /(no puedo|no me es posible|todavia no|aun no|no tengo (?:la )?(?:capacidad|permiso|acceso)|no estoy en condiciones|debido a las limitaciones)/.test(n)&&/(archivos? descargables?|generar (?:el )?archivo|crear (?:el )?archivo|descargar|codigo fuente|actualizar el codigo|subir)/.test(n);
+  return /(no puedo|no me es posible|todavia no|aun no|no tengo (?:la )?(?:capacidad|permiso|acceso)|no estoy en condiciones|debido a las limitaciones|no cuenta con|no dispone|no existe (?:un )?boton|no hay (?:un )?boton)/.test(n)&&/(archivos? descargables?|generar (?:un |el )?archivo|crear (?:un |el )?archivo|descarg\w*|enlace de descarga|archivo fisico|archivo adjunto|funcion de generar|boton (?:nativo )?(?:para )?(?:generar|descargar)|codigo fuente|actualizar el codigo|subir)/.test(n);
 }
 
 render();
