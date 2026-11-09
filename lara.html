@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v59</title>
+<title>Lara v58</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -298,7 +298,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 59. Incluye mejoras del bloque 3 a la 8: Excel completo (exportar e importar), hábitos avanzados con dificultad y puntos, memoria por capas, herramientas optimizadas (presupuesto, gráficas, estudio, calculadora exacta y estadísticas), cuentas en córdobas y dólares, y sincronización segura entre teléfonos.</p>
+  <p class="hint">Versión 58. Incluye memoria con «por qué», hábitos con «¿lo hiciste hoy?» y progreso semanal, tarjetas de repaso propias, Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -327,8 +327,8 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <select id="expacct" style="margin-top:8px;display:none"></select>
   <div class="row"><button id="exppdf" type="button">PDF</button><button id="expdoc" type="button">Word</button><button id="exptxt" type="button">Texto</button></div>
   <div id="expmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink)"></div>
-  <label>📊 Excel y Datos</label>
-  <p class="hint">Exporta tus tareas, hábitos, recordatorios, memoria, notas y cuentas a un archivo .xlsx de forma local y segura. Para importar, usa un archivo .xlsx con hojas llamadas Tareas, Hábitos, Memoria, Notas o Cuentas.</p>
+  <label>📊 Excel</label>
+  <p class="hint">Exporta tus tareas, hábitos, recordatorios, memoria, notas y cuentas a un archivo .xlsx. Para importar, usa un Excel con hojas llamadas Tareas, Hábitos, Memoria, Notas o Cuentas (lo más fácil: exporta uno y edítalo). Lara agrega lo nuevo y no borra nada.</p>
   <div class="row"><button id="xlexp" type="button">📊 Exportar a Excel</button><button id="xlimp" type="button">📥 Importar desde Excel</button><input type="file" id="xlimpf" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>
   <div id="xlmsg" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
   <label>📲 Accesos directos y compartir</label>
@@ -534,7 +534,8 @@ try{mems=JSON.parse(store.get("lara_mem","[]"))||[]}catch(e){mems=[]}
 function saveMems(){store.set("lara_mem",JSON.stringify(mems))}
 function addMem(t){
   t=(t||"").trim().slice(0,200);
-  if(!t||mems.some(m=>m.toLowerCase()===t.toLowerCase())) return;
+  if(!t) return;
+  {const dup=mems.find(m=>m.toLowerCase()===t.toLowerCase());if(dup){memHit(dup);return}}
   mems.push(t);
   try{const dm=getMemDates();dm[norm(t)]=Date.now();store.set("lara_memdates",JSON.stringify(dm))}catch(e){}
   if(/^[aá]nimo/i.test(t)){const an=mems.map((m,i)=>/^[aá]nimo/i.test(m)?i:-1).filter(i=>i>=0);if(an.length>6) mems.splice(an[0],1)}
@@ -566,6 +567,19 @@ function dedupeMems(){
 const MEM_LAYERS=["permanente","media","corta"],SHORT_DAYS=14;
 const LAYER_INFO={permanente:{t:"📌 Permanentes",d:"No caducan: quién eres, familia, fechas y preferencias."},media:{t:"🗂️ Medias",d:"Proyectos, decisiones e intereses del momento."},corta:{t:"⏳ Cortas",d:"Ánimo y cosas pasajeras: dejan de usarse a los "+SHORT_DAYS+" días."}};
 function getMemLayers(){try{return JSON.parse(store.get("lara_memlayers","{}"))||{}}catch(e){return{}}}
+function getMemWhy(){try{return JSON.parse(store.get("lara_memwhy","{}"))||{}}catch(e){return{}}}
+function setMemWhy(m,w){try{const x=getMemWhy();x[norm(m)]=String(w).slice(0,80);store.set("lara_memwhy",JSON.stringify(x))}catch(e){}}
+function memReason(m){
+  const w=getMemWhy()[norm(m)];if(w) return w;
+  const ly=memLayer(m);
+  return ly==="corta"?"Cosa pasajera: se deja de usar a los "+SHORT_DAYS+" días":ly==="permanente"?"Dato personal duradero (nombre, fechas, familia o preferencias)":"Tema o proyecto del momento";
+}
+function memHit(m){
+  try{
+    const h=JSON.parse(store.get("lara_memhits","{}"))||{},k=norm(m);h[k]=(h[k]||0)+1;store.set("lara_memhits",JSON.stringify(h));
+    if(h[k]>=2&&memLayer(m)!=="permanente"){setMemLayer(m,"permanente");setMemWhy(m,"Subió a permanente: me lo contaste "+h[k]+" veces");}
+  }catch(e){}
+}
 function setMemLayer(m,l){try{const L=getMemLayers();L[norm(m)]=l;store.set("lara_memlayers",JSON.stringify(L))}catch(e){}}
 function memLayer(m){
   const k=norm(m),L=getMemLayers();
@@ -592,13 +606,13 @@ function renderMems(){
       const sp=document.createElement("span");sp.textContent=m;
       const sm=document.createElement("small");sm.style.cssText="display:block;color:var(--muted)";
       const ts=dm[norm(m)];
-      sm.textContent=memCat(m)+(ts?" · guardado el "+new Date(ts).toLocaleDateString("es"):"")+(memExpired(m)?" · caducada (ya no se usa)":"");
+      sm.textContent=memCat(m)+(ts?" · guardado el "+new Date(ts).toLocaleDateString("es"):"")+(memExpired(m)?" · caducada (ya no se usa)":"")+"\nPor qué: "+memReason(m);sm.style.whiteSpace="pre-wrap";
       sp.appendChild(sm);
       const w=document.createElement("div");w.style.cssText="display:flex;gap:6px;flex:none;flex-wrap:wrap";
       const ed=document.createElement("button");ed.type="button";ed.textContent="Editar";
       ed.onclick=()=>{const t=prompt("Editar recuerdo",m);if(t&&t.trim()){const i=mems.indexOf(m);if(i>=0){const nt=t.trim().slice(0,200),ly=memLayer(m);mems[i]=nt;const x=getMemDates();x[norm(nt)]=x[norm(m)]||Date.now();store.set("lara_memdates",JSON.stringify(x));setMemLayer(nt,ly);saveMems();renderMems()}}};
       const cp=document.createElement("button");cp.type="button";cp.textContent="Capa";
-      cp.onclick=()=>{const nx=MEM_LAYERS[(MEM_LAYERS.indexOf(memLayer(m))+1)%MEM_LAYERS.length];setMemLayer(m,nx);if(nx==="corta"){const x=getMemDates();x[norm(m)]=Date.now();store.set("lara_memdates",JSON.stringify(x))}renderMems();toast("Ahora es "+LAYER_INFO[nx].t.replace(/^\S+\s/,"").toLowerCase().replace(/s$/,"")+".")};
+      cp.onclick=()=>{const nx=MEM_LAYERS[(MEM_LAYERS.indexOf(memLayer(m))+1)%MEM_LAYERS.length];setMemLayer(m,nx);setMemWhy(m,"Lo elegiste tú");if(nx==="corta"){const x=getMemDates();x[norm(m)]=Date.now();store.set("lara_memdates",JSON.stringify(x))}renderMems();toast("Ahora es "+LAYER_INFO[nx].t.replace(/^\S+\s/,"").toLowerCase().replace(/s$/,"")+".")};
       const b=document.createElement("button");b.type="button";b.textContent="Borrar";
       b.onclick=()=>{const i=mems.indexOf(m);if(i>=0){mems.splice(i,1);saveMems();renderMems()}};
       w.append(ed,cp,b);d.append(sp,w);box.appendChild(d);
@@ -771,9 +785,10 @@ function ttsStyle(){
 }
 function buildSys(){
   let s=effProf().prompt;
+  s+="\n\nTARJETAS DE REPASO: si el usuario quiere memorizar o repasar algo, o te pide tarjetas, crea cada una al final de tu respuesta con [[TARJETA: pregunta | respuesta]] (máximo 5 por respuesta, respuestas cortas y verificables). Dile que quedan en Estudio → Mis tarjetas.";
   s+=personaText();s+=mathRulesText();s+=numText();
   s+="\n\nContinuidad de conversación: interpreta mensajes breves como «sí», «listo», «sigue», «nueva mejora» o «continúa» usando los mensajes anteriores. Conserva nombres de proyectos, objetivos, restricciones, decisiones confirmadas y pasos completados. No vuelvas a preguntar algo que ya está claro en el contexto. La corrección más reciente del usuario prevalece. Distingue hechos confirmados de suposiciones; si falta un dato imprescindible, haz una sola pregunta breve. Si el usuario dice «listo», reconoce el avance y ofrece el siguiente paso concreto. Si el usuario pide información actual, consulta la búsqueda web cuando esté disponible y presenta enlaces de fuentes reales; si no pudiste buscar, dilo claramente.\n\nCalidad de análisis: distingue hechos, interpretaciones y opiniones; en temas debatidos presenta las posturas principales y tu nivel de certeza; no inventes datos, cifras ni citas; si algo puede haber cambiado, dilo.";
-  if(mems.length) s+="\n\nLo que sabes del usuario:\n- "+memFor(lastUserText()).join("\n- ");
+  if(mems.length) s+="\n\nLo que sabes del usuario (lo marcado «reciente» es pasajero y puede haber cambiado):\n- "+memFor(lastUserText()).map(m=>(memLayer(m)==="corta"?"(reciente) ":"")+m).join("\n- ");
   s+="\n\nSi el usuario te cuenta un dato personal duradero (nombre, gustos, familia, metas, preferencias, o decisiones tomadas en un proyecto, indicando el nombre del proyecto) o te pide que recuerdes algo, añade al FINAL de tu respuesta una línea con este formato: [[MEMORIA: dato breve]]. No lo hagas con datos pasajeros. Nunca menciones esta etiqueta. Si el usuario corrige o contradice algo que sabías de él, añade también [[OLVIDAR: palabras clave del dato viejo]] y luego el [[MEMORIA: dato nuevo]]. Si la petición es ambigua y de ello depende el resultado, haz UNA sola pregunta corta antes de responder; si es simple, responde directamente.";
   {const les=getLessons();if(les.length) s+="\n\nLecciones aprendidas del usuario (síguelas siempre):\n- "+les.join("\n- ")}
   s+=(/tarea|pendiente|hoy|ma[ñn]ana|agenda|recuerd|h[aá]bito|racha|d[ií]a|semana|plan|organiza|qu[eé] sigue/i.test(lastUserText())?agendaText():"")+chatContext(lastUserText())+projectsText(lastUserText())+styleText();
@@ -784,7 +799,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=59;
+const APP_V=58;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -935,6 +950,8 @@ $("f").onsubmit=async ev=>{
   document.querySelectorAll(".acts").forEach(x=>x.remove());
   if(selfImproveIntent(text)){chatSelfFlow(text);return}
   if(backupIntent(text)){chatBackupFlow();return}
+  if(!hadAttach&&(/\b(lo hice hoy|mis habitos de hoy|habitos de hoy|que habitos me faltan)\b/.test(norm(text))&&norm(text).length<60)){habAskToday();return}
+  if(!hadAttach&&habDoneIntent(text)) return;
   if(!hadAttach&&!window._sharedExt){const bl=bankLocal(text);if(bl){history.push({role:"model",parts:[{text:bl.text}]});saveChats();const bb=add("lara",bl.text);addActions();if(bl.undo) chatBubbleActions(bb,[["↩ Deshacer",bl.undo]]);logEvt("banklocal","");dayInc("l");try{speak(bl.text.replace(/[*_`]/g,""))}catch(e){}return}}
   if(!hadAttach&&!window._sharedExt){const ml=mathLocal(text);if(ml){history.push({role:"model",parts:[{text:ml}]});saveChats();add("lara",ml);addActions();logEvt("mathlocal","");dayInc("l");try{speak(ml.replace(/[*_`]/g,""))}catch(e){}return}}
   const bubble=add("lara","…");
@@ -950,6 +967,7 @@ $("f").onsubmit=async ev=>{
     let extra=[];let mejoraReq="";
     let clean=calcTags(guardTags(reply,untrusted)).replace(/\[\[MEJORA:\s*([^\]]+?)\]\]/g,(m,t)=>{mejoraReq=t.trim().slice(0,600);return ""}).replace(/\[\[PROYECTO:\s*([^|\]]+?)\s*(?:\|\s*([^\]]+?))?\]\]/g,(m,n,g)=>{projUpsert(n,p=>{if(g) p.goal=g.slice(0,200)});store.set("lara_activeproj",n.trim());extra.push("📁 Proyecto «"+n.trim()+"» actualizado");return ""})
       .replace(/\[\[DECISION:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\]\]/g,(m,n,t)=>{projUpsert(n,p=>{if(!p.decisions.some(d=>norm(d.t)===norm(t))) p.decisions.push({t:t.slice(0,200),d:Date.now()})});extra.push("📁 Decisión guardada en «"+n.trim()+"»");return ""})
+      .replace(/\[\[TARJETA:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\]\]/g,(m,q,a)=>{if(cardAdd(q,a,"chat")) extra.push("📇 Tarjeta guardada en Estudio");return ""})
       .replace(/\[\[PROXIMO:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\]\]/g,(m,n,t)=>{projUpsert(n,p=>{p.next=t.slice(0,200)});extra.push("📁 Próximo paso guardado en «"+n.trim()+"»");return ""})
       .replace(/\[\[LECCION:\s*([^\]]+?)\]\]/g,(m,t)=>{addLesson(t);extra.push("🧩 Lo tendré en cuenta");return ""}).replace(/\[\[OLVIDAR:\s*([^\]]+?)\]\]/g,(m,t)=>{const k=norm(t).trim();if(k.length>=3){const n0=mems.length;mems=mems.filter(x=>!norm(x).includes(k));if(mems.length<n0){saveMems();extra.push("🧠 Actualicé un recuerdo")}}return ""})
       .replace(/\[\[MEMORIA:\s*([^\]]+?)\]\]/g,(m,t)=>{addMem(t);return ""})
@@ -1175,7 +1193,7 @@ function renderNotes(){
   renderMore();
   const nl=$("nlist");nl.innerHTML="";
   if(!notes.length) empty(nl,"Sin notas.");
-  notes.forEach((n,i)=>nl.appendChild(row(n,[btn("Borrar",()=>{notes.splice(i,1);saveNotes();renderNotes()})])));
+  notes.forEach((n,i)=>nl.appendChild(row(n,[btn("📇 Tarjeta",()=>{const q=prompt("¿Qué pregunta quieres para repasar esta nota?","");if(q&&q.trim()){if(cardAdd(q,n,"nota")) toast("📇 Tarjeta creada en Estudio → Mis tarjetas.");else toast("No se creó: ya existe o está vacía.")}}),btn("Borrar",()=>{notes.splice(i,1);saveNotes();renderNotes()})])));
   const rl=$("rlist");rl.innerHTML="";
   if(!rems.length) empty(rl,"Sin recordatorios.");
   rems.slice().sort((a,b)=>a.at<b.at?-1:1).forEach(r=>{
@@ -1407,6 +1425,7 @@ function renderShorts(){
   bar.appendChild(btn("📰 Noticias",()=>newsBrief(false)));
   bar.appendChild(btn("🛠️ Mejora",()=>{$("openTools").click();$("openImps").click()}));
   bar.appendChild(btn("⬇️ Archivo",()=>chatBackupFlow()));
+  bar.appendChild(btn("🔁 ¿Lo hiciste hoy?",habAskToday));
   bar.appendChild(btn("🔍 A fondo",()=>{$("t").value="Analiza a fondo, con evidencias, otras interpretaciones y tu nivel de certeza: "+$("t").value;$("t").focus()}));
   shorts.forEach(t=>bar.appendChild(btn(t.trim().slice(0,24),()=>{$("t").value=($("t").value?$("t").value+" ":"")+t;$("t").focus()})));
   bar.classList.add("on");
@@ -1593,6 +1612,37 @@ function bestStreak(h){const s=[...new Set(h.days||[])].sort();let best=0,run=0,
 const HAB_LVL={facil:{t:"Fácil",p:1},media:{t:"Media",p:2},dificil:{t:"Difícil",p:3}},HAB_ORD=["facil","media","dificil"];
 function habLvl(h){return HAB_LVL[h.lvl]?h.lvl:"media"}
 function habPoints(h){const pre=dkey(new Date()).slice(0,7);return (h.days||[]).filter(k=>String(k).slice(0,7)===pre).length*HAB_LVL[habLvl(h)].p}
+function habWeek(h,off){const d=new Date();d.setDate(d.getDate()-(off||0));let n=0,s="";for(let i=0;i<7;i++){const k=dkey(d);if((h.days||[]).includes(k)){n++;s="✅"+s}else s="⬜"+s;d.setDate(d.getDate()-1)}return {s:s,n:n}}
+function habSummary(){
+  if(!habits.length) return "";
+  const a=habits.reduce((x,h)=>x+habWeek(h,0).n,0),b=habits.reduce((x,h)=>x+habWeek(h,7).n,0),tot=habits.length*7;
+  const pa=Math.round(a/tot*100),pb=Math.round(b/tot*100),df=pa-pb;
+  const m=habits.reduce((x,h)=>x+Math.round(hab30(h)),0)/habits.length;
+  return "📈 Esta semana: "+a+" de "+tot+" ("+pa+"%) · "+(df>0?"↑ +"+df:df<0?"↓ "+df:"igual")+" puntos que la anterior · Mes: "+Math.round(m)+"% de promedio";
+}
+function habPending(){const t=dkey(new Date());return habits.filter(h=>!(h.days||[]).includes(t))}
+function habMark(h){const t=dkey(new Date());if(!h.days.includes(t)) h.days.push(t);h.days=h.days.slice(-400);saveHabits();try{renderMore()}catch(e){}}
+function habAskToday(){
+  const p=habPending();
+  if(!habits.length){const b=add("lara","Todavía no tienes hábitos. Créalos en 📝 Notas y te los pregunto cada día.");return}
+  if(!p.length){add("lara","¡Hoy ya cumpliste todos tus hábitos! 🎉\n"+habSummary());return}
+  const msg="¿Lo hiciste hoy? Toca los que ya cumpliste:\n"+habSummary();
+  history.push({role:"model",parts:[{text:msg}]});saveChats();
+  const b=add("lara",msg);
+  chatBubbleActions(b,p.slice(0,8).map(h=>["✓ "+h.name.slice(0,28),()=>{habMark(h);toast("✅ «"+h.name+"» hecho hoy · racha "+streak(h));habAskToday()}]));
+}
+function habDoneIntent(t){
+  const n=norm(t||"");if(n.length>120||/\?/.test(t)) return false;
+  if(!/\b(hice|ya hice|ya lo hice|cumpli|termine|logre|ya medite|ya lei|ya camine|ya corri)\b/.test(n)) return false;
+  const STOP=["hice","hoy","cumpli","termine","logre","todo","toda","para","esta","esto","tambien"],w=(n.match(/[a-z]{3,}/g)||[]).filter(x=>STOP.indexOf(x)<0),same=(x,y)=>{const k=Math.min(5,Math.max(2,Math.min(x.length,y.length)-1));return x.slice(0,k)===y.slice(0,k)};
+  const hit=habPending().filter(h=>words4(h.name).some(x=>w.some(y=>same(x,y))));
+  if(hit.length!==1) return false;
+  const h=hit[0],msg="¡Muy bien! ¿Marco «"+h.name+"» como hecho hoy?";
+  history.push({role:"model",parts:[{text:msg}]});saveChats();
+  const b=add("lara",msg);addActions();
+  chatBubbleActions(b,[["✅ Sí, márcalo",()=>{habMark(h);toast("✅ Racha de «"+h.name+"»: "+streak(h)+" días")}],["No todavía",()=>{}]]);
+  return true;
+}
 function hab30(h){const d=new Date();let c=0;for(let i=0;i<30;i++){if((h.days||[]).includes(dkey(d))) c++;d.setDate(d.getDate()-1)}return Math.round(c/30*100)}
 function renderMore(){
   const tl=$("tlist");tl.innerHTML="";
@@ -1604,10 +1654,10 @@ function renderMore(){
     r.insertBefore(cb,r.firstChild);if(t.done) r.style.opacity=.6;tl.appendChild(r);
   });
   const hl=$("hlist");hl.innerHTML="";
-  if(!habits.length) empty(hl,"Sin hábitos.");
+  if(!habits.length) empty(hl,"Sin hábitos.");else{const sm=document.createElement("div");sm.className="hint";sm.style.cssText="font-size:14px;color:var(--ink);margin-bottom:6px";sm.textContent=habSummary();hl.appendChild(sm)}
   habits.forEach((h,i)=>{
     const today=dkey(new Date()),done=h.days.includes(today);
-    hl.appendChild(row(h.name+"\n🔥 Racha: "+streak(h)+" días · 🏆 Mejor: "+bestStreak(h)+"\n🎯 "+HAB_LVL[habLvl(h)].t+" · "+hab30(h)+"% en 30 días · ⭐ "+habPoints(h)+" pts este mes",[
+    hl.appendChild(row(h.name+"\n🔥 Racha: "+streak(h)+" días · 🏆 Mejor: "+bestStreak(h)+"\n🗓️ "+habWeek(h,0).s+" ("+habWeek(h,0).n+"/7)\n🎯 "+HAB_LVL[habLvl(h)].t+" · "+hab30(h)+"% en 30 días · ⭐ "+habPoints(h)+" pts este mes",[
       btn(done?"Hecho ✓":"Hoy",()=>{h.days=done?h.days.filter(x=>x!==today):h.days.concat(today);h.days=h.days.slice(-400);saveHabits();renderMore()}),
       btn("Dificultad",()=>{h.lvl=HAB_ORD[(HAB_ORD.indexOf(habLvl(h))+1)%3];saveHabits();renderMore();toast("Dificultad: "+HAB_LVL[h.lvl].t.toLowerCase()+".")}),
       btn("Borrar",()=>{habits.splice(i,1);saveHabits();renderMore()})]));
@@ -2327,8 +2377,8 @@ function secLog(k,d){const L=getSecLog();L.push({t:Date.now(),k:k,d:String(d||""
 document.addEventListener("securitypolicyviolation",e=>{secLog("csp","bloqueado: "+(e.violatedDirective||"")+" → "+String(e.blockedURI||"").slice(0,70))});
 function guardTags(r,untrusted){
   if(!untrusted) return r;
-  if(/\[\[(MEMORIA|OLVIDAR|LECCION|PROYECTO|DECISION|PROXIMO|MEJORA):/.test(r)){secLog("etiquetas","bloqueé acciones de una respuesta con contenido externo");window._tagsBlocked=true}
-  return r.replace(/\[\[(MEMORIA|OLVIDAR|LECCION|PROYECTO|DECISION|PROXIMO|MEJORA):[^\]]*\]\]/g,"");
+  if(/\[\[(MEMORIA|OLVIDAR|LECCION|PROYECTO|DECISION|PROXIMO|TARJETA|MEJORA):/.test(r)){secLog("etiquetas","bloqueé acciones de una respuesta con contenido externo");window._tagsBlocked=true}
+  return r.replace(/\[\[(MEMORIA|OLVIDAR|LECCION|PROYECTO|DECISION|PROXIMO|TARJETA|MEJORA):[^\]]*\]\]/g,"");
 }
 async function sha256hex(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 function getHashes(){try{return JSON.parse(store.get("lara_hashes","{}"))||{}}catch(e){return{}}}
@@ -2456,8 +2506,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
- {v:59,items:["Lara ahora cuenta con mejores herramientas de estudio, hábitos con dificultad y soporte completo para Excel y cuentas.","Implementación de las mejoras de la 3 a la 8 para optimizar las herramientas de Lara (gestión de hábitos avanzados, soporte mejorado para cuentas y exportación/"]},
- {v:58,items:["Podrás exportar y respaldar tus datos en un archivo Excel (xlsx) y volver a importarlos cuando lo necesites.","Agregué la funcionalidad para exportar tareas, hábitos, recordatorios, memoria, notas y cuentas a un archivo .xlsx y para importarlo desde Excel, permitiendo re"]},
+ {v:58,items:["🧠 Memoria: cada recuerdo muestra «Por qué» está en su capa. Si me cuentas algo dos veces, sube solo a permanente. Lo reciente se marca para que no lo tome como definitivo.","🔁 Hábitos: botón «¿Lo hiciste hoy?» en el chat para marcar los pendientes con un toque; si escribes «ya hice ejercicio», te pregunto si lo marco. Cada hábito muestra su semana (✅/⬜) y arriba ves el resumen semanal comparado con la anterior.","📇 Estudio: tarjetas propias gratis (sin Gemini), tarjetas desde una nota (botón «Tarjeta») o desde el chat («hazme tarjetas de…»), examen corto de 5 y seguimiento de lo dominado y lo que se te olvida. Usa el mismo repaso espaciado de siempre."]},
  {v:57,items:["📊 Excel: en Ajustes puedes exportar tareas, hábitos, recordatorios, memoria, notas y cuentas a un archivo .xlsx, y también importar un Excel con esas hojas. Importar solo agrega lo nuevo; no borra nada. Funciona sin internet.","🔢 Lara ahora conoce el número real de la versión instalada y de la siguiente mejora, y ya no inventa ni confunde la numeración. El número lo asigna el taller.","En el chat, «exporta a Excel» o «importar Excel» te muestra los botones."]},
  {v:56,items:["🔁 Hábitos con dificultad (fácil, media, difícil): cada día cumplido suma 1, 2 o 3 puntos al mes.","🏆 Ahora cada hábito muestra su mejor racha, el porcentaje de los últimos 30 días y los puntos del mes. Cambia la dificultad con el botón «Dificultad».","📋 Mejora n.º 56 aparece en el historial de mejoras (Ajustes → Automejora)."]},
  {v:55,items:["🧠 Memoria por capas: lo que Lara recuerda ahora se ordena en Permanentes (quién eres, familia, fechas, preferencias), Medias (proyectos y decisiones) y Cortas (ánimo y cosas pasajeras, que dejan de usarse a los 14 días).","Cada recuerdo tiene un botón «Capa» para pasarlo de una a otra cuando tú quieras. Nada se borra solo: lo caducado solo deja de usarse.","Cuando hay muchos recuerdos, Lara prioriza siempre los permanentes.","⬇️ Botón «Archivo» en el chat: muestra la mejora preparada con su número consecutivo para descargarla (lara.html) o guardar una copia lara-mejora-N.html. Si le preguntas dónde está el archivo, Lara te muestra los botones en vez de decir que no puede.","🔎 En Mis mejoras, «Reconocer un archivo» te dice qué número de mejora es un archivo y si conviene subirlo."]},
@@ -3977,11 +4026,50 @@ function getDecks(){try{return JSON.parse(store.get("lara_decks","[]"))||[]}catc
 function saveDecks(a){store.set("lara_decks",JSON.stringify(a.slice(0,30)))}
 function stuDue(){const now=Date.now(),out=[];getDecks().forEach(d=>d.cards.forEach(c=>{if((c.due||0)<=now) out.push({d:d,c:c})}));return out}
 function stuBox(){const b=$("stubox");b.innerHTML="";return b}
+function cardAdd(q,a,src){
+  q=String(q||"").trim().slice(0,300);a=String(a||"").trim().slice(0,300);if(q.length<2||!a) return false;
+  const D=getDecks();let d=D.find(x=>x.id==="mine");
+  if(!d){d={id:"mine",title:"📇 Mis tarjetas",cards:[]};D.unshift(d)}
+  if(d.cards.some(c=>norm(c.q)===norm(q))) return false;
+  if(d.cards.length>=200) d.cards.shift();
+  d.cards.push({id:uid(),type:"short",q:q,opts:[],ans:a,kw:[],exp:"",box:1,due:0,ok:0,ko:0,src:src||"manual"});
+  saveDecks(D);return true;
+}
+function stuStats(){
+  const all=[];getDecks().forEach(d=>d.cards.forEach(c=>all.push({d:d,c:c})));
+  const dom=all.filter(x=>(x.c.box||1)>=5),olv=all.filter(x=>(x.c.ko||0)>0&&(x.c.box||1)<=2);
+  return {all:all,dom:dom,olv:olv,learn:all.length-dom.length};
+}
+function stuExam(){
+  const S=stuStats(),now=Date.now();
+  const w=S.all.map(x=>({x:x,s:((x.c.due||0)<=now?3:0)+((x.c.ko||0)>(x.c.ok||0)?2:0)+(5-Math.min(5,x.c.box||1))*0.3+Math.random()}));
+  const pick=w.sort((a,b)=>b.s-a.s).slice(0,5).map(o=>({deckId:o.x.d.id,card:o.x.c}));
+  stuStart(pick,"Examen corto");
+}
+function stuCardForm(){
+  const box=stuBox();
+  const h=document.createElement("h2");h.style.cssText="font:600 1.15rem var(--serif);margin:0 0 8px";h.textContent="Nueva tarjeta";box.appendChild(h);
+  const l1=document.createElement("label");l1.textContent="Pregunta o concepto";box.appendChild(l1);
+  const q=document.createElement("input");q.placeholder="Ej: ¿Cuántos libros tiene el Nuevo Testamento?";box.appendChild(q);
+  const l2=document.createElement("label");l2.textContent="Respuesta";box.appendChild(l2);
+  const a=document.createElement("input");a.placeholder="Ej: 27";box.appendChild(a);
+  const st=document.createElement("div");st.className="hint";
+  const go=btn("Guardar tarjeta",()=>{if(cardAdd(q.value,a.value,"manual")){q.value="";a.value="";st.textContent="✅ Guardada en «Mis tarjetas». Puedes agregar otra.";q.focus()}else st.textContent="⚠️ Escribe pregunta y respuesta (y que no esté repetida)."});go.className="main";go.style.marginTop="10px";box.appendChild(go);
+  const bk=btn("Volver",stuHome);bk.style.cssText="margin:10px 0 0 8px";box.appendChild(bk);box.appendChild(st);
+}
 function stuHome(){
   STU=null;const box=stuBox(),decks=getDecks(),due=stuDue();
   const intro=document.createElement("p");intro.className="hint";intro.textContent="Practica con preguntas. Los mazos de Gemini se repasan con repetición espaciada (lo que fallas vuelve antes). La práctica de matemáticas la genera Lara en tu teléfono, sin gastar cuota.";box.appendChild(intro);
   const r=document.createElement("div");r.className="row";r.style.marginTop="8px";
   r.append(btn("➕ Nuevo mazo con Gemini",stuNewForm),btn("🧮 Práctica de matemáticas",stuMathForm));box.appendChild(r);
+  const r2=document.createElement("div");r2.className="row";r2.style.marginTop="8px";
+  r2.append(btn("📇 Nueva tarjeta (gratis)",stuCardForm),btn("📝 Examen corto (5)",stuExam));box.appendChild(r2);
+  {const S=stuStats();if(S.all.length){
+    const sm=document.createElement("div");sm.className="hint";sm.style.cssText="margin-top:12px;font-size:14px;color:var(--ink);white-space:pre-wrap";
+    sm.textContent="📊 Tu dominio: "+S.dom.length+" dominadas · "+S.learn+" en aprendizaje · "+S.olv.length+" que se te olvidan"+(S.olv.length?"\nPara reforzar: "+S.olv.sort((a,b)=>b.c.ko-a.c.ko).slice(0,3).map(x=>"«"+x.c.q.slice(0,40)+"»").join(", "):"");
+    box.appendChild(sm);
+    if(S.olv.length){const bo=btn("🔁 Reforzar lo que se me olvida",()=>stuStart(S.olv.slice(0,12).map(x=>({deckId:x.d.id,card:x.c})),"Reforzar"));bo.style.marginTop="8px";box.appendChild(bo)}
+  }}
   if(due.length){const b2=btn("▶ Repasar lo pendiente ("+due.length+")",()=>stuStart(due.slice(0,12).map(x=>({deckId:x.d.id,card:x.c})),"Repaso pendiente"));b2.className="main";b2.style.marginTop="10px";box.appendChild(b2)}
   const h=document.createElement("div");h.className="hint";h.style.cssText="margin-top:14px;font-weight:600;color:var(--ink)";h.textContent="Mis mazos ("+decks.length+")";box.appendChild(h);
   if(!decks.length) empty(box,"Todavía no tienes mazos.");
@@ -4733,7 +4821,7 @@ $("xlimpf").onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.valu
 
 refreshImpPrep();
 try{
-  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos",57:"Excel (exportar e importar) y numeración de mejoras corregida"};
+  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos",57:"Excel (exportar e importar) y numeración de mejoras corregida",58:"Memoria con «por qué», hábitos con progreso semanal y tarjetas de repaso propias"};
   Object.keys(NOTES).map(Number).filter(v=>v<=APP_V&&!getChanges().some(c=>+c.v===v)).forEach(v=>recordChangeRaw(v,NOTES[v]));
 }catch(e){}
 render();
