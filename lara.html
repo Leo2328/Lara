@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v60</title>
+<title>Lara v61</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -300,7 +300,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 60. Incluye Proyectos y Presupuesto más potentes, automejora que se mantiene en el tema que pides, memoria con «por qué», hábitos con «¿lo hiciste hoy?» y progreso semanal, tarjetas de repaso propias, Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 61. Incluye Proyectos y Presupuesto más potentes, automejora que se mantiene en el tema que pides, memoria con «por qué», hábitos con «¿lo hiciste hoy?» y progreso semanal, tarjetas de repaso propias, Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -801,7 +801,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=60;
+const APP_V=61;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -950,7 +950,7 @@ $("f").onsubmit=async ev=>{
   history.push(entry);
   add("user",(pendingImg||pendingTxt)?text+" 📎":text);
   document.querySelectorAll(".acts").forEach(x=>x.remove());
-  if(!hadAttach&&norm(text).length<40&&/^(si|ok|okay|dale|hazlo|hazla|adelante|procede|prepara|preparala|realizala|ejecutala)\b/.test(norm(text))&&inSelfCtx()){
+  if(!hadAttach&&norm(text).length<50&&/^(si|ok|okay|dale|hazlo|hazla|adelante|procede|prepara|preparala|realizala|ejecutala|haslo lo autorizo)\b/.test(norm(text))&&inSelfCtx()){
     const lr=window._lastReq||lastImproveRequest();
     if(lr){const m2="Entendido. Preparo la propuesta de verdad en el taller, la pruebo y no cambio nada sin tu autorización.";history.push({role:"model",parts:[{text:m2}]});saveChats();add("lara",m2);chatSelfImprove(lr);return}
   }
@@ -2576,6 +2576,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:61,items:["Lara procesará con mayor precisión la autorización del usuario cuando este escriba una frase de aprobación.","Se reemplazó la frase «Haslo lo autorizo» por la autorización estricta en el flujo de automejora del chat."]},
  {v:60,items:["📁 Proyectos: ahora tienen estado (activo, trabado, en pausa, terminado), fecha límite opcional, «en qué estás trabado» y notas o enlaces relacionados. Botones «¿En qué estoy trabado?» y «¿Qué hago hoy?» (también puedes preguntárselo a Lara en el chat) y «Proponer próximo paso» por proyecto: Lara sugiere uno según el historial y tú decides si lo guarda.","💰 Presupuesto: categoría automática al escribir la descripción, avisos al acercarte o pasarte del límite, comparación con el mes anterior (y por categoría) y botón «Resumen» semanal y mensual con acciones recomendadas.","🛡️ Si el aviso de integridad salta porque volviste a subir la misma versión, puedes aceptarlo tocando el aviso.","🗣️ «Ok, hazlo» ahora sí lanza el taller con tu último pedido, en vez de prometer sin hacer nada."]},
  {v:59,items:["🎯 Automejora más fiel a lo que pides: usa tus palabras exactas (ya no una versión resumida por Gemini), no recorta pedidos largos y cada cambio debe ligarse a una frase de tu pedido; si algo no tiene relación, se descarta y se reintenta.","📋 Si pegas una lista de varias mejoras numeradas, Lara las prepara de una en una (con botones) para que no se mezclen.","👀 Al terminar, la propuesta muestra «Tu pedido» y la lista de cambios para que revises que coincidan."]},
  {v:58,items:["🧠 Memoria: cada recuerdo muestra «Por qué» está en su capa. Si me cuentas algo dos veces, sube solo a permanente. Lo reciente se marca para que no lo tome como definitivo.","🔁 Hábitos: botón «¿Lo hiciste hoy?» en el chat para marcar los pendientes con un toque; si escribes «ya hice ejercicio», te pregunto si lo marco. Cada hábito muestra su semana (✅/⬜) y arriba ves el resumen semanal comparado con la anterior.","📇 Estudio: tarjetas propias gratis (sin Gemini), tarjetas desde una nota (botón «Tarjeta») o desde el chat («hazme tarjetas de…»), examen corto de 5 y seguimiento de lo dominado y lo que se te olvida. Usa el mismo repaso espaciado de siempre."]},
