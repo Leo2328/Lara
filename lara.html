@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v64</title>
+<title>Lara v65</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -58,8 +58,8 @@ form textarea:focus-visible{outline:none}
 #attach,#mic,#conv{width:40px;height:40px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:var(--bg);border-color:transparent}
 #conv{outline-offset:2px}
 #send{justify-self:end;padding:10px 22px}
-#cfg,#notes,#chats,#projects,#news,#gsearch,#tools,#budget,#charts,#quiz,#calc,#stats,#bank,#imps{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
-#cfg.open,#notes.open,#chats.open,#projects.open,#news.open,#gsearch.open,#tools.open,#budget.open,#charts.open,#quiz.open,#calc.open,#stats.open,#bank.open,#imps.open{display:block}
+#cfg,#notes,#chats,#projects,#focus,#news,#gsearch,#tools,#budget,#charts,#quiz,#calc,#stats,#bank,#imps{position:fixed;inset:0;background:var(--bg);overflow-y:auto;display:none;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 640px)/2)) calc(28px + env(safe-area-inset-bottom,0px))}
+#cfg.open,#notes.open,#chats.open,#projects.open,#focus.open,#news.open,#gsearch.open,#tools.open,#budget.open,#charts.open,#quiz.open,#calc.open,#stats.open,#bank.open,#imps.open{display:block}
 .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tcard{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px;border-radius:18px;background:var(--surface)}
 .tcard span{font-size:26px;line-height:1}.tcard b{font:600 15px var(--ui)}.tcard small{font:400 12px/1.3 var(--ui);color:var(--muted)}
@@ -264,6 +264,14 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="newslist"></div>
   <div class="row"><button class="main" id="closeNews" type="button">Entendido</button></div>
 </section>
+<section id="focus" aria-label="Modo enfoque">
+  <h1>🎯 Enfoque</h1>
+  <p class="hint" id="focusdate"></p>
+  <div id="focusbody"></div>
+  <div class="row" style="margin-top:16px"><button id="focustimer" type="button">⏱️ 25 min de enfoque</button></div>
+  <label style="display:flex;gap:8px;align-items:center;margin:12px 0"><input id="focuskeep" type="checkbox" style="width:auto"> Abrir la app en modo enfoque</label>
+  <div class="row"><button class="main" id="focusexit" type="button">Salir del enfoque</button></div>
+</section>
 <section id="projects" aria-label="Proyectos">
   <h1>Proyectos</h1>
   <p class="hint">Aquí Lara guarda el objetivo, las decisiones y el próximo paso de cada proyecto, para responder «¿qué habíamos decidido?» con datos reales.</p>
@@ -300,7 +308,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 64. Incluye prueba de IA local del teléfono, modo local (resolver sin gastar cuota), publicación automática más robusta (autorizar escribiendo, rehacer la propuesta si GitHub cambió, subir un archivo a GitHub desde Mis mejoras), Proyectos y Presupuesto más potentes, automejora que se mantiene en el tema que pides, memoria con «por qué», hábitos con «¿lo hiciste hoy?» y progreso semanal, tarjetas de repaso propias, Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 65. Incluye modo enfoque, prueba de IA local del teléfono, modo local (resolver sin gastar cuota), publicación automática más robusta (autorizar escribiendo, rehacer la propuesta si GitHub cambió, subir un archivo a GitHub desde Mis mejoras), Proyectos y Presupuesto más potentes, automejora que se mantiene en el tema que pides, memoria con «por qué», hábitos con «¿lo hiciste hoy?» y progreso semanal, tarjetas de repaso propias, Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -805,7 +813,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=64;
+const APP_V=65;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1445,6 +1453,7 @@ function renderShorts(){
   bar.appendChild(btn("🛠️ Mejora",()=>{$("openTools").click();$("openImps").click()}));
   bar.appendChild(btn("⬇️ Archivo",()=>chatBackupFlow()));
   bar.appendChild(btn("🔁 ¿Lo hiciste hoy?",habAskToday));
+  bar.appendChild(btn("🎯 Enfoque",openFocus));
   bar.appendChild(btn("🔍 A fondo",()=>{$("t").value="Analiza a fondo, con evidencias, otras interpretaciones y tu nivel de certeza: "+$("t").value;$("t").focus()}));
   shorts.forEach(t=>bar.appendChild(btn(t.trim().slice(0,24),()=>{$("t").value=($("t").value?$("t").value+" ":"")+t;$("t").focus()})));
   bar.classList.add("on");
@@ -1556,6 +1565,7 @@ function localRoute(text){
     if(!text||text.length>160||/\[\[/.test(text)) return null;
     const n=norm(text);let m;
     const undoTxt=(m2)=>["↩ Deshacer",m2];
+    if(/^(modo enfoque|activa(?:r)? (?:el )?modo enfoque|enfoque|quiero concentrarme|ayudame a concentrarme|modo concentracion)\W*$/.test(n)){setTimeout(openFocus,150);return {text:"🎯 Abriendo tu modo enfoque: solo lo importante de hoy.",tag:"enfoque"}}
     if(/^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hey|hola lara)\W*$/.test(n)) return {text:"¡Hola! ¿En qué te ayudo hoy?",tag:"saludo",actions:[["📅 Mi día",myDay],["🔁 ¿Lo hiciste hoy?",habAskToday]]};
     if(/^(gracias|muchas gracias|ok gracias|vale gracias|gracias lara)\W*$/.test(n)) return {text:"¡Con gusto! 💚",tag:"gracias"};
     if(/^(mi dia|resumen de mi dia|que tengo hoy|que tengo para hoy|agenda de hoy|mi agenda)\W*$/.test(n)) return {text:localDayText(),tag:"mi dia"};
@@ -1618,6 +1628,39 @@ function localRoute(text){
   }catch(e){}
   return null;
 }
+
+
+/* ===== Modo enfoque (Mejora 65) ===== */
+let focusInt=null,focusEnd=0;
+function projTop(){return getProjects().filter(p=>projSt(p)==="activo"||projSt(p)==="trabado").map(p=>{const d=projDays(p);let s=0;if(d!==null) s+=d<0?100:d<=7?60-d:10;if(projSt(p)==="trabado") s+=15;s+=Math.min(projIdle(p),14);if(!p.next) s+=5;return {p:p,s:s,d:d}}).sort((a,b)=>b.s-a.s)[0]||null}
+function focusRender(){
+  const box=$("focusbody");box.innerHTML="";
+  $("focusdate").textContent=new Date().toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long"});
+  const sec=t=>{const h=document.createElement("div");h.style.cssText="margin:16px 0 6px;font-weight:600";h.textContent=t;box.appendChild(h)};
+  let any=false;
+  const end=new Date();end.setHours(23,59,59,999);
+  const r=rems.filter(x=>!x.done&&new Date(x.at)<=end).sort((a,b)=>a.at<b.at?-1:1).slice(0,5);
+  if(r.length){any=true;sec("⏰ Recordatorios de hoy");r.forEach(x=>box.appendChild(row(new Date(x.at).toLocaleTimeString("es",{timeStyle:"short"})+" · "+x.text,[])))}
+  const tk=tasks.filter(t=>!t.done);
+  if(tk.length){any=true;sec("📝 Tareas ("+tk.length+")");tk.slice(0,5).forEach(t=>box.appendChild(row(t.text,[btn("✓",()=>{t.done=true;saveTasks();try{renderMore()}catch(e){}focusRender()})])));if(tk.length>5){const m=document.createElement("small");m.style.color="var(--muted)";m.textContent="… y "+(tk.length-5)+" más";box.appendChild(m)}}
+  const hp=habPending();
+  if(hp.length){any=true;sec("🔁 Hábitos por hacer");hp.slice(0,6).forEach(h=>box.appendChild(row(h.name+(streak(h)?"  🔥 "+streak(h):""),[btn("✓ Hecho",()=>{habMark(h);focusRender()})])))}
+  const tp=projTop();
+  if(tp){any=true;sec("📁 Proyecto de hoy");const x=tp.p,dd=tp.d;
+    box.appendChild(row(x.name+"\nPróximo paso: "+(x.next||"sin definir")+(x.blk?"\nTrabado en: "+x.blk:"")+(dd!==null?(dd<0?"\n⏰ Venció hace "+(-dd)+" día"+(dd===-1?"":"s"):"\n⏰ Faltan "+dd+" día"+(dd===1?"":"s")):""),[btn("Abrir",()=>{closeFocus();$("openTools").click();$("openProj").click()})]))}
+  if(!any){const d=document.createElement("div");d.className="hint";d.style.cssText="font-size:16px;color:var(--ink);margin-top:14px";d.textContent="🎉 Todo despejado: no tienes nada pendiente para hoy.";box.appendChild(d)}
+}
+function focusTick(){
+  const b=$("focustimer"),left=focusEnd-Date.now();
+  if(left<=0){clearInterval(focusInt);focusInt=null;b.textContent="⏱️ 25 min de enfoque";toast("⏱️ ¡Listo! Completaste 25 minutos de enfoque.");try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}return}
+  const s=Math.ceil(left/1000);b.textContent="⏱️ "+Math.floor(s/60)+":"+String(s%60).padStart(2,"0")+" (toca para cancelar)";
+}
+function focusToggleTimer(){
+  if(focusInt){clearInterval(focusInt);focusInt=null;$("focustimer").textContent="⏱️ 25 min de enfoque";return}
+  focusEnd=Date.now()+25*60000;focusInt=setInterval(focusTick,1000);focusTick();
+}
+function openFocus(){focusRender();$("focus").classList.add("open")}
+function closeFocus(){$("focus").classList.remove("open")}
 
 function myDay(){
   const lt=localDayText();history.push({role:"model",parts:[{text:lt}]});saveChats();const lb=add("lara",lt);addActions();dayInc("l");
@@ -2737,6 +2780,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:65,items:["🎯 Modo enfoque: botón «Enfoque» en el chat (o escribe «modo enfoque») que muestra solo lo importante de hoy: recordatorios, tareas, hábitos pendientes y el proyecto del día con su próximo paso. Marca tareas y hábitos con un toque.","⏱️ Temporizador de 25 minutos de enfoque, con aviso al terminar.","Casilla «Abrir la app en modo enfoque» y botón «Salir del enfoque» para activarlo y desactivarlo fácil."]},
  {v:64,items:["🧪 Nueva prueba en Ajustes: «Probar si mi teléfono puede correr IA local». Mide WebGPU, memoria, espacio y conexión, y te dice si conviene un modelo mediano dentro de Lara, uno pequeño o la app Android. Solo mide: no descarga ni cambia nada."]},
  {v:63,items:["🏠 Modo local: Lara resuelve en tu teléfono, sin gastar cuota de Gemini, cosas como «mis tareas», «agrega tarea …», «anota nota …», «recuérdame … a las 5 pm», «mi día», «qué recuerdas de mí», «olvida …», «mis proyectos», «cuánto gasté hoy», «resumen de gastos», «qué debo repasar», la hora y la fecha, y saludos.","📅 El botón «Mi día» ahora responde al instante con tus recordatorios, tareas, hábitos, proyecto del día y gastos; si quieres la versión motivadora, hay un botón que usa Gemini.","🔌 Nuevo interruptor «Solo local» en Ajustes: cuando se acaba la cuota, Lara sigue funcionando sin IA y te avisa qué sí puede hacer. «Resolver primero en el teléfono» se puede apagar.","Las estadísticas de uso ahora cuentan todo lo resuelto en el teléfono."]},
  {v:62,items:["🚀 Publicar sin pelear con archivos: si escribes «lo autorizo», «publícala» o «hazlo» cuando hay una propuesta lista, Lara la sube sola a GitHub (sin que tengas que descargar ni renombrar nada).","🔁 Si GitHub cambió después de preparar la propuesta, Lara intenta rehacerla sobre la versión nueva, la vuelve a probar y la publica; si ya estaba publicada, te lo dice en vez de dar error.","📤 En Mis mejoras, «Reconocer un archivo» ahora tiene «Subir a GitHub como lara.html»: eliges el archivo que descargaste (aunque se llame «lara (1).html») y Lara lo sube con el nombre correcto, con respaldo previo.","Si no hay GitHub configurado, al autorizar te descarga el archivo para que lo subas."]},
@@ -5165,13 +5209,16 @@ async function aiLocalProbe(){
 }
 
 refreshImpPrep();
+$("focusexit").onclick=closeFocus;$("focustimer").onclick=focusToggleTimer;
+$("focuskeep").checked=store.get("lara_focuskeep","0")==="1";$("focuskeep").onchange=e=>store.set("lara_focuskeep",e.target.checked?"1":"0");
+if(store.get("lara_focuskeep","0")==="1") setTimeout(openFocus,400);
 $("aiprobe").onclick=async()=>{const o=$("aiproberes");o.textContent="⏳ Midiendo tu teléfono…";try{o.textContent=await aiLocalProbe()}catch(e){o.textContent="❌ No pude hacer la prueba: "+(e.message||e)}};
 $("aiprobecopy").onclick=()=>{try{navigator.clipboard.writeText($("aiproberes").textContent);toast("Copiado.")}catch(e){}};
 $("budrep").onclick=budReport;
 $("budcat").addEventListener("input",()=>{$("budcat").dataset.auto="0"});
 $("buddesc").addEventListener("input",()=>{if($("budkind").value!=="o") return;const bc=$("budcat");if(!bc.value||bc.dataset.auto==="1"){const g=budGuessCat($("buddesc").value);bc.value=g;bc.dataset.auto=g?"1":"0"}});
 try{
-  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos",57:"Excel (exportar e importar) y numeración de mejoras corregida",58:"Memoria con «por qué», hábitos con progreso semanal y tarjetas de repaso propias",59:"Automejora que se mantiene en el tema que pides",60:"Proyectos y Presupuesto más potentes",61:"Ajuste de la frase de autorización (ya incluido en la 62)",62:"Publicación automática más robusta y subir archivos a GitHub desde Mis mejoras",63:"Modo local: más cosas resueltas sin gastar cuota",64:"Prueba de IA local en el teléfono"};
+  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos",57:"Excel (exportar e importar) y numeración de mejoras corregida",58:"Memoria con «por qué», hábitos con progreso semanal y tarjetas de repaso propias",59:"Automejora que se mantiene en el tema que pides",60:"Proyectos y Presupuesto más potentes",61:"Ajuste de la frase de autorización (ya incluido en la 62)",62:"Publicación automática más robusta y subir archivos a GitHub desde Mis mejoras",63:"Modo local: más cosas resueltas sin gastar cuota",64:"Prueba de IA local en el teléfono",65:"Modo enfoque"};
   Object.keys(NOTES).map(Number).filter(v=>v<=APP_V&&!getChanges().some(c=>+c.v===v)).forEach(v=>recordChangeRaw(v,NOTES[v]));
 }catch(e){}
 render();
