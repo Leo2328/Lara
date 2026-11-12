@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v67</title>
+<title>Lara v68</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -308,7 +308,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 67. Incluye frases más naturales en el modo local, uso sin clave de Gemini para lo local, modo enfoque, prueba de IA local del teléfono, modo local (resolver sin gastar cuota), publicación automática más robusta (autorizar escribiendo, rehacer la propuesta si GitHub cambió, subir un archivo a GitHub desde Mis mejoras), Proyectos y Presupuesto más potentes, automejora que se mantiene en el tema que pides, memoria con «por qué», hábitos con «¿lo hiciste hoy?» y progreso semanal, tarjetas de repaso propias, Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 68. Incluye herramientas nativas de la app Android (dictado y alarmas exactas), frases más naturales en el modo local, uso sin clave de Gemini para lo local, modo enfoque, prueba de IA local del teléfono, modo local (resolver sin gastar cuota), publicación automática más robusta (autorizar escribiendo, rehacer la propuesta si GitHub cambió, subir un archivo a GitHub desde Mis mejoras), Proyectos y Presupuesto más potentes, automejora que se mantiene en el tema que pides, memoria con «por qué», hábitos con «¿lo hiciste hoy?» y progreso semanal, tarjetas de repaso propias, Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -329,6 +329,11 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <label style="display:flex;gap:8px;align-items:center"><input id="localfirst" type="checkbox" style="width:auto"> Resolver primero en el teléfono (tareas, notas, recordatorios, tu día…)</label>
   <label style="display:flex;gap:8px;align-items:center"><input id="localonly" type="checkbox" style="width:auto"> Solo local: no usar Gemini (útil si se acabó la cuota)</label>
   <div class="row"><button id="aiprobe" type="button">🧪 Probar si mi teléfono puede correr IA local</button><button id="aiprobecopy" type="button">Copiar</button></div>
+  <label>📱 App Android</label>
+  <p class="hint">Solo funciona dentro de la app instalada (APK): dictado por voz nativo y recordatorios con alarma exacta aunque la app esté cerrada.</p>
+  <div class="row"><button id="natdiag" type="button">🧪 Probar herramientas nativas</button><button id="natexact" type="button">⏰ Permitir alarmas exactas</button></div>
+  <div class="row"><button id="nattest" type="button">🔔 Probar aviso en 10 s</button></div>
+  <div id="natres" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
   <div id="aiproberes" class="hint" aria-live="polite" style="font-size:14px;color:var(--ink);white-space:pre-wrap"></div>
   <label style="display:flex;gap:8px;align-items:center"><input id="mathcheck" type="checkbox" style="width:auto"> Revisar las cuentas de las respuestas</label>
   <div class="row"><input id="calcin" placeholder="Prueba: 15% de 2340 · 3/4+1/6 · x^2-5x+6=0"><button id="calcgo" type="button">Calcular</button></div>
@@ -813,7 +818,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=67;
+const APP_V=68;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1097,7 +1102,96 @@ function speak(t){
   if(hf&&store.get("lara_barge","0")==="1"&&recStart) recStart();
   speakAuto(t,()=>{speakingText="";if(hfActive&&recStart) setTimeout(recStart,400)});
 }
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+/* ===== Herramientas nativas de la app Android (Mejora 68) ===== */
+const NAT={
+  on(){try{const C=window.Capacitor;if(!C) return false;if(C.isNativePlatform) return !!C.isNativePlatform();if(C.getPlatform) return C.getPlatform()!=="web";return !!C.nativePromise}catch(e){return false}},
+  plugin(name){
+    try{
+      const C=window.Capacitor;if(!C||!NAT.on()) return null;
+      if(C.Plugins&&C.Plugins[name]) return C.Plugins[name];
+      if(C.registerPlugin){try{const p=C.registerPlugin(name);if(p) return p}catch(e){}}
+      if(C.nativePromise) return new Proxy({},{get:(_,m)=>o=>C.nativePromise(name,String(m),o||{})});
+    }catch(e){}
+    return null;
+  },
+  async diag(){
+    const L=[],C=window.Capacitor;
+    L.push("📱 App nativa: "+(NAT.on()?"sí ("+((C.getPlatform&&C.getPlatform())||"android")+")":"no (estás en el navegador; esto solo funciona en la app instalada)"));
+    if(!NAT.on()) return L.join("\n");
+    try{const h=C.PluginHeaders;const n=Array.isArray(h)?h.map(x=>x.name):Object.keys(h||{});L.push("🧩 Plugins nativos vistos: "+(n.length?n.join(", "):"ninguno"))}catch(e){L.push("🧩 Plugins: no pude listarlos")}
+    const SRp=NAT.plugin("SpeechRecognition");
+    try{const a=await SRp.available();L.push("🎤 Dictado nativo: "+(a&&a.available?"disponible":"no disponible en este teléfono"))}catch(e){L.push("🎤 Dictado nativo: sin acceso ("+String(e&&e.message||e).slice(0,80)+")")}
+    try{const p=await SRp.checkPermissions();L.push("🎤 Permiso de micrófono: "+(p.speechRecognition||JSON.stringify(p)))}catch(e){}
+    const LN=NAT.plugin("LocalNotifications");
+    try{const p=await LN.checkPermissions();L.push("🔔 Permiso de avisos: "+(p.display||JSON.stringify(p)))}catch(e){L.push("🔔 Avisos: sin acceso ("+String(e&&e.message||e).slice(0,80)+")")}
+    try{const p=await LN.checkExactNotificationSetting();L.push("⏰ Alarmas exactas: "+(p.exact_alarm||JSON.stringify(p)))}catch(e){L.push("⏰ Alarmas exactas: no pude consultarlo")}
+    try{const q=await LN.getPending();L.push("🗓️ Avisos programados ahora: "+((q.notifications||[]).length))}catch(e){}
+    return L.join("\n");
+  }
+};
+function makeNativeRec(){
+  const P=NAT.plugin("SpeechRecognition");
+  const r={lang:"es-ES",interimResults:false,onresult:null,onend:null,onerror:null,_on:false,
+    start(){
+      if(r._on) throw new Error("busy");
+      r._on=true;
+      (async()=>{
+        let tr="",err="";
+        try{
+          let pm=await P.checkPermissions().catch(()=>({}));
+          if(pm.speechRecognition!=="granted") pm=await P.requestPermissions();
+          if(pm.speechRecognition!=="granted") err="not-allowed";
+          else{const res=await P.start({language:r.lang,maxResults:1,prompt:"Habla",partialResults:false,popup:false});tr=(res&&res.matches&&res.matches[0])||"";if(!tr) err="no-speech"}
+        }catch(e){err=/permission|denied|not.?allowed/i.test(String(e&&e.message||e))?"not-allowed":"no-speech"}
+        r._on=false;
+        if(tr&&r.onresult) r.onresult({results:[[{transcript:tr}]]});
+        else if(err&&r.onerror) r.onerror({error:err});
+        if(r.onend) r.onend();
+      })();
+    },
+    stop(){try{P.stop()}catch(e){}}
+  };
+  return r;
+}
+const NOTIF={
+  chan:false,timer:null,
+  id(r,k){let h=0;const s=String(r.id);for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0;return (Math.abs(h)%2000000000)+1+(k||0)},
+  async ready(){
+    const P=NAT.plugin("LocalNotifications");if(!P) return null;
+    try{
+      let p=await P.checkPermissions();if(p.display!=="granted") p=await P.requestPermissions();
+      if(p.display!=="granted") return null;
+      if(!NOTIF.chan){try{await P.createChannel({id:"lara-rem",name:"Recordatorios de Lara",description:"Avisos de tus recordatorios",importance:5,visibility:1,vibration:true,sound:"default"})}catch(e){}NOTIF.chan=true}
+      return P;
+    }catch(e){return null}
+  },
+  occ(r){
+    const out=[],base=new Date(r.at);let d=new Date(base),n=0;const now=Date.now();
+    while(n<14&&out.length<14){
+      if(d.getTime()>now) out.push(new Date(d));
+      if(!r.rep) break;
+      d=new Date(d);d.setDate(d.getDate()+(r.rep==="semanal"?7:1));
+      if(r.rep==="laborales"){while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1)}
+      n++;
+    }
+    return out;
+  },
+  async sync(){
+    if(!NAT.on()) return;
+    const P=await NOTIF.ready();if(!P) return;
+    try{
+      const pend=await P.getPending();
+      if(pend&&pend.notifications&&pend.notifications.length) await P.cancel({notifications:pend.notifications.filter(x=>x.id!==999999).map(x=>({id:x.id}))});
+      const horizon=Date.now()+60*864e5,list=[];
+      rems.filter(r=>!r.done).forEach(r=>{NOTIF.occ(r).forEach((d,k)=>{if(d.getTime()<horizon&&list.length<60) list.push({id:NOTIF.id(r,k),title:"⏰ Lara",body:r.text,schedule:{at:d,allowWhileIdle:true},channelId:"lara-rem"})})});
+      if(list.length) await P.schedule({notifications:list});
+    }catch(e){}
+  },
+  syncSoon(){if(!NAT.on()) return;clearTimeout(NOTIF.timer);NOTIF.timer=setTimeout(()=>NOTIF.sync(),400)}
+};
+
+const NATSR=NAT.on()&&NAT.plugin("SpeechRecognition");
+const SR=NATSR?function(){return makeNativeRec()}:(window.SpeechRecognition||window.webkitSpeechRecognition);
 if(!SR){$("mic").style.display="none";$("conv").style.display="none"}else{
   const rec=new SR();rec.lang="es-ES";rec.interimResults=false;
   let on=false,got=false,wl=null;
@@ -1192,7 +1286,7 @@ let notes=[],rems=[];
 try{notes=JSON.parse(store.get("lara_notes","[]"))||[]}catch(e){}
 try{rems=JSON.parse(store.get("lara_rem","[]"))||[]}catch(e){}
 function saveNotes(){store.set("lara_notes",JSON.stringify(notes))}
-function saveRems(){store.set("lara_rem",JSON.stringify(rems))}
+function saveRems(){store.set("lara_rem",JSON.stringify(rems));try{NOTIF.syncSoon()}catch(e){}}
 function addNote(t){t=(t||"").trim().slice(0,1000);if(!t)return;notes.push(t);if(notes.length>100)notes.shift();saveNotes()}
 function addRem(at,text,rep){
   text=(text||"").trim().slice(0,200);
@@ -2786,6 +2880,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:68,items:["📱 App Android: el micrófono vuelve a funcionar con dictado nativo, y los recordatorios se programan como avisos exactos del teléfono, incluso con la app cerrada (los que se repiten se programan 14 veces por adelantado).","En Ajustes → «App Android»: probar qué herramientas nativas ve Lara, permitir alarmas exactas y probar un aviso en 10 segundos. En el navegador todo sigue igual."]},
  {v:67,items:["🏠 El modo local entiende mejor cómo escribes: «hola lara q día es hoy», «q hora es», «oye mis tareas»… ya se resuelven en el teléfono sin gastar cuota de Gemini ni de búsqueda web."]},
  {v:66,items:["🔑 Lara ya no se bloquea cuando falta la clave de Gemini: tareas, notas, recordatorios, hábitos, «mi día», proyectos, presupuesto, cuentas y cálculos funcionan igual. Solo lo que necesita IA te pide la clave, y tu mensaje se queda escrito para reenviarlo."]},
  {v:65,items:["🎯 Modo enfoque: botón «Enfoque» en el chat (o escribe «modo enfoque») que muestra solo lo importante de hoy: recordatorios, tareas, hábitos pendientes y el proyecto del día con su próximo paso. Marca tareas y hábitos con un toque.","⏱️ Temporizador de 25 minutos de enfoque, con aviso al terminar.","Casilla «Abrir la app en modo enfoque» y botón «Salir del enfoque» para activarlo y desactivarlo fácil."]},
@@ -5217,6 +5312,22 @@ async function aiLocalProbe(){
 }
 
 refreshImpPrep();
+$("natdiag").onclick=async()=>{const o=$("natres");o.textContent="⏳ Revisando…";try{o.textContent=await NAT.diag()}catch(e){o.textContent="❌ "+(e.message||e)}};
+$("natexact").onclick=async()=>{
+  const o=$("natres"),P=NAT.plugin("LocalNotifications");
+  if(!P){o.textContent="Esto solo funciona dentro de la app instalada (APK).";return}
+  try{const s=await P.checkExactNotificationSetting();
+    if(s&&s.exact_alarm==="granted"){o.textContent="✅ Las alarmas exactas ya están permitidas."}
+    else{o.textContent="Se abrirá la pantalla de Android «Alarmas y recordatorios». Activa el permiso para Lara y vuelve.";await P.changeExactNotificationSetting()}
+  }catch(e){o.textContent="❌ No pude abrir ese permiso: "+String(e&&e.message||e).slice(0,100)}
+};
+$("nattest").onclick=async()=>{
+  const o=$("natres"),P=await NOTIF.ready();
+  if(!P){o.textContent=NAT.on()?"❌ Falta el permiso de avisos. Toca «Probar herramientas nativas» y acéptalo.":"Esto solo funciona dentro de la app instalada (APK).";return}
+  try{await P.schedule({notifications:[{id:999999,title:"🔔 Lara",body:"Prueba de aviso: si lo ves, funcionan.",schedule:{at:new Date(Date.now()+10000),allowWhileIdle:true},channelId:"lara-rem"}]});o.textContent="🔔 Programé un aviso en 10 segundos. Sal de la app (o bloquea la pantalla) y espera."}catch(e){o.textContent="❌ No pude programarlo: "+String(e&&e.message||e).slice(0,100)}
+};
+setTimeout(()=>{try{NOTIF.sync()}catch(e){}},3000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden) try{NOTIF.syncSoon()}catch(e){}});
 $("focusexit").onclick=closeFocus;$("focustimer").onclick=focusToggleTimer;
 $("focuskeep").checked=store.get("lara_focuskeep","0")==="1";$("focuskeep").onchange=e=>store.set("lara_focuskeep",e.target.checked?"1":"0");
 if(store.get("lara_focuskeep","0")==="1") setTimeout(openFocus,400);
@@ -5226,7 +5337,7 @@ $("budrep").onclick=budReport;
 $("budcat").addEventListener("input",()=>{$("budcat").dataset.auto="0"});
 $("buddesc").addEventListener("input",()=>{if($("budkind").value!=="o") return;const bc=$("budcat");if(!bc.value||bc.dataset.auto==="1"){const g=budGuessCat($("buddesc").value);bc.value=g;bc.dataset.auto=g?"1":"0"}});
 try{
-  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos",57:"Excel (exportar e importar) y numeración de mejoras corregida",58:"Memoria con «por qué», hábitos con progreso semanal y tarjetas de repaso propias",59:"Automejora que se mantiene en el tema que pides",60:"Proyectos y Presupuesto más potentes",61:"Ajuste de la frase de autorización (ya incluido en la 62)",62:"Publicación automática más robusta y subir archivos a GitHub desde Mis mejoras",63:"Modo local: más cosas resueltas sin gastar cuota",64:"Prueba de IA local en el teléfono",65:"Modo enfoque",66:"Lo local funciona sin clave de Gemini",67:"Frases más naturales en el modo local"};
+  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos",57:"Excel (exportar e importar) y numeración de mejoras corregida",58:"Memoria con «por qué», hábitos con progreso semanal y tarjetas de repaso propias",59:"Automejora que se mantiene en el tema que pides",60:"Proyectos y Presupuesto más potentes",61:"Ajuste de la frase de autorización (ya incluido en la 62)",62:"Publicación automática más robusta y subir archivos a GitHub desde Mis mejoras",63:"Modo local: más cosas resueltas sin gastar cuota",64:"Prueba de IA local en el teléfono",65:"Modo enfoque",66:"Lo local funciona sin clave de Gemini",67:"Frases más naturales en el modo local",68:"Dictado nativo y alarmas exactas en la app Android"};
   Object.keys(NOTES).map(Number).filter(v=>v<=APP_V&&!getChanges().some(c=>+c.v===v)).forEach(v=>recordChangeRaw(v,NOTES[v]));
 }catch(e){}
 render();
