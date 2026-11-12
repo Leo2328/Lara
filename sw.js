@@ -1,4 +1,4 @@
-const CACHE="lara-v65";
+const CACHE="lara-v66";
 self.addEventListener("install",e=>{self.skipWaiting()});
 self.addEventListener("activate",e=>{
   e.waitUntil((async()=>{
