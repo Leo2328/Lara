@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icono-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Lara v66</title>
+<title>Lara v67</title>
 <style>
 :root{color-scheme:light dark;
 --bg:#eef3f1;--surface:#fbfdfc;--ink:#14201e;--muted:#5b6a67;--accent:#0f766e;--on-accent:#fff;--line:#d3ddda;--danger:#b3261e;
@@ -308,7 +308,7 @@ body.live #conv{background:var(--accent);color:var(--on-accent)}
   <div id="slist"></div>
   <div class="row"><input id="newshort" placeholder="Ej: Traduce al inglés: "><button id="addshort" type="button">Añadir</button></div>
   <label>Versión de la app</label>
-  <p class="hint">Versión 66. Incluye uso sin clave de Gemini para lo local, modo enfoque, prueba de IA local del teléfono, modo local (resolver sin gastar cuota), publicación automática más robusta (autorizar escribiendo, rehacer la propuesta si GitHub cambió, subir un archivo a GitHub desde Mis mejoras), Proyectos y Presupuesto más potentes, automejora que se mantiene en el tema que pides, memoria con «por qué», hábitos con «¿lo hiciste hoy?» y progreso semanal, tarjetas de repaso propias, Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
+  <p class="hint">Versión 67. Incluye frases más naturales en el modo local, uso sin clave de Gemini para lo local, modo enfoque, prueba de IA local del teléfono, modo local (resolver sin gastar cuota), publicación automática más robusta (autorizar escribiendo, rehacer la propuesta si GitHub cambió, subir un archivo a GitHub desde Mis mejoras), Proyectos y Presupuesto más potentes, automejora que se mantiene en el tema que pides, memoria con «por qué», hábitos con «¿lo hiciste hoy?» y progreso semanal, tarjetas de repaso propias, Excel (exportar e importar), numeración de mejoras siempre correcta, Hábitos con dificultad, mejor racha y puntos, Memoria por capas (permanente, media y corta), botón de descarga de mejoras con número consecutivo y reconocimiento de archivos, Mis mejoras (archivos para descargar y subir) y Cuentas en córdobas y dólares, mejoras con número consecutivo y archivo para subir, herramientas (presupuesto, gráficas, estudio, calculadora y estadísticas), calculadora exacta y razonamiento matemático, aviso de vencimiento del token, conflictos de sincronización resueltos por ti, exportar a PDF/Word/texto, íconos intercambiables, nuevo ícono de la app, búsqueda en todo, compartir hacia Lara, accesos directos, autoprueba completa, borrados sincronizados, copias locales de seguridad, novedades al actualizar, sincronización entre teléfonos, confirmación doble en el botón de emergencia, sistema de protección y defensa (seguridad), automejora desde el chat (siempre con tu autorización), control de cuota, proyectos, diagnóstico, respaldo de datos, memoria ordenada, voz más natural, espera más larga de GitHub, ideas basadas en tu uso real, limpieza del repositorio, vista limpia, publicación automática en GitHub, automejora que se corrige sola, ideas de mejora que puedes usar o descartar, lecciones aprendidas, nuevo diseño y conversación por voz.</p>
   <div class="row"><button id="upd" type="button">Actualizar app</button><button id="chkupd" type="button">Buscar actualización</button><button id="allnews" type="button">📰 Novedades</button></div>
   <div class="row"><button id="diag" type="button">🩺 Diagnóstico</button><button id="diagcopy" type="button">Copiar</button></div>
   <div class="row"><button id="selftest" type="button">🧪 Autoprueba completa</button><button id="selftestcopy" type="button">Copiar</button></div>
@@ -813,7 +813,7 @@ function buildSys(){
   if(notes.length) s+="\n\nNotas del usuario:\n- "+notes.slice(-15).map(n=>n.slice(0,120)).join("\n- ");
   return s;
 }
-const APP_V=66;
+const APP_V=67;
 let ctrl=null;
 const FALLBACK=["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-flash-lite-latest","gemini-flash-latest"];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1567,13 +1567,15 @@ function localDayText(){
 function localRoute(text){
   try{
     if(!text||text.length>160||/\[\[/.test(text)) return null;
-    const n=norm(text);let m;
+    const n0=norm(text);let n=n0,m;
+    for(let i=0;i<3;i++) n=n.replace(/^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|oye|ey|hey|lara|porfa|por favor)\b[\s,.!¿?]*/,"");
+    n=n.replace(/\bq\b/g,"que").replace(/\bk\b/g,"que");
     const undoTxt=(m2)=>["↩ Deshacer",m2];
     if(/^(modo enfoque|activa(?:r)? (?:el )?modo enfoque|enfoque|quiero concentrarme|ayudame a concentrarme|modo concentracion)\W*$/.test(n)){setTimeout(openFocus,150);return {text:"🎯 Abriendo tu modo enfoque: solo lo importante de hoy.",tag:"enfoque"}}
-    if(/^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hey|hola lara)\W*$/.test(n)) return {text:"¡Hola! ¿En qué te ayudo hoy?",tag:"saludo",actions:[["📅 Mi día",myDay],["🔁 ¿Lo hiciste hoy?",habAskToday]]};
-    if(/^(gracias|muchas gracias|ok gracias|vale gracias|gracias lara)\W*$/.test(n)) return {text:"¡Con gusto! 💚",tag:"gracias"};
+    if(/^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hey|hola lara)\W*$/.test(n0)) return {text:"¡Hola! ¿En qué te ayudo hoy?",tag:"saludo",actions:[["📅 Mi día",myDay],["🔁 ¿Lo hiciste hoy?",habAskToday]]};
+    if(/^(gracias|muchas gracias|ok gracias|vale gracias|gracias lara)\W*$/.test(n0)) return {text:"¡Con gusto! 💚",tag:"gracias"};
     if(/^(mi dia|resumen de mi dia|que tengo hoy|que tengo para hoy|agenda de hoy|mi agenda)\W*$/.test(n)) return {text:localDayText(),tag:"mi dia"};
-    if(/\b(que hora es|que dia es hoy|que fecha es hoy|a cuantos estamos|que dia es)\b/.test(n)&&n.length<50){const d=new Date();return {text:"🕒 Son las "+d.toLocaleTimeString("es",{timeStyle:"short"})+" del "+d.toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+".",tag:"hora"}}
+    if(/\b(que hora es|que hora son|que dia es|que fecha es|a que fecha estamos|a cuantos estamos|dime la hora|dime la fecha)\b/.test(n)&&n.length<50){const d=new Date(),f=d.toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long",year:"numeric"});return {text:/hora/.test(n)?"🕒 Son las "+d.toLocaleTimeString("es",{timeStyle:"short"})+" del "+f+".":"📅 Hoy es "+f+".",tag:"hora"}}
     // recordatorios
     if((m=text.match(/^(?:por favor[, ]+)?recu[eé]rdame\s+(.+)$/i))){
       const w=parseWhenLocal(m[1]);if(!w) return null;
@@ -2784,6 +2786,7 @@ $("panicgo").onclick=()=>{
 
 /* ===== Novedades al actualizar ===== */
 const CHANGELOG=[
+ {v:67,items:["🏠 El modo local entiende mejor cómo escribes: «hola lara q día es hoy», «q hora es», «oye mis tareas»… ya se resuelven en el teléfono sin gastar cuota de Gemini ni de búsqueda web."]},
  {v:66,items:["🔑 Lara ya no se bloquea cuando falta la clave de Gemini: tareas, notas, recordatorios, hábitos, «mi día», proyectos, presupuesto, cuentas y cálculos funcionan igual. Solo lo que necesita IA te pide la clave, y tu mensaje se queda escrito para reenviarlo."]},
  {v:65,items:["🎯 Modo enfoque: botón «Enfoque» en el chat (o escribe «modo enfoque») que muestra solo lo importante de hoy: recordatorios, tareas, hábitos pendientes y el proyecto del día con su próximo paso. Marca tareas y hábitos con un toque.","⏱️ Temporizador de 25 minutos de enfoque, con aviso al terminar.","Casilla «Abrir la app en modo enfoque» y botón «Salir del enfoque» para activarlo y desactivarlo fácil."]},
  {v:64,items:["🧪 Nueva prueba en Ajustes: «Probar si mi teléfono puede correr IA local». Mide WebGPU, memoria, espacio y conexión, y te dice si conviene un modelo mediano dentro de Lara, uno pequeño o la app Android. Solo mide: no descarga ni cambia nada."]},
@@ -5223,7 +5226,7 @@ $("budrep").onclick=budReport;
 $("budcat").addEventListener("input",()=>{$("budcat").dataset.auto="0"});
 $("buddesc").addEventListener("input",()=>{if($("budkind").value!=="o") return;const bc=$("budcat");if(!bc.value||bc.dataset.auto==="1"){const g=budGuessCat($("buddesc").value);bc.value=g;bc.dataset.auto=g?"1":"0"}});
 try{
-  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos",57:"Excel (exportar e importar) y numeración de mejoras corregida",58:"Memoria con «por qué», hábitos con progreso semanal y tarjetas de repaso propias",59:"Automejora que se mantiene en el tema que pides",60:"Proyectos y Presupuesto más potentes",61:"Ajuste de la frase de autorización (ya incluido en la 62)",62:"Publicación automática más robusta y subir archivos a GitHub desde Mis mejoras",63:"Modo local: más cosas resueltas sin gastar cuota",64:"Prueba de IA local en el teléfono",65:"Modo enfoque",66:"Lo local funciona sin clave de Gemini"};
+  const NOTES={54:"Mis mejoras (archivos para subir) y Cuentas en córdobas y dólares",55:"Memoria por capas, botón ⬇️ Archivo y reconocer archivos",56:"Hábitos con dificultad, mejor racha y puntos",57:"Excel (exportar e importar) y numeración de mejoras corregida",58:"Memoria con «por qué», hábitos con progreso semanal y tarjetas de repaso propias",59:"Automejora que se mantiene en el tema que pides",60:"Proyectos y Presupuesto más potentes",61:"Ajuste de la frase de autorización (ya incluido en la 62)",62:"Publicación automática más robusta y subir archivos a GitHub desde Mis mejoras",63:"Modo local: más cosas resueltas sin gastar cuota",64:"Prueba de IA local en el teléfono",65:"Modo enfoque",66:"Lo local funciona sin clave de Gemini",67:"Frases más naturales en el modo local"};
   Object.keys(NOTES).map(Number).filter(v=>v<=APP_V&&!getChanges().some(c=>+c.v===v)).forEach(v=>recordChangeRaw(v,NOTES[v]));
 }catch(e){}
 render();
